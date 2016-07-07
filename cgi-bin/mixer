@@ -1,0 +1,79 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+
+TMP=/tmp
+BASE="/usr/local/Audio/Music"
+WORK="$TMP/$$"
+CACHE=$TMP/.musiccache
+export HOME=$WORK
+PLAYLIST=$WORK/trax.txt
+TITLE="Mixer"
+MPG123LOG="$TMP/mpg123.log"
+# Split the encoded data into name=value pairs
+OPTS=`cat - | sed 's/&/ /g'`
+DEVS="`mixer | grep -v source | cut -f 2 -d \ `"
+
+mkdir -p $WORK
+
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+echo "<HTML><HEAD><TITLE>$TITLE</TITLE>"
+if echo $OPTS | grep -q TRACK ; then
+  echo "<meta http-equiv='Refresh' content='1; url=/cgi-bin/lights'>"
+fi
+echo "</HEAD>"
+echo "<BODY>"
+echo "<FONT SIZE='1'>"
+
+# Decode the form data
+echo "<OL>"
+for opt in $OPTS; do
+   NAME=`echo $opt | sed 's/=/ /g' | awk '{print $1}'`
+   VALUE="`echo $opt | sed 's/=/ /g' | awk '{print $2}' | \
+          sed 's,%,\\\x,g' | \
+          sed 's~\\\x2C~,~g' | \
+          sed 's/+/ /g'`"
+#   printf "<LI><B>$NAME:</B>:$VALUE:"
+   if echo "$NAME" | grep -q DEV ; then
+      DV="`echo $NAME | cut -b 4-`"
+#      echo "<BR>/usr/sbin/mixer $DV $VALUE:$VALUE <BR>" 
+      eval "/usr/sbin/mixer $DV $VALUE:$VALUE" 2>&1 >/dev/null
+   fi
+done
+echo "</OL>"
+
+echo "<FORM METHOD='POST'>"
+            #<TR><TD>$PARENT</TD><TD><INPUT TYPE='CHECKBOX' NAME='TRACK' VALUE='$FPATH'></TD><TD>$FNAME</TD></TR>\n"
+
+NUM=1
+
+echo "<TABLE BORDER='2'>"
+for DV in HDR $DEVS ; do
+  echo "<TR>"
+  if [ "$DV" = "HDR" ] ; then
+    echo "<TH>Device</TH>"
+  else
+    CV="`mixer $DV | awk '{print $7}' | cut -f 1 -d :`"
+    echo "<TD>$DV $CV:$CV</TD>"
+  fi
+  for LV in 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 ; do 
+    if [ "$DV" = "HDR" ] ; then
+      echo "<TH>$LV</TH>"
+    else
+      if [ "$CV" = "$LV" ] ; then 
+        echo "<TD ALIGN='CENTER' STYLE='background-color:black;color:white;'><INPUT TYPE='RADIO' NAME='DEV$DV' VALUE='$LV' CHECKED></TD>"
+      else
+        echo "<TD ALIGN='CENTER' STYLE='background-color:white;color:black;'><INPUT TYPE='RADIO' NAME='DEV$DV' VALUE='$LV'></TD>"
+      fi
+    fi
+  done
+  echo "</TR>"
+done
+echo "</TABLE>"
+
+echo "<INPUT TYPE='SUBMIT'>"
+echo "</FONT>"
+echo "</BODY></HTML>"
+
+rm -r $WORK

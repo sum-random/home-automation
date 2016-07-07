@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# m4a to wav
+for j in `find /usr/local/Audio/Noi -type f -name "*.m4a" | tr \  \*`
+do
+echo $j
+i="`echo $j | sed -e 's/\*/ /g'`"
+echo $i
+#done
+#while false ; do
+faad "$i"
+x=`echo "$i"|sed -e 's/.m4a/.wav/'`
+y=`echo "$i"|sed -e 's/.m4a/.mp3/'`
+faad -i "$i" 2>.trackinfo.txt
+title=`grep 'title: ' .trackinfo.txt|sed -e 's/title: //'`
+artist=`grep 'artist: ' .trackinfo.txt|sed -e 's/artist: //'`
+album=`grep 'album: ' .trackinfo.txt|sed -e 's/album: //'`
+genre=`grep 'genre: ' .trackinfo.txt|sed -e 's/genre: //'`
+track=`grep 'track: ' .trackinfo.txt|sed -e 's/track: //'`
+year=`grep 'year: ' .trackinfo.txt|sed -e 's/year: //'`
+lame --alt-preset 160 --tt "$title" --ta "$artist" --tl "$album" --tn "$track" --ty "$year" "$x" "$y"
+rm .trackinfo.txt
+rm "$x"
+done

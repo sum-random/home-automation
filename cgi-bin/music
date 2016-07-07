@@ -1,0 +1,93 @@
+#!/usr/local/bin/bash
+
+stop_play() { 
+  kill -9 `ps wwaux | grep -v grep | grep mpg123 | awk '{print $2}'` 2>/dev/null
+}
+
+exec 2>&1
+
+TMP=/tmp
+#BASE="/usr/local/media/Audio/Music"
+BASE="/usr/local/media"
+WORK="$TMP/$$"
+CACHE=$TMP/.musiccache
+export HOME=$WORK
+PLAYLIST=$TMP/trax.txt
+TITLE="Play music"
+MPG123LOG="$TMP/mpg123.log"
+# Split the encoded data into name=value pairs
+OPTS=`cat - | sed 's/&/ /g'`
+
+mkdir -p $WORK
+
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+echo "<HTML><HEAD><TITLE>$TITLE</TITLE>"
+if echo $OPTS | grep -q TRACK ; then
+  echo "<meta http-equiv='Refresh' content='1; url=/cgi-bin/monitor'>"
+fi
+echo "</HEAD>"
+echo "<BODY>"
+echo "<FONT SIZE='1'>"
+
+# Decode the form data
+echo "<OL>"
+DOPLAY="no"
+for opt in $OPTS; do
+   NAME=$(echo $opt | cut -d = -f 1)
+   VALUE=$(echo $opt | cut -d = -f 2 | sed -e 's,%,\\\x,g' -e 's/+/ /g')
+   eval "$NAME=\"$VALUE\""
+   printf "<LI><B>$NAME:</B>$VALUE"
+   if [ "$NAME" = "TRACK" ] ; then
+     DOPLAY="yes"
+     printf "$BASE/$VALUE\n" | tr '^' \ >> $PLAYLIST.new
+   fi
+   [ "$NAME" = "SHUFFLE" ] && SHUFFLE="$VALUE"
+   [ "$NAME" = "FILTER" ] && FILTER="$VALUE"
+   [ "$NAME" = "STOP" ] && [ -n "$VALUE" ] && stop_play
+done
+echo "</OL>"
+
+if [ $DOPLAY = "yes" ] ; then
+  stop_play
+  mv $PLAYLIST.new $PLAYLIST
+  /usr/local/bin/mpg123 $SHUFFLE -@ $PLAYLIST >$MPG123LOG 2>&1 &
+fi
+
+echo "<FORM METHOD='POST'>"
+pgrep mpg123 | while read MPGPID; do
+  echo "Stop mpg123 process:<BR>"
+  ps wwaux | grep $MPGPID | grep www | grep -v grep | while read LN ; do
+    echo $LN; 
+    for FN in $LN; do
+      [ -f "$FN" ] && file "$FN" | grep -q ASCII && cat $FN | cut -d  / -f 6-
+    done
+  done | sed -e 's/$/<BR>/'
+  echo "<BR><INPUT TYPE='SUBMIT' NAME='STOP' VALUE='$MPGPID'><BR>"
+done
+[ -f $CACHE ] || exit 1
+
+if [ -n "$FILTER" ] ; then
+  echo "Pick tracks to play, use shift or ctrl to select multiple items<BR>"
+  printf "<SELECT NAME='TRACK' MULTIPLE SIZE='20'>\n"
+  FILTERED=$WORK/workingset
+  for ITEM in $FILTER ; do 
+    if [ -f "$FILTERED" ] ; then
+      mv $FILTERED ${FILTERED}.$ITEM
+      cat ${FILTERED}.$ITEM | grep -i "$ITEM" | sort -k 3  >$FILTERED
+    else
+      cat $CACHE | grep -i "$ITEM" >$FILTERED
+    fi
+  done
+  cat $FILTERED | sort -k 3 | uniq
+  printf "</SELECT><BR>\n"
+  echo "<INPUT TYPE='CHECKBOX' NAME='SHUFFLE' VALUE='-z' CHECKED> Shuffle tracks <BR>"
+fi
+echo "Filter track list<BR>"
+echo "<INPUT TYPE='TEXT' NAME='FILTER' VALUE='$FILTER'><BR>"
+
+echo "<INPUT TYPE='SUBMIT'>"
+echo "</FONT>"
+echo "</BODY></HTML>"
+
+rm -rf $WORK

@@ -1,0 +1,111 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+CMDVARS="`echo $QUERY_STRING | tr \& "\n" | grep =`"
+eval "$CMDVARS"
+[ -z "$YEAR" ] && YEAR=0
+[ -z "$COLUMNS" ] && COLUMNS=8
+MOD=nathan
+SOURCEDIR="/usr/local/Image/$MOD$YEAR"
+BASEDIR="/usr/local/www/apache24/data/resized/$MOD$YEAR"
+BASEWEB="/resized/$MOD$YEAR"
+THUMBDIR="$BASEDIR/thumbs"
+THUMBWEB="$BASEWEB/thumbs"
+WEBSZDIR="$BASEDIR/websize"
+WEBSZWEB="$BASEWEB/websize"
+FULLSWEB="/img/$MOD$YEAR"
+FILELIST="`ls $SOURCEDIR | grep -i jpg `"
+VPASS="COLUMNS=$COLUMNS&YEAR=$YEAR"
+
+# Function declarations
+makeThumbs() { 
+      IMGSZ=`nice /usr/local/bin/identify $SOURCEDIR/$FNAME | awk '{print $3}'`
+      IMGW=`echo $IMGSZ | cut -f 1 -d x | awk '{print $1}'`
+      IMGH=`echo $IMGSZ | cut -f 2 -d x | awk '{print $1}'`
+      if [ $IMGW -ge $IMGH ] ; then
+        SCALE=`expr $IMGW / 64` 
+        TW=64
+        TH=`expr $IMGH / $SCALE`
+        SCALE=`expr $IMGW / 640` 
+        WW=640
+        WH=`expr $IMGH / $SCALE`
+      else
+        SCALE=`expr $IMGH / 64` 
+        TW=`expr $IMGW / $SCALE`
+        TH=64
+        SCALE=`expr $IMGH / 640` 
+        WW=`expr $IMGW / $SCALE`
+        WH=640
+      fi
+      [ -d $THUMBDIR ] || mkdir -p $THUMBDIR
+      [ -d $WEBSZDIR ] || mkdir -p $WEBSZDIR
+      nice /usr/local/bin/convert -sample ${TW}x${TH} $SOURCEDIR/$FNAME $THUMBDIR/$FNAME
+      nice /usr/local/bin/convert -sample ${WW}x${WH} $SOURCEDIR/$FNAME $WEBSZDIR/$FNAME
+}
+showThumbs() {
+  echo "Year: " ; for YR in 0 1 ; do [ "$YEAR" = "$YR" ] || echo "<A HREF=/$MOD?COLUMNS=$COLUMNS&YEAR=$YR>$YR</A>  " ; done
+  echo "<BR>"
+  echo "Columns: " ; for COL in 4 6 8 12 16 ; do [ "$COLUMNS" = "$COL" ] || echo "<A HREF=/$MOD?COLUMNS=$COL&YEAR=$YEAR>$COL</A>  " ; done
+  [ "$COLUMNS" = "" ] && COLUMNS=8
+  echo "<TABLE><TR>"
+  COUNT=0
+  for FNAME in $FILELIST ; do
+    echo "<TD ALIGN='CENTER' WIDTH='66'>"
+    [ -f $THUMBDIR/$FNAME ] || makeThumbs
+    echo "<A HREF='/$MOD?OPTION=SHOW&DISPFILE=$FNAME&$VPASS'>"
+    echo "<IMG SRC='$THUMBWEB/$FNAME'></A><BR>"
+    echo "</TD>"
+    COUNT=`expr $COUNT + 1`
+    if [ $COUNT -ge $COLUMNS ] ; then
+      COUNT=0
+      echo "</TR><TR>"
+    fi 
+  done
+  echo "</TR></TABLE>"
+
+}
+
+showImage(){
+  NC="LAST"
+  for FNAME in $FILELIST ; do
+    [ "$NF" = "" ] && NF="$FNAME"
+    NL=$FNAME
+    NA="$NB"
+    NB="$NC"
+    NC="$FNAME"
+    [ "$F3" = "" ] && F3="$FNAME"
+    if [ "$NC" = "$DISPFILE" ] ; then
+      F1="$NB"
+    elif [ "$NB" = "$DISPFILE" ] ; then
+      F1="$NA"
+      F3="$NC"
+    fi
+  done
+  [ "$F1" = "LAST" ] && F1="$FNAME"
+  [ -f $WEBSZDIR/$FNAME ] || makeThumbs
+  echo "<CENTER>"
+  echo "<TABLE><TR>"
+  echo "<TD VALIGN='TOP' ALIGN='CENTER'><A HREF='/$MOD?OPTION=SHOW&DISPFILE=$NF&$VPASS'><IMG SRC='/img/btn_lt.jpg'></A></TD>"
+  echo "<TD ALIGN='CENTER'><A HREF='/$MOD?$VPASS'><IMG SRC='/img/btn_up.jpg'></A></TD>"
+  echo "<TD VALIGN='TOP' ALIGN='CENTER'><A HREF='/$MOD?OPTION=SHOW&DISPFILE=$NL&$VPASS'><IMG SRC='/img/btn_rt.jpg'></A></TD>"
+  echo "</TR><TR>"
+  echo "<TD VALIGN='TOP' ALIGN='CENTER' WIDTH='66'><A HREF='/$MOD?OPTION=SHOW&DISPFILE=$F1&$VPASS'><IMG SRC='$THUMBWEB/$F1'></A></TD>"
+  echo "<TD ALIGN='CENTER' WIDTH='644'><A HREF='$FULLSWEB/$DISPFILE'><IMG SRC='$WEBSZWEB/$DISPFILE'></A></TD>"
+  echo "<TD VALIGN='TOP' ALIGN='CENTER' WIDTH='66'><A HREF='/$MOD?OPTION=SHOW&DISPFILE=$F3&$VPASS'><IMG SRC='$THUMBWEB/$F3'></A></TD>"
+  echo "</TR></TABLE>"
+  echo "</CENTER>"
+}
+
+
+# display page
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+echo "<HTML><HEAD><TITLE>Nathan Tucker Pictures</TITLE></HEAD>"
+echo "<BODY>"
+  if [ "$OPTION" = "SHOW" ] ; then
+    showImage
+  else
+    showThumbs
+  fi
+echo "</BODY></HTML>"
+

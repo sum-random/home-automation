@@ -1,0 +1,21 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+
+#contants
+BASE=/usr/local/www/apache24/cgi-data
+OFFSET=3
+HOUSECODE=i
+RPT="-r 5"
+BR="/usr/local/bin/br -x /dev/cuau0 -c $HOUSECODE $RPT"
+SEP=","
+
+#presets
+DEVFILE="$BASE/lights.dat"
+[ -f "$DEVFILE" ] || exit 1
+
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+
+cat $DEVFILE
+

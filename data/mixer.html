@@ -1,0 +1,63 @@
+<html>
+<head>
+<TITLE>Mixer</TITLE>
+	<link type="text/css" href="/jscript/themes/base/ui.all.css" rel="stylesheet" />
+  <script type="text/javascript" src="/jscript/jquery-1.3.2.js"></script>
+  <script type="text/javascript" src="/jscript/ui/ui.core.js"></script>
+  <script type="text/javascript" src="/jscript/ui/ui.slider.js"></script>
+  <script type="text/javascript">
+	$(function() {
+		$("#SLVOL").slider({
+			min: 0,
+			max: 100,
+			step: 5,
+			slide: function(event, ui) {
+				$("#AMT").load("/cgi-bin/setmixer?DEVvol="+ui.value);
+			}
+		});
+		$("#SLPCM").slider({
+			min: 0,
+			max: 100,
+			step: 5,
+			slide: function(event, ui) {
+				$("#AMT").load("/cgi-bin/setmixer?DEVpcm="+ui.value);
+			}
+		});
+	    $("#AMT").load("/cgi-bin/getmixer?DEV=vol",
+	                      {},
+	                      function()
+	                        {
+	                        var amt=$("#AMT").text();
+	                        $("#SLVOL").slider('value',amt);
+	                        });
+	    $("#AMT").load("/cgi-bin/getmixer?DEV=pcm",
+	                      {},
+	                      function()
+	                        {
+	                        var amt=$("#AMT").text();
+	                        $("#SLPCM").slider('value',amt);
+	                        });
+	});
+  </script>
+
+<style type="text/css">
+.track
+{
+width:80%;
+text-align:center;
+align:center;
+}
+.loader
+{
+display:none;
+}
+</style>
+</head>
+<body>
+<CENTER>
+<DIV ID='SLVOL' CLASS='track'><FONT SIZE='1'>VOL</FONT></DIV><BR>
+<DIV ID='SLPCM' CLASS='track'><FONT SIZE='1'>PCM</FONT></DIV>
+</CENTER>
+<SPAN ID='AMT' CLASS='loader'></SPAN>
+</body>
+</html>

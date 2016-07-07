@@ -1,0 +1,25 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+
+TMP=/tmp
+WORK="$TMP/$$"
+# Split the encoded data into name=value pairs
+OPTS="`echo $QUERY_STRING | tr \& "\n" | grep =`"
+
+mkdir -p $WORK
+
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+# Decode the form data
+for opt in $OPTS; do
+   NAME=`echo $opt | sed 's/=/ /g' | awk '{print $1}'`
+   VALUE="`echo $opt | sed 's/=/ /g' | awk '{print $2}' | \
+          sed 's,%,\\\x,g' | \
+          sed 's~\\\x2C~,~g' | \
+          sed 's/+/ /g'`"
+   if [ "$NAME" = "DEV" ] ; then
+      mixer $VALUE | awk '{print $7}' | cut -f 1 -d :
+   fi
+done
+rm -r $WORK

@@ -1,0 +1,15 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+
+# display page
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+echo "<HTML><HEAD>"
+echo "<META HTTP-EQUIV='REFRESH' CONTENT='0;URL=/pix.php' />"
+echo "</HEAD>"
+echo "<BODY>"
+echo "Redirecting to pix.php"
+echo "</BODY></HTML>"
+

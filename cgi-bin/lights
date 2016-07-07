@@ -1,0 +1,69 @@
+#!/usr/local/bin/bash
+
+exec 2>&1
+
+TITLE="Light control panel"
+# Split the encoded data into name=value pairs
+OPTS=`cat - | sed 's/&/ /g'`
+
+mkdir -p $WORK
+
+echo "Content-type: text/html; charset=iso-8859-1"
+echo
+echo "<HTML><HEAD><TITLE>$TITLE</TITLE>"
+if echo $OPTS | grep -q TRACK ; then
+  echo "<meta http-equiv='Refresh' content='1; url=/cgi-bin/lights'>"
+fi
+echo "</HEAD>"
+echo "<BODY>"
+echo "<FONT SIZE='1'>"
+
+# Decode the form data
+echo "<OL>"
+for opt in $OPTS; do
+   NAME=`echo $opt | sed 's/=/ /g' | awk '{print $1}'`
+   VALUE="`echo $opt | sed 's/=/ /g' | awk '{print $2}' | \
+          sed 's,%,\\\x,g' | \
+          sed 's~\\\x2C~,~g' | \
+          sed 's/+/ /g'`"
+#   printf "<LI><B>$NAME:</B>:$VALUE:"
+   if echo "$NAME" | grep -q LIGHT ; then
+      ACT="`echo $VALUE | cut -f 1 -d :`"
+      ARG="`echo $VALUE | cut -f 2 -d :`"
+#      echo "<BR>/usr/local/bin/br -x /dev/cuau0 -c i -$VALUE<BR>" 
+      eval "/usr/local/bin/br -x /dev/cuau0 -c i -$VALUE" 
+      sleep 1
+   fi
+done
+echo "</OL>"
+
+echo "<FORM METHOD='POST'>"
+            #<TR><TD>$PARENT</TD><TD><INPUT TYPE='CHECKBOX' NAME='TRACK' VALUE='$FPATH'></TD><TD>$FNAME</TD></TR>\n"
+echo "<TABLE BORDER='2'><TR><TH>Light</TH><TH>On</TH><TH>Off</TH><TH>Dim</TH><TH>Less</TH><TH>Down</TH><TH>Up</TH><TH>More</TH><TH>Bright</TH></TR>"
+
+for LTNM in 2:1:nathans\ computer           \
+ 3:1:clip 5:1:sofa 6:1:sofa2               \
+ 4:1:dining 1:0:motion\ sensor 16:0:router \
+ 7:0:nathans\ room 15:0:tv ;  do
+  NUM=`echo $LTNM | cut -f 1 -d :`
+  LD=`echo $LTNM | cut -f 2 -d :`
+  LT=`echo $LTNM | cut -f 3 -d :`
+  echo "<TR><TD>$LT</TD>"
+  echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='n $NUM'></TD>"
+  echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='f $NUM'></TD>"
+  if [ $LD -eq 1 ] ; then
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d -6,$NUM'></TD>"
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d -3,$NUM'></TD>"
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d -1,$NUM'></TD>"
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d 1,$NUM'></TD>"
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d 3,$NUM'></TD>"
+    echo "<TD ALIGN='CENTER'><INPUT TYPE='RADIO' NAME='LIGHT$LT' VALUE='d 6,$NUM'></TD>"
+  fi
+  echo "</TR>"
+done
+echo "</TABLE>"
+
+echo "<INPUT TYPE='SUBMIT'>"
+echo "</FONT>"
+echo "</BODY></HTML>"
+
