@@ -60,10 +60,10 @@ if(array_key_exists('OPTION',$_REQUEST))
 
 function inImageDb($fileName) {
   $retval=sqlquery("SELECT imgid FROM thumblist WHERE fname='" . $fileName . "'");
-  echo "<!--\n";
-  print_r($retval);
-  echo "$fileName \n";
-  echo "-->\n";
+  //echo "<!--\n";
+  //print_r($retval);
+  //echo "$fileName \n";
+  //echo "-->\n";
   return (count($retval) > 0) ;
 }
 
@@ -95,8 +95,11 @@ function rotateImage($imgId, $degree) {
 $page=0;
 if(array_key_exists('page',$_REQUEST)) 
   $page=$_REQUEST['page'];
+if(array_key_exists('newpage',$_REQUEST)) 
+  foreach(($_REQUEST['newpage']) as $idx=>$val)
+    $page=$idx;
 $imglist=sqlquery("SELECT fname,imgid FROM thumblist WHERE fname like '" . $scanDir . "%' order by 1 DESC");
-if($page * 100 > count($imglist))
+if($page * 100 > count($imglist)) 
   $page=intval(count($imglist) / 100);
 echo "<INPUT TYPE='HIDDEN' NAME='page' VALUE='" . $page . "'>\n";
 
@@ -167,16 +170,17 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
         echo "<OPTION " . ($fldr == $_REQUEST['SET'] ? " SELECTED " : "" ) . "VALUE='" . $fldr . "'>" . $fldr . "</OPTION>\n";
     echo "</SELECT><BR>\n";
     if($page > 0) {
-      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[($page - 1) * 100]['imgid'] . "' NAME='page' VALUE='";
+      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[($page - 1) * 100]['imgid'] . "' NAME='newpage[0]' VALUE='";
       echo $page - 1 . "' SRC='/img/btn_lt.jpg'>\n";
     }
     for($idx  = 0; $idx <= count($imglist) / 100; $idx++) 
       if($idx == $page)
         echo $page;
       else
-        echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[$idx * 100]['imgid'] . "' NAME='page' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
+        echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[$idx * 100]['imgid'] . "' NAME='newpage[" . $idx . "]' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
     if($page + 1 < (count($imglist) / 100)) {
-      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumblist.php?IMGID=" . $imglist[($page + 1) * 100]['imgid'] . "' NAME='page' VALUE='";
+      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumblist.php?IMGID=" . $imglist[($page + 1) * 100]['imgid'] . "' NAME='newpage[";
+      echo $page + 1 . "]' VALUE='";
       echo $page + 1 . "' SRC='/img/btn_rt.jpg'>\n";
     }
     echo "<BR>\n";
@@ -185,7 +189,6 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
       if(inImageDb($file) || isImage($file)) {
         $imgID=$imglist[$idx]['imgid'];
         echo "<INPUT TYPE='IMAGE' ID='IMGCELL' NAME='IMG[" . $imgID . "]' VALUE='" . basename($file) . "' SRC='/thumbnail.php?IMGID=" . $imgID . "&SIZE=64'>\n";
-        //usleep(100);
       }
     } 
 }

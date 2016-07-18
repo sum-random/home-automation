@@ -19,6 +19,17 @@ img, input {
 </style>
 <TITLE>Picture viewer</TITLE>
 <script type="text/javascript" src="/jscript/pix.php.js"></script>
+<?php
+    if(array_key_exists('SLIDESHOW',$_REQUEST)) {
+      $_REQUEST['IMG']=$_REQUEST['SLIDEIMG'];
+?>
+  <script type="text/javascript" >
+    var myVar = setInterval(pushButton,5000);
+    function pushButton() { document.forms[0].submit(); }
+  </script>
+<?php
+    }
+?>
 </HEAD>
 <BODY>
 <DIV ID='POPWIN' STYLE='position:absolute;visibility:hidden;'> </DIV>
@@ -26,7 +37,6 @@ img, input {
 <?php
 set_time_limit(300);
 $noscanimages=true;
-$imgFilter="jpg$|jpeg$|gif$|png$";
 include("generatethumbs.php");
 
 global $mysql;
@@ -37,10 +47,13 @@ if($mynice < 10)
   proc_nice(1);
 
 $base='/usr/local/media/Image';
+$setlist=preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 6- | sort"));
 
 if(! array_key_exists('SET',$_REQUEST)) {
-  $_REQUEST['SET']='';
+  $_REQUEST['SET']=$setlist[0];
 }
+
+$scanDir=$base . '/' . $_REQUEST['SET'] ;
 
 if(array_key_exists('OPTION',$_REQUEST)) 
   echo "<INPUT ID='OPTION' TYPE='HIDDEN' NAME='OPTION' VALUE='" . $_REQUEST['OPTION'] . "'>\n";
@@ -59,13 +72,7 @@ function getIdForImage($fname) {
   if(count($retval) == 0) {
     $retval=sqlquery("SELECT imgid FROM thumblist WHERE fname='/" . $fname . "'");
     if(count($retval) > 0) {
-      sqlquery("UPDATE thumblist SET fname='" . $fname . "' WHERE imgid=" . $retval[0][0] );
-      $retval=sqlquery("SELECT imgid FROM thumblist WHERE fname='" . $fname . "'");
-    } else 
-      $retval=registerImage($fname, true);
-      shell_exec("php rescanimage '" . $fname . "' & ");
-      return $retval;
-  }
+      sqlquery("UPDATE thumblist SET fname='" . $fname . "' WHERE imgid=" . $retval[0][0] ); $retval=sqlquery("SELECT imgid FROM thumblist WHERE fname='" . $fname . "'"); } else $retval=registerImage($fname, true); shell_exec("php rescanimage '" . $fname . "' & "); return $retval; }
   echo "<!--\n";
   print_r($retval);
   echo "$fname \n";
@@ -85,12 +92,15 @@ function rotateImage($imgId, $degree) {
   $pic->destroy();
 }
 
-//print_r($_REQUEST);
+$page=0;
+if(array_key_exists('page',$_REQUEST)) 
+  $page=$_REQUEST['page'];
+$imglist=sqlquery("SELECT fname,imgid FROM thumblist WHERE fname like '" . $scanDir . "%' order by 1 DESC");
+if($page * 100 > count($imglist))
+  $page=intval(count($imglist) / 100);
+echo "<INPUT TYPE='HIDDEN' NAME='page' VALUE='" . $page . "'>\n";
 
-if(! array_key_exists('SET',$_REQUEST))
-  $_REQUEST['SET']='20140410';
-
-if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG'])) {
+if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_key_exists('HOME',$_REQUEST)) {
   echo "<INPUT TYPE='HIDDEN' NAME='SET' VALUE='" . $_REQUEST['SET'] . "'>\n";
   $img=(array_keys($_REQUEST['IMG'])[0]);
   switch($_REQUEST['IMG'][$img]) {
@@ -108,78 +118,74 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG'])) {
   echo "<TD ALIGN='CENTER' COLSPAN='5'><A HREF='thumbnail.php?IMGID=" . $img . "&SIZE=FULL' TITLE='Full resolution'><IMG SRC='thumbnail.php?IMGID=" . $img . "&SIZE=640'></A></TD>";
   echo "<TD><BUTTON TYPE='SUBMIT' NAME='IMG[" . $img . "]' ALT='Rotate right' VALUE='RIGHT'><IMG SRC='/img/rotate_r.png' ></BUTTON></TD></TR>\n";
   echo "<TR>";
-  $first=true;
-  $atimage=false;
-  $prev=$theImage;
-  $lastImage=$theImage;
-  foreach(preg_split('/\n/',shell_exec("find " . dirname($theImage) . " -type f -maxdepth 1 | grep -iE '" . $imgFilter . "' | sort -r")) as $file) {
-    if(inImageDb($file) || isImage($file)) {
-      write_log("File name is " . $file);
-      if($first) {
-        write_log($theImage . " First = " . $file);
-        $first=false;
-        $prev=$file;
-        $imgid=getIdForImage($file);
-        echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='First' TYPE='IMAGE' NAME='IMG[" . $imgid . "]' SRC='thumbnail.php?IMGID=" . $imgid . "&SIZE=80'></TD>\n";
-      }
-      if($atimage) {
-        write_log($theImage . " after image = " . $file);
-        $atimage=false;
-        $afterImage=$file;
-      }
-      if($file == $theImage) {
-        write_log($theImage . " at image prev = " . $prev);
-        $previd=getIdForImage($prev);
-        echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Previous' TYPE='IMAGE' NAME='IMG[" . $previd . "]' SRC='thumbnail.php?IMGID=" . $previd . "&SIZE=80'></TD>\n";
-        echo "<TD VALIGN='TOP' ALIGN='CENTER'><A HREF='collage.php?IMGID=" . getIdForImage($theImage) . "&SCALE=640&THUMBSZ=64' TITLE='Collage'><IMG ALT='Collage' SRC='/img/collage.jpg'></A></TD>\n";
-        echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ALT='Index' TYPE='IMAGE' NAME='HOME' VALUE='GO THERE' SRC='/img/btn_up.jpg'></TD>\n";
-        echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ALT='Slideshow' TYPE='IMAGE' NAME='SLIDESHOW[" .  $_REQUEST['SET'] . "]' SRC='/img/projector.GIF'></TD>\n";
-        $atimage=true;
-        $afterImage=$file;
-      }
-      $lastImage=$file;
-      $prev=$file;
-    }
+  $imgidx=-1;
+  $min=0;
+  $max=count($imglist);
+  while($imgidx == -1 && $max >= $min) { 
+    $mid=intval(($max+$min) / 2);
+    $midname=$imglist[$mid]['fname'];
+    write_log("Searching " . basename($theImage) . " found " . basename($midname) . "\t" . $min . " " . $mid . " " . $max);
+    $cmpval=strcmp($theImage,$midname);
+    if($cmpval == 0)
+      $imgidx=$mid;
+    else if($cmpval < 0)
+      $min=$mid + 1;
+    else
+      $max=$mid - 1;
   }
-  $nxtid=getIdForImage($afterImage);
-  echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Next' TYPE='IMAGE' NAME='IMG[" . $nxtid . "]' SRC='thumbnail.php?IMGID=" . $nxtid . "&SIZE=80'></TD>\n";
-  $lastid=getIdForImage($lastImage);
-  echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ALT='Last' ID='IMGCELL' TYPE='IMAGE' NAME='IMG[" . $lastid . "]' SRC='thumbnail.php?IMGID=" . $lastid . "&SIZE=80'></TD>\n";
+  if($imgidx !== -1) {
+    $firstidx=$page * 100;
+    $firstid=$imglist[$firstidx]['imgid'];
+    $theid=$imglist[$imgidx]['imgid'];
+    $nxtidx=($imgidx - 1 <= $firstidx ? $firstidx : $imgidx - 1);
+    $nxtid=$imglist[$nxtidx]['imgid'];
+    $lastidx=($page * 100 + 99 >= count($imglist) ? count($imglist) - 1 : $page * 100 + 99);
+    $lastid=$imglist[$lastidx]['imgid'];
+    $prvidx=($imgidx + 1 > $lastidx ? $lastidx : $imgidx + 1);
+    $prvid=$imglist[$prvidx]['imgid'];
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='First' TYPE='IMAGE' NAME='IMG[" . $firstid . "]' SRC='thumbnail.php?IMGID=" . $firstid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Next' TYPE='IMAGE' NAME='IMG[" . $nxtid . "]' SRC='thumbnail.php?IMGID=" . $nxtid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><A HREF='collage.php?IMGID=" . getIdForImage($theImage) . "&SCALE=640&THUMBSZ=64' TITLE='Collage'><IMG ALT='Collage' SRC='/img/collage.jpg'></A></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ALT='Index' TYPE='IMAGE' NAME='HOME' VALUE='GO THERE' SRC='/img/btn_up.jpg'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'>";
+    if(array_key_exists('SLIDESHOW',$_REQUEST) && $firstidx != $imgidx) {
+      echo "<INPUT TYPE='HIDDEN' NAME='SLIDEIMG[" . $nxtid . "]' VALUE=''>\n";
+      echo "<INPUT TYPE='HIDDEN' NAME='SLIDESHOW[" .  $_REQUEST['SET'] . "]' VALUE=''>\n";
+    } else {
+      echo "<INPUT TYPE='HIDDEN' NAME='SLIDEIMG[" . $imglist[$imgidx]['imgid'] . "]' VALUE=''>\n";
+      echo "<INPUT ALT='Slideshow' TYPE='IMAGE' NAME='SLIDESHOW[" .  $_REQUEST['SET'] . "]' SRC='/img/projector.GIF'>";
+    }
+    echo "</TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Previous' TYPE='IMAGE' NAME='IMG[" . $prvid . "]' SRC='thumbnail.php?IMGID=" . $prvid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Last' TYPE='IMAGE' NAME='IMG[" . $lastid . "]' SRC='thumbnail.php?IMGID=" . $lastid . "&SIZE=80'></TD>\n";
+  }
   echo "</TR></TABLE>\n";
-      
-
 } else {
-    if(array_key_exists('page',$_REQUEST)) $page=$_REQUEST['page'];
-    else $page=0;
     echo "<SELECT NAME='SET' onChange='submit();'>\n";
-    foreach(preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 6- | sort")) as $fldr)
+    foreach($setlist as $fldr)
       if(strpos($fldr,'.') == false)
         echo "<OPTION " . ($fldr == $_REQUEST['SET'] ? " SELECTED " : "" ) . "VALUE='" . $fldr . "'>" . $fldr . "</OPTION>\n";
     echo "</SELECT><BR>\n";
-    $scanDir=$base . '/' . $_REQUEST['SET'] ;
-    $files=preg_split('/\n/',shell_exec("find " . $scanDir . " -type f | grep -iE '" . $imgFilter . "' | sort -r"));
-    echo "<!--scanDir=" . $scanDir . "<BR-->\n";
     if($page > 0) {
-      echo "<INPUT TYPE='IMAGE' ALT='Back' NAME='page' VALUE='";
+      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[($page - 1) * 100]['imgid'] . "' NAME='page' VALUE='";
       echo $page - 1 . "' SRC='/img/btn_lt.jpg'>\n";
     }
-    for($idx  = 0; $idx <= count($files) / 100; $idx++) 
+    for($idx  = 0; $idx <= count($imglist) / 100; $idx++) 
       if($idx == $page)
         echo $page;
       else
-        echo "<INPUT TYPE='IMAGE' ALT='Page " . $idx . "' NAME='page' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
-    if($page + 1 < (count($files) / 100)) {
-      echo "<INPUT TYPE='IMAGE' ALT='Fwd' NAME='page' VALUE='";
+        echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[$idx * 100]['imgid'] . "' NAME='page' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
+    if($page + 1 < (count($imglist) / 100)) {
+      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumblist.php?IMGID=" . $imglist[($page + 1) * 100]['imgid'] . "' NAME='page' VALUE='";
       echo $page + 1 . "' SRC='/img/btn_rt.jpg'>\n";
     }
     echo "<BR>\n";
-    for($idx  = $page * 100; $idx < $page * 100 + 100 && $idx < count($files); $idx++) {
-      $file = $files[$idx];
-      echo "<!-- " . $scanDir . "-->\n";
+    for($idx  = $page * 100; $idx <= $page * 100 + 99 && $idx < count($imglist); $idx++) {
+      $file = $imglist[$idx]['fname'];
       if(inImageDb($file) || isImage($file)) {
-        $imgID=getIdForImage($file);
+        $imgID=$imglist[$idx]['imgid'];
         echo "<INPUT TYPE='IMAGE' ID='IMGCELL' NAME='IMG[" . $imgID . "]' VALUE='" . basename($file) . "' SRC='/thumbnail.php?IMGID=" . $imgID . "&SIZE=64'>\n";
-        usleep(100);
+        //usleep(100);
       }
     } 
 }
