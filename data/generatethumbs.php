@@ -56,6 +56,15 @@ function cacheReadImage($thefile,$size) {
   return false;
 }
 
+function matchImage($qry) {
+  global $mysql;
+  $colors=preg_split('/:/',$qry);
+  $query="SELECT fname,imgid, ABS(ulr-" . $colors[0] . ")+ABS(ulg-" . $colors[1] . ")+ABS(ulb-" . $colors[2] . ")+ABS(urr-" . $colors[3] . ")+ABS(urg-" . $colors[4] . ")+ABS(urb-" . $colors[5] . ")+ABS(llr-" . $colors[6] . ")+ABS(llg-" . $colors[7] . ")+ABS(llb-" . $colors[8] . ")+ABS(lrr-" . $colors[9] . ")+ABS(lrg-" . $colors[10] . ")+ABS(lrb-" . $colors[11] . ") AS score, a.imgid FROM thumblist a WHERE fname LIKE '%jpg' ORDER BY 3 LIMIT 1";
+  foreach($mysql->query($query) as $row) {
+    return $row;
+  }
+}
+
 function registerImage($fname, $quick = false) {
   global $mysql;
   if(is_file($fname) && isImage($fname)) {

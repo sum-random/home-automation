@@ -51,7 +51,7 @@ function showPreview(evt) {
 	prevWin.style.top = screen.availHeight*.4 + "px";
 	prevWin.style.left = screen.availWidth*.4 + "px";
         var maxdim = screen.availWidth * .4;
-	prevWin.innerHTML = "<IMG ID='PWIMG' WIDTH='40%' HEIGHT='40%' BORDER='5' SRC='thumbnail.php?IMGID=" + url + "&SIZE=" + Math.round(maxdim) + "'>";
+	prevWin.innerHTML = "<IMG ID='PWIMG' WIDTH='40%' HEIGHT='40%' BORDER='5' SRC='thumbnail.php?COLLAGEQUERY=" + url + "&SIZE=" + Math.round(maxdim) + "'>";
 	var pwImg = document.getElementById("PWIMG");
         pwImg.onload=function() {
           var prevWin = document.getElementById("POPWIN");

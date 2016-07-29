@@ -30,19 +30,10 @@ include("generatethumbs.php");
 global $mysql,$base,$log;
 
 if(array_key_exists('IMGID',$_REQUEST)) {
-  foreach($mysql->query("SELECT fname,imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID']) as $row) 
-    if(file_exists($row[0])) 
-      $fname=$row[0];
-} else if(array_key_exists('IMGMATCH',$_REQUEST)) {
-  $row=matchImage($_REQUEST['IMGMATCH']);
-    if(file_exists($row[0]))  
-      $fname=$row[0];
-} else {
-  echo "Missing IMG";
-  exit(1);
-}
+  foreach($mysql->query("SELECT fname FROM thumblist WHERE imgid=" . $_REQUEST['IMGID']) as $row) {
+    $pic=new Imagick();
 
-      $pic=new Imagick();
+    if(file_exists($row[0])) {
       $pic->clear();
       $pic->readImage($row[0]);
       //$pic->setImageFormat('png');
@@ -58,10 +49,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       if(array_key_exists('SCALE',$_REQUEST))
         $scaleimg=$_REQUEST['SCALE'];
 
-      if(array_key_exists('IMGID',$_REQUEST)) 
-        echo "<INPUT TYPE='HIDDEN' NAME='IMGID' VALUE='" . $_REQUEST['IMGID'] . "'>\n";
-      if(array_key_exists('IMGMATCH',$_REQUEST)) 
-        echo "<INPUT TYPE='HIDDEN' NAME='IMGMATCH' VALUE='" . $_REQUEST['IMGMATCH'] . "'>\n";
+      echo "<INPUT TYPE='HIDDEN' NAME='IMGID' VALUE='" . $_REQUEST['IMGID'] . "'>\n";
       echo "Thumbnail size: <SELECT NAME='THUMBSZ' onChange='submit();'>\n";
       foreach(array(4,8,12,16,20,24,28,32,36,40,44,48,56,64,72,80,88,96,112,128) as $nxtthumb)
         echo "<OPTION VALUE=" . $nxtthumb . ($thumbsz == $nxtthumb ? " SELECTED " : "") . ">" . $nxtthumb . "</OPTION>\n";
@@ -84,14 +72,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       $mysql->query("CREATE TEMPORARY TABLE unusedimgid SELECT imgid FROM thumblist");
       echo "<TABLE STYLE=\"font-size:0.25em;\" CELLPADDING='0' CELLSPACING='0'>\n";
       $plist=preg_split('/\//',$row[0]);
-      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $row[0] . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[6] . "'>";
-      if(array_key_exists('IMGID',$_REQUEST)) 
-        echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $_REQUEST['IMGID'] . "]' SRC='thumbnail.php?IMGID=" . $_REQUEST['IMGID'] . "&SIZE=512'>";
-      if(array_key_exists('IMGMATCH',$_REQUEST)) {
-        $row=matchImage($_REQUEST['IMGMATCH']);
-        echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $row[1] . "]' SRC='thumbnail.php?IMGID=" . $row[1] . "&SIZE=512'>";
-      }
-      echo "</FORM></TH></TR>\n";
+      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $row[0] . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[6] . "'><INPUT TYPE='IMAGE' NAME='IMG[" . $_REQUEST['IMGID'] . "]' SRC='thumbnail.php?IMGID=" . $_REQUEST['IMGID'] . "&SIZE=512'></FORM></TH></TR>\n";
       for($y=0; $y<$height; $y++) {
         echo "<TR>\n";
         $nxtRow=array();
@@ -104,16 +85,29 @@ if(array_key_exists('IMGID',$_REQUEST)) {
             $colorsll=$impll->getColor();
             $implr=$pic->getImagePixelColor($x*2-1,$y*2+1);
             $colorslr=$implr->getColor();
-            $imgquery=$colorsul['r'] . ":" . $colorsul['g'] . ":" . $colorsul['b'] . ":" . $colorsur['r'] . ":" . $colorsur['g'] . ":" . $colorsur['b'] . ":" . $colorsll['r'] . ":" . $colorsll['g'] . ":" . $colorsll['b'] . ":" . $colorslr['r'] . ":" . $colorslr['g'] . ":" . $colorslr['b'];
-            $imgsrc="thumbnail.php?COLLAGEQUERY=" . $imgquery;
-            $bgcolor=sprintf("%02X%02X%02X",($colorsul['r']+$colorsur['r']+$colorsll['r']+$colorslr['r'])/4,($colorsul['g']+$colorsur['g']+$colorsll['g']+$colorslr['g'])/4,($colorsul['b']+$colorsur['b']+$colorsll['b']+$colorslr['b'])/4);
-            $nxtRow[$x]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGMATCH=" . $imgquery . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgquery . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
+            $imgquery="SELECT fname, ABS(ulr-" . $colorsul['r'] . ")+ABS(ulg-" . $colorsul['g'] . ")+ABS(ulb-" . $colorsul['b'] . ")+ABS(urr-" . $colorsur['r'] . ")+ABS(urg-" . $colorsur['g'] . ")+ABS(urb-" . $colorsur['b'] . ")+ABS(llr-" . $colorsll['r'] . ")+ABS(llg-" . $colorsll['g'] . ")+ABS(llb-" . $colorsll['b'] . ")+ABS(lrr-" . $colorslr['r'] . ")+ABS(lrg-" . $colorslr['g'] . ")+ABS(lrb-" . $colorslr['b'] . ") AS score, a.imgid FROM thumblist a INNER JOIN unusedimgid b ON a.imgid=b.imgid WHERE fname LIKE '%jpg' ORDER BY 2 LIMIT 1";
+            echo"<!--" . $imgquery . "-->";
+            foreach($mysql->query($imgquery) as $imgrow) {
+              $thumbfile=basename($imgrow[0]);
+              if(! file_exists($imgrow[0])) 
+                error_log(datestamp() . 'File not found ' . $imgrow[0] . "\n",3,$log);
+              $directimg=str_replace('/usr/local/media/Image','/img',$imgrow[0]);
+              $imgsrc="thumbnail.php?IMGID=" . $imgrow[2];
+              $bgcolor=sprintf("%02X%02X%02X",($colorsul['r']+$colorsur['r']+$colorsll['r']+$colorslr['r'])/4,($colorsul['g']+$colorsur['g']+$colorsll['g']+$colorslr['g'])/4,($colorsul['b']+$colorsur['b']+$colorsll['b']+$colorslr['b'])/4);
+              $nxtRow[$x]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGID=" . $imgrow[2] . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgrow[2] . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
+              //$mysql->query("DELETE FROM unusedimgid WHERE imgid=" . $imgrow[2] );
+            }
         }
         foreach($nxtRow as $cells)
           echo $cells;
         echo "</TR>";
       }
       echo "</TABLE>";
+    }
+  }
+} else {
+  echo "Missing IMG";
+}
 ?>
 </BODY>
 </HTML>

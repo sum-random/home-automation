@@ -21,6 +21,10 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       $thefile=$row[0];
       $imgid=$row[1];
     }
+} else if(array_key_exists('COLLAGEQUERY',$_REQUEST)) {
+  $row=matchImage($_REQUEST['COLLAGEQUERY']);
+  $thefile=$row[0];
+  $imgid=$row[1];
 }
 //if(isset($query)) 
 //  error_log(datestamp() . "Query was " . $query . "\n",3, $log);
