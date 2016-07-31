@@ -76,7 +76,9 @@ function registerImage($fname, $quick = false) {
       $pic=new Imagick();
 
       $pic->clear();
-      $pic->readImage($fname);
+      $pic->readimageblob(file_get_contents($fname));
+      //$pic->readImage($fname);
+      autoRotateImage($pic);
       $cx=$pic->getImageWidth() / 2;
       $cy=$pic->getImageHeight()/ 2;
 
@@ -87,12 +89,14 @@ function registerImage($fname, $quick = false) {
     
       $pic->clear();
       $pic->readImage($fname);
+      autoRotateImage($pic);
       $pic->cropImage($cx,$cy,$cx,0);
       $ulr=$pic->getImageChannelMean(imagick::CHANNEL_RED);
       $ulg=$pic->getImageChannelMean(imagick::CHANNEL_GREEN);
       $ulb=$pic->getImageChannelMean(imagick::CHANNEL_BLUE);
   
       $pic->readImage($fname);
+      autoRotateImage($pic);
       $pic->cropImage($cx,$cy,0,$cy);
       $lrr=$pic->getImageChannelMean(imagick::CHANNEL_RED);
       $lrg=$pic->getImageChannelMean(imagick::CHANNEL_GREEN);
@@ -100,6 +104,7 @@ function registerImage($fname, $quick = false) {
   
       $pic->clear();
       $pic->readImage($fname);
+      autoRotateImage($pic);
       $pic->cropImage($cx,$cy,$cx,$cy);
       $llr=$pic->getImageChannelMean(imagick::CHANNEL_RED);
       $llg=$pic->getImageChannelMean(imagick::CHANNEL_GREEN);
@@ -123,7 +128,7 @@ function registerImage($fname, $quick = false) {
           cacheWriteImage($row['imgid'],"64",$pic);
         }
    } catch(PDOException $e) {
-    write_log("Caught exception: " . $e->getmessage());
+    write_log("Caught exception: " . $e->getmessage() . " " . $fname);
    }
   }
   foreach($mysql->query("SELECT imgId FROM thumblist WHERE fname='" . $fname . "'") as $row)

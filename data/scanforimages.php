@@ -9,8 +9,10 @@ $pic=new Imagick();
 
   try {
     write_log("Fixup thumblist");
-    foreach($mysql->query("select fname from thumblist where llb=-1") as $row)
+    foreach($mysql->query("select fname from thumblist where llb=-1") as $row) {
+      echo ":" . $row['fname'] . ":\n";
       registerImage($row['fname']);
+    }
     write_log("Cleanup deleted");
     foreach($mysql->query("SELECT fname,imgid FROM thumblist") as $row) 
       if( ! file_exists($row['fname'])) {
@@ -19,7 +21,7 @@ $pic=new Imagick();
       }
 
     write_log("Scan for new files");
-    foreach(preg_split('/[\n]/',shell_exec("nice -n 20 find " . $base . " -type f | grep -iE 'jpg|gif|jpeg|png|tiff|svg|xcf|ico' | sort -r")) as $fname) {
+    foreach(preg_split('/[\n]/',shell_exec("nice -n 20 find " . $base . " -type f | grep -iE 'jpg|gif|jpeg|png|tiff|ico' | sort -r")) as $fname) {
       write_log("Checking " . $fname);
       $query = "SELECT COUNT(*) FROM thumblist WHERE fname='" . $fname . "'";
       //write_log($query);

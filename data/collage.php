@@ -31,12 +31,16 @@ global $mysql,$base,$log;
 
 if(array_key_exists('IMGID',$_REQUEST)) {
   foreach($mysql->query("SELECT fname,imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID']) as $row) 
-    if(file_exists($row[0])) 
+    if(file_exists($row[0])) {
       $fname=$row[0];
+      $imgid=$row[1];
+    }
 } else if(array_key_exists('IMGMATCH',$_REQUEST)) {
   $row=matchImage($_REQUEST['IMGMATCH']);
-    if(file_exists($row[0]))  
+    if(file_exists($row[0])) { 
       $fname=$row[0];
+      $imgid=$row[1];
+    }
 } else {
   echo "Missing IMG";
   exit(1);
@@ -44,7 +48,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
 
       $pic=new Imagick();
       $pic->clear();
-      $pic->readImage($row[0]);
+      $pic->readImage($fname);
       //$pic->setImageFormat('png');
       autoRotateImage($pic);
 
@@ -80,17 +84,10 @@ if(array_key_exists('IMGID',$_REQUEST)) {
         $height=intval(($width/$pw)*$ph);
       }
       $pic->scaleimage($width*2,$height*2,true);
-      //$mysql->query("IF EXISTS unusedimgid DROP unusedimgid");
-      $mysql->query("CREATE TEMPORARY TABLE unusedimgid SELECT imgid FROM thumblist");
       echo "<TABLE STYLE=\"font-size:0.25em;\" CELLPADDING='0' CELLSPACING='0'>\n";
-      $plist=preg_split('/\//',$row[0]);
-      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $row[0] . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[6] . "'>";
-      if(array_key_exists('IMGID',$_REQUEST)) 
-        echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $_REQUEST['IMGID'] . "]' SRC='thumbnail.php?IMGID=" . $_REQUEST['IMGID'] . "&SIZE=512'>";
-      if(array_key_exists('IMGMATCH',$_REQUEST)) {
-        $row=matchImage($_REQUEST['IMGMATCH']);
-        echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $row[1] . "]' SRC='thumbnail.php?IMGID=" . $row[1] . "&SIZE=512'>";
-      }
+      $plist=preg_split('/\//',$fname);
+      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $fname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[5] . "'>";
+      echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $imgid . "]' SRC='thumbnail.php?IMGID=" . $imgid . "&SIZE=512'>";
       echo "</FORM></TH></TR>\n";
       for($y=0; $y<$height; $y++) {
         echo "<TR>\n";
