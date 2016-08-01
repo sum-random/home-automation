@@ -9,6 +9,7 @@ proc_nice(1);
 $base="/usr/local/media/Image";
 
 $thefile=$base . "/NathansWallpaper.JPG";
+$size = (array_key_exists('SIZE',$_REQUEST) ? $_REQUEST['SIZE'] : "scaled64");
 if(array_key_exists('IMGID',$_REQUEST)) {
   $query="SELECT fname, imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID'];
   foreach($mysql->query($query) as $row) {
@@ -25,6 +26,8 @@ if(array_key_exists('IMGID',$_REQUEST)) {
   $row=matchImage($_REQUEST['COLLAGEQUERY']);
   $thefile=$row[0];
   $imgid=$row[1];
+  //header("Location: /thumbnail.php?IMGID=" . $imgid . "&SIZE=" . $size);
+  //exit;
 }
 //if(isset($query)) 
 //  error_log(datestamp() . "Query was " . $query . "\n",3, $log);
@@ -32,7 +35,6 @@ if(array_key_exists('IMGID',$_REQUEST)) {
 $pic=new Imagick();
 
 $cached=false;
-$size = (array_key_exists('SIZE',$_REQUEST) ? $_REQUEST['SIZE'] : "scaled64");
 foreach($mysql->query("SELECT b.fname, a.imgdata, b.imgid FROM imgcache a INNER JOIN thumblist b ON a.imgid=b.imgid WHERE b.fname='" . $thefile . "' AND a.size='" . $size . "'") as $row) {
   try {
     $pic->clear();
@@ -86,5 +88,6 @@ if(! $cached) {
   error_log(datestamp() . "Inserted " . $rowcount . " rows " . $thefile . " " . $size . "\n",3, $log);
 }
 header('Content-Type: image/'.$pic->getImageFormat());
+header('Last-Modified: '.gmdate('D, d M Y H:i:s', filemtime($thefile)).' GMT', true);
 echo $pic;
 ?>
