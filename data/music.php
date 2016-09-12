@@ -12,11 +12,11 @@ function stop_play() {
 }
 
 function get_devices() {
-  return preg_split('/[\n]/',shell_exec('cat /etc/hosts | grep -iE "tablet|phone" | while read IP NM; do nc -zw 3 $IP 2222 2>&1 | sed -e "s/.*\($IP\).*/\1/" & done; wait'));
+  return preg_split('/[\n]/',shell_exec('grep Galaxy /etc/namedb/master/claytontucker.export | awk \'{print $4" "$1}\' | while read IP NM; do nc -zw 3 $IP 2222 2>&1 | sed -e "s/.*\($IP\).*/\1/" & done; wait'));
 }
 
 function get_host($IPADDR) {
-  return system("cat /etc/hosts | grep " . $IPADDR . " | awk '{print $2\" - \"$4}'");
+  return system("grep " . $IPADDR . " /etc/namedb/master/claytontucker.export | awk '{print $1\" - \"$4}'");
 }
 
 if(array_key_exists('STOP',$_REQUEST)) 
