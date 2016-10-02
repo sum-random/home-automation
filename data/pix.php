@@ -50,7 +50,10 @@ $base='/usr/local/media/Image';
 $setlist=preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 6- | sort"));
 
 if(! array_key_exists('SET',$_REQUEST)) {
-  $_REQUEST['SET']=$setlist[0];
+  //$_REQUEST['SET']=$setlist[0];
+  foreach($setlist as $fldr)
+    if(preg_match('/nathan/',$fldr))
+      $_REQUEST['SET']=$fldr;
 }
 
 $scanDir=$base . '/' . $_REQUEST['SET'] ;
