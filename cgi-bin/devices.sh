@@ -4,7 +4,7 @@ APACHE="/usr/local/www/apache24"
 CGIDATA="$APACHE/cgi-data"
 
 USERSSH="$CGIDATA/.ssh"
-SSHAUTH="-i $USERSSH/id_dsa"
+SSHAUTH="-i $USERSSH/id_rsa"
 SSHOPTIONS="$SSHAUTH -o StrictHostKeyChecking=no -o PasswordAuthentication=no"
 lname[1]="ctucker"
 lname[50]="ctucker"
@@ -39,12 +39,13 @@ readdevice() {
 	        IDX=$(echo $1 | sed -e 's/[0-9]*\.[0-9]*\.[0-9]*\.\([0-9]*\)/\1/')
 		printf "<TD>"
 		if [ -n "$IDX" ] && [ -n "${lname[$IDX]}" ] ; then
-			PWRSTAT=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${lname[$IDX]}@$IP "cat /sys/class/power_supply/BAT0/uevent | grep POWER_SUPPLY_STATUS | cut -d = -f 2" 2>/dev/null)
-			BATCAP=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${lname[$IDX]}@$IP "cat /sys/class/power_supply/BAT0/capacity" 2>/dev/null)
+                        THELOGIN=${lname[$IDX]}
+			PWRSTAT=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${THELOGIN}@$IP "cat /sys/class/power_supply/BAT0/uevent | grep POWER_SUPPLY_STATUS | cut -d = -f 2" 2>/dev/null)
+			BATCAP=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${THELOGIN}@$IP "cat /sys/class/power_supply/BAT0/capacity" 2>/dev/null)
 			[ -n "$BATCAP" ] && RGB=$(getRGB $BATCAP)
 			LOADAVG=""
-			LOADAVG=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${lname[$IDX]}@$IP "cat /proc/loadavg" 2>/dev/null)
-			[ -z "$LOADAVG" ] && LOADAVG=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${lname[$IDX]}@$IP "sysctl vm.loadavg" 2>/dev/null)
+			LOADAVG=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${THELOGIN}@$IP "cat /proc/loadavg" 2>/dev/null)
+			[ -z "$LOADAVG" ] && LOADAVG=$(ssh -o UserKnownHostsFile=$USERSSH/known_hosts $SSHOPTIONS -n ${THELOGIN}@$IP "sysctl vm.loadavg" 2>/dev/null)
 		fi
 		[ -n "$PWRSTAT" ] && printf "$PWRSTAT "
 		[ -n "$LOADAVG" ] && printf "$LOADAVG"
