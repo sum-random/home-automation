@@ -26,6 +26,8 @@ getRGB() {
 
 readdevice() {
 	HN=$( nslookup $1 | grep name | sed -e 's/.*= //' -e 's/.claytontucker.*//' | tail -1)
+        TYPE=$(grep -iA 4 \ $HN\  /usr/local/etc/dhcpd.conf | grep type  | awk '{print $3}')
+        EXACT=$(grep -iA 4 \ $HN\  /usr/local/etc/dhcpd.conf | grep type  | awk '{print $4" "$5" "$6}')
 	STATS=$(if nc -zw 1 $1 2222 2>&1 | grep -qi succeeded ; then 
 		ST=$(ssh -q -l root $SSHOPTIONS -p 2222 $1 'cat /sys/class/power_supply/battery/uevent' | grep 'STATUS' | cut -d = -f 2)
 		LD=$(ssh -q -l root $SSHOPTIONS -p 2222 $1 'cat /proc/loadavg')
@@ -56,7 +58,7 @@ readdevice() {
 	else
 		printf "<TD>Down</TD>"
 	fi)
-	printf "<TR><TD>$HN</TD>$STATS</TR>\n";
+	printf "<TR><TD>$HN</TD><TD>$TYPE</TD>$STATS</TR>\n";
 }
 
 for IP in $( cat /etc/namedb/master/claytontucker.org | grep ^[A-Za-z] | grep 10.4.69 | awk '{print $4}' | sort | uniq); do
