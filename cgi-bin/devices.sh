@@ -61,7 +61,7 @@ readdevice() {
 	printf "<TR><TD>$HN</TD><TD>$TYPE</TD>$STATS</TR>\n";
 }
 
-for IP in $( cat /etc/namedb/master/claytontucker.org | grep ^[A-Za-z] | grep 10.4.69 | awk '{print $4}' | sort | uniq); do
+for IP in $( cat /usr/local/etc/namedb/master/claytontucker.org | grep ^[A-Za-z] | grep 10.4.69 | awk '{print $4}' | sort | uniq); do
 	readdevice $IP >>$CGIDATA/devices.new.txt 2>&1  &
 done 
 wait
