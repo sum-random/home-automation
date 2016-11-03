@@ -7,12 +7,28 @@ global $mysql,$base;
 $base="/usr/local/media/";
 
 
+
 function stop_play() { 
   shell_exec("kill -9 $(ps wwaux | grep -v grep | grep mpg123 | awk '{print $2}') 2>/dev/null; rm -f /tmp/tracks*");
 }
 
 function get_devices() {
-  return preg_split('/[\n]/',shell_exec('grep Galaxy /etc/namedb/master/claytontucker.export | awk \'{print $4" "$1}\' | while read IP NM; do nc -zw 3 $IP 2222 2>&1 | sed -e "s/.*\($IP\).*/\1/" & done; wait'));
+  $droids = Array();
+  $droids['GalaxyS3'] = '10.4.69.130';
+  $droids['GalaxyS4'] = '10.4.69.138';
+  $droids['GalaxyS5'] = '10.4.69.140';
+  $droids['GalaxyS6'] = '10.4.69.142';
+  $droids['GalaxyTab'] = '10.4.69.144';
+  $droids['GalaxyNote'] = '10.4.69.136';
+  foreach($droids as $host => $ip) {
+    $connection = @fsockopen($ip, 2222, $errno, $errstr, 1);
+    if (is_resource($connection))
+      fclose($connection);
+    else
+      unset($droids[$host]);
+  }
+  return $droids;
+  //return preg_split('/[\n]/',shell_exec('grep Galaxy /etc/namedb/master/claytontucker.export | awk \'{print $4" "$1}\' | while read IP NM; do nc -zw 3 $IP 2222 2>&1 | sed -e "s/.*\($IP\).*/\1/" & done; wait'));
 }
 
 function get_host($IPADDR) {
@@ -95,9 +111,9 @@ foreach($_POST as $name=>$value)
     echo "<INPUT TYPE='CHECKBOX' NAME='SHUFFLE' VALUE='-z' CHECKED> Shuffle tracks<BR>\n";
     echo "<SELECT NAME='DEST'>\n";
     echo " <OPTION VALUE='dsp'>Play music now</OPTION>\n";
-    foreach(get_devices() as $IPADDR) 
+    foreach(get_devices() as $host => $IPADDR) 
       if($IPADDR !== '') {
-        echo " <OPTION VALUE='" . $IPADDR . "'" . (array_key_exists('DEST',$_REQUEST) && $_REQUEST['DEST'] == $IPADDR ? " SELECTED" : "" ) . ">Push file to ";
+        echo " <OPTION VALUE='" . $IPADDR . "'" . (array_key_exists('DEST',$_REQUEST) && $_REQUEST['DEST'] == $IPADDR ? " SELECTED" : "" ) . ">Push file to " . $host;
         get_host($IPADDR);
         echo "</OPTION>\n";
       }
