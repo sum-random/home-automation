@@ -31,10 +31,6 @@ function get_devices() {
   //return preg_split('/[\n]/',shell_exec('grep Galaxy /etc/namedb/master/claytontucker.export | awk \'{print $4" "$1}\' | while read IP NM; do nc -zw 3 $IP 2222 2>&1 | sed -e "s/.*\($IP\).*/\1/" & done; wait'));
 }
 
-function get_host($IPADDR) {
-  return system("grep " . $IPADDR . " /etc/namedb/master/claytontucker.export | awk '{print $1\" - \"$4}'");
-}
-
 if(array_key_exists('STOP',$_REQUEST)) 
   stop_play();
 
@@ -114,7 +110,6 @@ foreach($_POST as $name=>$value)
     foreach(get_devices() as $host => $IPADDR) 
       if($IPADDR !== '') {
         echo " <OPTION VALUE='" . $IPADDR . "'" . (array_key_exists('DEST',$_REQUEST) && $_REQUEST['DEST'] == $IPADDR ? " SELECTED" : "" ) . ">Push file to " . $host;
-        get_host($IPADDR);
         echo "</OPTION>\n";
       }
     echo "</SELECT><BR>\n";
