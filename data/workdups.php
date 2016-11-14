@@ -5,7 +5,7 @@ include("inc/pdo.php");
 include("inc/functions.php");
 
 global $mysql,$base,$log;
-$base="/usr/local/media/";
+$base="/storage/";
 $cksumcolors=array("#FF8080","#80FF80","#8080FF");
 $inodecolors=array("#FFC080","#C0FF80","#C080FF","#FF80C0","#80FFC0","#80C0FF");
 $ckcolor=0;$icolor=0;

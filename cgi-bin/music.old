@@ -7,8 +7,8 @@ stop_play() {
 exec 2>&1
 
 TMP=/tmp
-BASE="/usr/local/media/Audio/Music"
-BASE="/usr/local/media"
+BASE="/storage/Audio/Music"
+BASE="/storage"
 WORK="$TMP/$$"
 CACHE=$TMP/.musiccache
 export HOME=$WORK

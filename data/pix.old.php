@@ -46,7 +46,7 @@ $mynice=shell_exec("ps -auxo nice | grep -v grep | grep " . $mypid . " | awk '{p
 if($mynice < 10)
   proc_nice(1);
 
-$base='/usr/local/media/Image';
+$base='/storage/Image';
 $setlist=preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 6- | sort"));
 
 if(! array_key_exists('SET',$_REQUEST)) {

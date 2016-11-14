@@ -4,7 +4,7 @@ include("generatethumbs.php");
 
 global $mysql;
 
-$base="/usr/local/media/Image";
+$base="/storage/Image";
 $pic=new Imagick();
 
   try {

@@ -3,7 +3,7 @@
 exec 2>&1
 
 TMP=/tmp
-BASE="/usr/local/media/Audio"
+BASE="/storage/Audio"
 FILES="`cd $BASE ; find ./ -type f -name '*[mM][pP]3' | sort -f | tr \  '^'`"
 CACHE=$TMP/.musiccache
 

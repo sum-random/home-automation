@@ -4,7 +4,7 @@
 include("inc/pdo.php");
 
 global $mysql,$base;
-$base="/usr/local/media/";
+$base="/storage/";
 
 
 

@@ -91,7 +91,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
               $thumbfile=basename($imgrow[0]);
               if(! file_exists($imgrow[0])) 
                 error_log(datestamp() . 'File not found ' . $imgrow[0] . "\n",3,$log);
-              $directimg=str_replace('/usr/local/media/Image','/img',$imgrow[0]);
+              $directimg=str_replace('/storage/Image','/img',$imgrow[0]);
               $imgsrc="thumbnail.php?IMGID=" . $imgrow[2];
               $bgcolor=sprintf("%02X%02X%02X",($colorsul['r']+$colorsur['r']+$colorsll['r']+$colorslr['r'])/4,($colorsul['g']+$colorsur['g']+$colorsll['g']+$colorslr['g'])/4,($colorsul['b']+$colorsur['b']+$colorsll['b']+$colorslr['b'])/4);
               $nxtRow[$x]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGID=" . $imgrow[2] . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgrow[2] . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";

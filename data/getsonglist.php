@@ -6,7 +6,7 @@ $log="/usr/local/www/apache24/cgi-data/musicfiles.log";
 
 global $mysql,$base;
 if($argc == 1)
-  $base="/usr/local/media";
+  $base="/storage";
 else
   $base=$argv[1];
 

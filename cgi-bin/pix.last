@@ -6,7 +6,7 @@ eval "$CMDVARS"
 [ -z "$YEAR" ] && YEAR=7
 [ -n "$MOD" ] || MOD="nathan$YEAR"
 [ -n "$PICSET" ] && MOD="sets/$PICSET"
-SOURCEDIR="/usr/local/media/Image/$MOD"
+SOURCEDIR="/storage/Image/$MOD"
 COMMENTS="$SOURCEDIR/comments.txt"; touch $COMMENTS
 BASEDIR="$SOURCEDIR"
 BASEWEB="/img/$MOD"

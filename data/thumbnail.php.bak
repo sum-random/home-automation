@@ -6,7 +6,7 @@ global $mysql,$log;
 
 proc_nice(1);
 
-$base="/usr/local/media/Image";
+$base="/storage/Image";
 
 $thefile=$base . "/NathansWallpaper.JPG";
 if(array_key_exists('IMGID',$_REQUEST)) {

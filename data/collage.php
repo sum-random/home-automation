@@ -86,7 +86,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       $pic->scaleimage($width*2,$height*2,true);
       echo "<TABLE STYLE=\"font-size:0.25em;\" CELLPADDING='0' CELLSPACING='0'>\n";
       $plist=preg_split('/\//',$fname);
-      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $fname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[5] . "'>";
+      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $fname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[4] . "'>";
       echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $imgid . "]' SRC='thumbnail.php?IMGID=" . $imgid . "&SIZE=512'>";
       echo "</FORM></TH></TR>\n";
       for($y=0; $y<$height; $y++) {

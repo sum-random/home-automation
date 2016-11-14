@@ -3,7 +3,7 @@
 include("inc/pdo.php");
 include("inc/functions.php");
 
-$base="/usr/local/media/Image";
+$base="/storage/Image";
 
 function autoRotateImage($image) { 
     $orientation = $image->getImageOrientation(); 

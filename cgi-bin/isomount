@@ -65,7 +65,7 @@ echo "<FORM METHOD='POST'>"
 echo "<H2>Mount file</H2>"
 echo "<SELECT NAME='MOUNTME'>"
 #sudo find /usr/local/ -name "*.[iI][sS][oO]" | while read MNTOPT ; do
-sudo find /usr/local/media -name "*.[iI][sS][oO]" | while read MNTOPT ; do
+sudo find /storage -name "*.[iI][sS][oO]" | while read MNTOPT ; do
   echo -n "<OPTION"
   echo $MDPT | grep -q "$MNTOPT" && echo -n " selected"
   echo " VALUE='$MNTOPT'>$MNTOPT</OPTION>"

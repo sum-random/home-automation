@@ -6,7 +6,7 @@ include("inc/functions.php");
 
 global $mysql,$log,$base;
 $log="/usr/local/www/apache24/cgi-data/musicfiles.log";
-$base="/usr/local/media";
+$base="/storage";
 
 write_log("Validate music files");
 

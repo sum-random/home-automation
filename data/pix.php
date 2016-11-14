@@ -46,8 +46,8 @@ $mynice=shell_exec("ps -auxo nice | grep -v grep | grep " . $mypid . " | awk '{p
 if($mynice < 10)
   proc_nice(1);
 
-$base='/usr/local/media/Image';
-$setlist=preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 6- | sort"));
+$base='/storage/Image';
+$setlist=preg_split('/\n/',shell_exec("find " . $base . " -type d -maxdepth 1 | cut -d / -f 4- | sort"));
 
 if(! array_key_exists('SET',$_REQUEST)) {
   //$_REQUEST['SET']=$setlist[0];
@@ -101,6 +101,7 @@ if(array_key_exists('page',$_REQUEST))
 if(array_key_exists('newpage',$_REQUEST)) 
   foreach(($_REQUEST['newpage']) as $idx=>$val)
     $page=$idx;
+echo "<!--SELECT fname,imgid FROM thumblist WHERE fname like '" . $scanDir . "%' order by 1 DESC-->";
 $imglist=sqlquery("SELECT fname,imgid FROM thumblist WHERE fname like '" . $scanDir . "%' order by 1 DESC");
 if($page * 100 > count($imglist)) 
   $page=intval(count($imglist) / 100);

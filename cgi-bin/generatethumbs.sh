@@ -6,7 +6,7 @@ rm -f $WORK/thumblist2.txt $WORK/thumblist3.txt
 
 LNCNT=0
 
-find /usr/local/media/Image -type f | grep -iE "jpg|gif|jpeg|png" | grep -i thumbsize | while read FN ; do
+find /storage/Image -type f | grep -iE "jpg|gif|jpeg|png" | grep -i thumbsize | while read FN ; do
   SF="/img`echo "$FN" | cut -b 23-`" ; 
   IMGVAL=`identify -verbose "$FN" | grep mean | head -3 | tr \. \  | awk '{print $2}' | tr "\n" \ `; 
   echo $IMGVAL | grep -q \  || IMGVAL="$IMGVAL $IMGVAL $IMGVAL"

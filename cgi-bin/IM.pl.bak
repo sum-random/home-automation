@@ -22,7 +22,7 @@ if (length ($ENV{'QUERY_STRING'}) > 0){
   }
 }
 
-$base="/usr/local/media/Image";
+$base="/storage/Image";
 
 $fname=$opts{'IMG'};
 if($fname eq "") { $fname='/img/nathan0/thumbsize/IMG_00000.JPG'; }
