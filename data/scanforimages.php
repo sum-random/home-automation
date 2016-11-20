@@ -21,7 +21,7 @@ $pic=new Imagick();
       }
 
     write_log("Scan for new files");
-    foreach(preg_split('/[\n]/',shell_exec("nice -n 20 find " . $base . " -type f | grep -iE 'jpg|gif|jpeg|png|tiff|ico' | sort -r")) as $fname) {
+    foreach(preg_split('/[\n]/',shell_exec("nice -n 20 find " . $base . " -type f | grep -iE 'jpg$|gif$|jpeg$|png$|tiff$|ico$' | sort -r")) as $fname) {
       write_log("Checking " . $fname);
       $query = "SELECT COUNT(*) FROM thumblist WHERE fname='" . $fname . "'";
       //write_log($query);

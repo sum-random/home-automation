@@ -76,8 +76,8 @@ function registerImage($fname, $quick = false) {
       $pic=new Imagick();
 
       $pic->clear();
-      $pic->readimageblob(file_get_contents($fname));
-      //$pic->readImage($fname);
+      //$pic->readimageblob(file_get_contents($fname));
+      $pic->readImage($fname);
       autoRotateImage($pic);
       $cx=$pic->getImageWidth() / 2;
       $cy=$pic->getImageHeight()/ 2;
