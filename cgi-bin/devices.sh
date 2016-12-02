@@ -19,6 +19,7 @@ lname[141]="ctucker"
 
 getRGB() {
 	NM=$1
+        [ -z "$1" ] && NM=0
 	[ "$1" -gt 100 ] && NM=100
 	RC=$(if [ "$NM" -lt 50 ] ; then echo FF ; else printf "%02X" "$((255 - 255 * ($NM-50) / 50))" ; fi )
 	GC=$(if [ "$NM" -ge 50 ] ; then echo FF ; else printf "%02X" "$((255 * $NM / 50))" ; fi )
