@@ -22,7 +22,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVpcm: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVpcm: ui.value);
 			}
 		});
 		$("#SLSPK").slider({
@@ -30,7 +30,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVspeaker: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVspeaker: ui.value);
 			}
 		});
 		$("#SLLIN").slider({
@@ -38,7 +38,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVline: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVline: ui.value);
 			}
 		});
 		$("#SLMIC").slider({
@@ -46,7 +46,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVmic: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVmic: ui.value);
 			}
 		});
 		$("#SLCD").slider({
@@ -54,7 +54,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVcd: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVcd: ui.value);
 			}
 		});
 		$("#SLMIX").slider({
@@ -62,7 +62,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVmix: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVmix: ui.value);
 			}
 		});
 		$("#SLREC").slider({
@@ -70,7 +70,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVrec: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVrec: ui.value);
 			}
 		});
 		$("#SLIGN").slider({
@@ -78,7 +78,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVigain: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVigain: ui.value);
 			}
 		});
 		$("#SLLN1").slider({
@@ -86,7 +86,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVline1: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVline1="+ui.value);
 			}
 		});
 		$("#SLMON").slider({
@@ -94,7 +94,7 @@
 			max: 100,
 			step: 5,
 			slide: function(event, ui) {
-				$("#AMT").load("/cgi-bin/setmixer",{DEVmonitor: ui.value});
+				$("#AMT").load("/cgi-bin/setmixer","DEVmonitor: ui.value);
 			}
 		});
 	    $("#AMT").load("/cgi-bin/getmixer",
@@ -351,8 +351,8 @@ padding-right:15px;
 <IMG CLASS='bstyle' ID='PUBICO' SRC='/img/display_showcase.jpg' onMouseOver='changeSize("#PUBICO",64,48);' onMouseOut='changeSize("#PUBICO",48,32);'></A>
 <A HREF='/~*owner_name*/bookmarks.html' onMouseOver='changeSrcImg("#myImage","/img/bookmark1.jpg", "Bookmarks")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A>
-<A HREF='/pix.php' onMouseOver='changeSrcImg("#myImage","/thumbnail.php?IMGID=81968&SIZE=FULL", "Family pix")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
-<IMG CLASS='bstyle' ID='NATICO' SRC='/thumbnail.php?IMGID=81968&SIZE=64x48' onMouseOver='changeSize("#NATICO",64,48);' onMouseOut='changeSize("#NATICO",48,32);'></A>
+<A HREF='/pix.php' onMouseOver='changeSrcImg("#myImage","/thumbnail.php?IMGID=38292&SIZE=FULL", "Family pix")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='NATICO' SRC='/thumbnail.php?IMGID=38292&SIZE=64x48' onMouseOver='changeSize("#NATICO",64,48);' onMouseOut='changeSize("#NATICO",48,32);'></A>
 <A onMouseOver="$('#LIGHTS').hide();$('#MIXER').hide();$('#WEATHER').hide();$('#DEVICES').hide();$('#PLACES').show();">
 <IMG CLASS='bstyle' ID='SETICO' SRC='http://chart.apis.google.com/chart?cht=t&chs=440x220&chtm=usa&chf=bg,s,336699&chco=d0d0d0,cc0000&chd=s:99999999999999999999&chld=ALAZCACOHIKSMDNVNMOHOKTXUTWAWYORINKYILMI' onMouseOver='changeSize("#SETICO",64,48);' onMouseOut='changeSize("#SETICO",48,32);'></A>
 <a href="http://www.facebook.com/people/Clayton-Tucker/100000813915752" title="Facebook" target="_blank"  onMouseOver="changeSrcImg('#myImage','http://badge.facebook.com/badge/100000813915752.224.1813268417.png', 'Facebook')" onMouseOut="hideIt('#myImage');" >
@@ -367,7 +367,7 @@ padding-right:15px;
 <IMG CLASS='bstyle' ID='MUSICO' SRC='/img/MusicNote.gif' onMouseOver='changeSize("#MUSICO",64,48);' onMouseOut='changeSize("#MUSICO",48,32);'></A>
 <A onMouseOver="$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#DEVICES').hide();$('#MIXER').show();">
 <IMG CLASS='bstyle' ID='MIXICO' SRC='/img/Mixer.gif' onMouseOver='changeSize("#MIXICO",64,48);' onMouseOut='changeSize("#MIXICO",48,32);'></A>
-<A onMouseOver="$('#DEVICES').load('/devices.php');$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MIXER').hide();$('#DEVICES').show();">
+<A onMouseOver="$('#DEVICES').get('/devices.php');$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MIXER').hide();$('#DEVICES').show();">
 <IMG CLASS='bstyle' ID='DEVICO' SRC='/img/google_vs_apple_thm.jpg' onMouseOver='changeSize("#DEVICO",64,48);' onMouseOut='changeSize("#DEVICO",48,32);'></A>
 </DIV>
 
