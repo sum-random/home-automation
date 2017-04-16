@@ -56,6 +56,22 @@ function cacheReadImage($thefile,$size) {
   return false;
 }
 
+function selectCollageSubImage($pic, $x, $y) {
+  $impul=$pic->getImagePixelColor($x*2,$y*2);
+  $colorsul=$impul->getColor();
+  $impur=$pic->getImagePixelColor($x*2-1,$y*2);
+  $colorsur=$impur->getColor();
+  $impll=$pic->getImagePixelColor($x*2,$y*2+1);
+  $colorsll=$impll->getColor();
+  $implr=$pic->getImagePixelColor($x*2-1,$y*2+1);
+  $colorslr=$implr->getColor();
+  $imgquery=$colorsul['r'] . ":" . $colorsul['g'] . ":" . $colorsul['b'] . ":" . $colorsur['r'] . ":" . $colorsur['g'] . ":" . $colorsur['b'] . ":" . $colorsll['r'] . ":" . $colorsll['g'] . ":" . $colorsll['b'] . ":" . $colorslr['r'] . ":" . $colorslr['g'] . ":" . $colorslr['b'];
+  $bgcolor=sprintf("%02X%02X%02X",($colorsul['r']+$colorsur['r']+$colorsll['r']+$colorslr['r'])/4,($colorsul['g']+$colorsur['g']+$colorsll['g']+$colorslr['g'])/4,($colorsul['b']+$colorsur['b']+$colorsll['b']+$colorslr['b'])/4);
+  $retval=array();
+  $retval[0]=$imgquery;
+  $retval[1]=$bgcolor;
+  return $retval;
+}
 function matchImage($qry) {
   global $mysql;
   $colors=preg_split('/:/',$qry);

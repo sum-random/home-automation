@@ -23,41 +23,23 @@ img {
 <DIV ID='POPWIN' STYLE='position:absolute;visibility:hidden;'> </DIV>
 <FORM>
 <?php
+//include("inc/pdo.php");
+//include("inc/functions.php");
 include("generatethumbs.php");
 
-class workerThread extends Thread {
-public function __construct($theList,$offset,$colors){
-  $this->list=$theList;
-  $this->offset=$offset;
-  $this->colors=$colors;
-}
-
-public function run(){
-  global $thumbsz;
-
-  $imgquery=$this->colors[0];
-  $bgcolor=$this->colors[1];
-  $imginfo=matchImage($imgquery);
-  $subimgid=$imginfo[1];
-  $subimgname=$imginfo[0];
-  $imgsrc="thumbnail.php?IMGID=" . $subimgid;
-  $this->list[$this->offset]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGID=" . $subimgid . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgquery . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
-}
-}
-
-global $mysql,$base,$log,$thumbsz;
+global $mysql,$base,$log;
 
 if(array_key_exists('IMGID',$_REQUEST)) {
   foreach($mysql->query("SELECT fname,imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID']) as $row) 
     if(file_exists($row[0])) {
-      $srcfname=$row[0];
-      $srcimgid=$row[1];
+      $fname=$row[0];
+      $imgid=$row[1];
     }
 } else if(array_key_exists('IMGMATCH',$_REQUEST)) {
   $row=matchImage($_REQUEST['IMGMATCH']);
     if(file_exists($row[0])) { 
-      $srcfname=$row[0];
-      $srcimgid=$row[1];
+      $fname=$row[0];
+      $imgid=$row[1];
     }
 } else {
   echo "Missing IMG";
@@ -66,7 +48,7 @@ if(array_key_exists('IMGID',$_REQUEST)) {
 
       $pic=new Imagick();
       $pic->clear();
-      $pic->readImage($srcfname);
+      $pic->readImage($fname);
       //$pic->setImageFormat('png');
       autoRotateImage($pic);
 
@@ -102,37 +84,30 @@ if(array_key_exists('IMGID',$_REQUEST)) {
         $height=intval(($width/$pw)*$ph);
       }
       $pic->scaleimage($width*2,$height*2,true);
-      $theImages=array();
-      for($y=0; $y<$height; $y++) 
-        for($x=0; $x<$width; $x++) 
-          $theImages[$x+$y*$width] = "";
-      $theThreads=array();
-      for($remaining=$width*$height; $remaining>0; $remaining--) {
-        $idx=0;
-        for($offset=rand(0,$remaining-1); $offset>0; $offset--)
-          {$idx++; while(strlen($theImages[$idx])>0) $idx++;}
-        while(strlen($theImages[$idx])>0) $idx++;
-        if(strlen($theImages[$idx])==0){
-            $y=intval($idx/$width);
-            $x=intval($idx-$y*$width);
-            $colorSet=selectCollageSubImage($pic, $x, $y);
-            $theThreads[]=new workerThread($theImages, $idx, $colorset);
-        }
-        else break;
-      }
-      foreach($theThreads as $nextThread) 
-        while(!$nextThread->isRunning())
-          usleep(1000);
       echo "<TABLE STYLE=\"font-size:0.25em;\" CELLPADDING='0' CELLSPACING='0'>\n";
-      $plist=preg_split('/\//',$srcfname);
-      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $srcfname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[4] . "'>";
-      echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $srcimgid . "]' SRC='thumbnail.php?IMGID=" . $srcimgid . "&SIZE=512'>";
+      $plist=preg_split('/\//',$fname);
+      echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $fname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[4] . "'>";
+      echo "<INPUT TYPE='IMAGE' NAME='IMG[" . $imgid . "]' SRC='thumbnail.php?IMGID=" . $imgid . "&SIZE=512'>";
       echo "</FORM></TH></TR>\n";
       for($y=0; $y<$height; $y++) {
         echo "<TR>\n";
+        $nxtRow=array();
         for($x=1; $x<$width; $x++) {
-            echo $theImages[$x+$y*$width];
+            $impul=$pic->getImagePixelColor($x*2,$y*2);
+            $colorsul=$impul->getColor();
+            $impur=$pic->getImagePixelColor($x*2-1,$y*2);
+            $colorsur=$impur->getColor();
+            $impll=$pic->getImagePixelColor($x*2,$y*2+1);
+            $colorsll=$impll->getColor();
+            $implr=$pic->getImagePixelColor($x*2-1,$y*2+1);
+            $colorslr=$implr->getColor();
+            $imgquery=$colorsul['r'] . ":" . $colorsul['g'] . ":" . $colorsul['b'] . ":" . $colorsur['r'] . ":" . $colorsur['g'] . ":" . $colorsur['b'] . ":" . $colorsll['r'] . ":" . $colorsll['g'] . ":" . $colorsll['b'] . ":" . $colorslr['r'] . ":" . $colorslr['g'] . ":" . $colorslr['b'];
+            $imgsrc="thumbnail.php?COLLAGEQUERY=" . $imgquery;
+            $bgcolor=sprintf("%02X%02X%02X",($colorsul['r']+$colorsur['r']+$colorsll['r']+$colorslr['r'])/4,($colorsul['g']+$colorsur['g']+$colorsll['g']+$colorslr['g'])/4,($colorsul['b']+$colorsur['b']+$colorsll['b']+$colorslr['b'])/4);
+            $nxtRow[$x]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGMATCH=" . $imgquery . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgquery . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
         }
+        foreach($nxtRow as $cells)
+          echo $cells;
         echo "</TR>";
       }
       echo "</TABLE>";
