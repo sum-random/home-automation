@@ -24,28 +24,21 @@ img {
 <FORM>
 <?php
 include("generatethumbs.php");
+global $mysql,$base,$log,$thumbsz,$scaleimg;
 
-class workerThread extends Thread {
-public function __construct($theList,$offset,$colors){
-  $this->list=$theList;
-  $this->offset=$offset;
-  $this->colors=$colors;
-}
+function insertCell(&$list, $offset, $colors){
+  global $thumbsz,$scaleimg;
 
-public function run(){
-  global $thumbsz;
-
-  $imgquery=$this->colors[0];
-  $bgcolor=$this->colors[1];
+  $imgquery=$colors[0];
+  $bgcolor=$colors[1];
   $imginfo=matchImage($imgquery);
   $subimgid=$imginfo[1];
   $subimgname=$imginfo[0];
   $imgsrc="thumbnail.php?IMGID=" . $subimgid;
-  $this->list[$this->offset]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGID=" . $subimgid . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgquery . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
-}
+  $list[$offset]="<TD STYLE='background-color: #" . $bgcolor . ";' bgcolor='" . $bgcolor . "'><A TITLE='" . $bgcolor . "' HREF='/collage.php?IMGID=" . $subimgid . "&THUMBSZ=" . $thumbsz . "&SCALE=" . $scaleimg . "' BORDER='0' ><IMG ID='IMGCELL' onMouseOver='showPreview();' onMouseOut='hidePreview();' BORDER='0' ALT='" . $imgquery . "' SRC='" . $imgsrc . "&SIZE=" . $thumbsz . "x" . $thumbsz . "' HEIGHT='" . $thumbsz . "' WIDTH='" . $thumbsz . "'></A></TD>\n";
+  echo "<!-- $offset $bgcolor :" . $list[$offset] . ":-->\n";
 }
 
-global $mysql,$base,$log,$thumbsz;
 
 if(array_key_exists('IMGID',$_REQUEST)) {
   foreach($mysql->query("SELECT fname,imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID']) as $row) 
@@ -103,26 +96,24 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       }
       $pic->scaleimage($width*2,$height*2,true);
       $theImages=array();
-      for($y=0; $y<$height; $y++) 
-        for($x=0; $x<$width; $x++) 
-          $theImages[$x+$y*$width] = "";
-      $theThreads=array();
-      for($remaining=$width*$height; $remaining>0; $remaining--) {
-        $idx=0;
-        for($offset=rand(0,$remaining-1); $offset>0; $offset--)
-          {$idx++; while(strlen($theImages[$idx])>0) $idx++;}
-        while(strlen($theImages[$idx])>0) $idx++;
-        if(strlen($theImages[$idx])==0){
-            $y=intval($idx/$width);
-            $x=intval($idx-$y*$width);
-            $colorSet=selectCollageSubImage($pic, $x, $y);
-            $theThreads[]=new workerThread($theImages, $idx, $colorset);
-        }
-        else break;
-      }
-      foreach($theThreads as $nextThread) 
-        while(!$nextThread->isRunning())
-          usleep(1000);
+      //$mysql->query("IF EXISTS unusedimgid DROP unusedimgid");
+      $mysql->query("CREATE TEMPORARY TABLE unusedimgid SELECT imgid FROM thumblist");
+      #for($y=0; $y<$height; $y++) 
+      #  for($x=0; $x<$width; $x++) 
+      #    $theImages[$x+$y*$width] = "";
+      #for($remaining=$width*$height; $remaining>0; $remaining--) {
+      #  $idx=0;
+      #  for($offset=rand(0,$remaining-1); $offset>0; $offset--)
+      #    {$idx++; while(strlen($theImages[$idx])>0) $idx++;}
+      #  while(strlen($theImages[$idx])>0) $idx++;
+      #  if(strlen($theImages[$idx])==0){
+      #      $y=intval($idx/$width);
+      #      $x=intval($idx-$y*$width);
+      #      $colorSet=selectCollageSubImage($pic, $x, $y);
+      #      insertCell($theImages, $idx, $colorSet);
+      #  }
+      #  else break;
+      #}
       echo "<TABLE STYLE=\"font-size:0.25em;\" CELLPADDING='0' CELLSPACING='0'>\n";
       $plist=preg_split('/\//',$srcfname);
       echo "<TR><TH COLSPAN=" . $width . "><FORM ACTION='pix.php' METHOD='POST'><INPUT TITLE='" . $srcfname . "' TYPE='HIDDEN' NAME='SET' VALUE='" . $plist[4] . "'>";
@@ -131,6 +122,8 @@ if(array_key_exists('IMGID',$_REQUEST)) {
       for($y=0; $y<$height; $y++) {
         echo "<TR>\n";
         for($x=1; $x<$width; $x++) {
+            $colorSet=selectCollageSubImage($pic, $x, $y); #
+            insertCell($theImages, $x+$y*$width, $colorSet); #
             echo $theImages[$x+$y*$width];
         }
         echo "</TR>";
