@@ -47,7 +47,7 @@ if(array_key_exists('TRACK',$_REQUEST)) {
       foreach($thetracks as $track) {
         $fldr=basename(dirname($track)) . '/';
 	if($fldr == "Music/") $fldr='';
-        system('/usr/local/bin/rsync --chmod=ugo=rwX --inplace -rLptgDe "ssh -l root -i /usr/local/www/apache24/cgi-data/.ssh/id_dsa -o StrictHostKeyChecking=no -p 2222" "' . rtrim($track) . '" ' . $_REQUEST['DEST'] . ':"/mnt/sdcard/Music/' . $fldr . '"&');
+        system('/usr/local/bin/rsync --chmod=ugo=rwX --inplace -rLptgDe "ssh -l root -i /usr/local/www/apache24/cgi-data/.ssh/id_rsa -o StrictHostKeyChecking=no -p 2222" "' . rtrim($track) . '" ' . $_REQUEST['DEST'] . ':"/mnt/sdcard/Music/' . $fldr . '"&');
       }
     }
   }
