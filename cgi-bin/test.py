@@ -20,7 +20,7 @@ form = cgi.FieldStorage()
 #print(form)
 formkeys = form.keys()
 #print(formkeys)
-print('<form method="post">')
+print('<form method="post" action="/cgi-bin/test.py">')
 for formvar in formkeys:
   #print(formvar)
   print('<div style="color:red;"><span style="color:blue;">%s</span> = <span style="color:green;">%s</span></div>' %(formvar,form.getvalue(formvar)))
