@@ -122,7 +122,7 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
   }
   $theImage=sqlquery("SELECT fname FROM thumblist WHERE imgid=" . $img)[0][0];
   echo "<CENTER><TABLE BORDER='0'><TR><TD><BUTTON TYPE='SUBMIT' NAME='IMG[" . $img . "]' ALT='Rotate left' VALUE='LEFT'><IMG SRC='/img/rotate_l.png'></BUTTON></TD>";
-  echo "<TD ALIGN='CENTER' COLSPAN='5'><A HREF='thumbnail.php?IMGID=" . $img . "&SIZE=FULL' TITLE='Full resolution'><IMG SRC='thumbnail.php?IMGID=" . $img . "&SIZE=640'></A></TD>";
+  echo "<TD ALIGN='CENTER' COLSPAN='5'><A HREF='/wsgi-bin/thumbnail?IMGID=" . $img . "&SIZE=FULL' TITLE='Full resolution'><IMG SRC='/wsgi-bin/thumbnail?IMGID=" . $img . "&SIZE=640'></A></TD>";
   echo "<TD><BUTTON TYPE='SUBMIT' NAME='IMG[" . $img . "]' ALT='Rotate right' VALUE='RIGHT'><IMG SRC='/img/rotate_r.png' ></BUTTON></TD></TR>\n";
   echo "<TR>";
   $imgidx=-1;
@@ -150,8 +150,8 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
     $lastid=$imglist[$lastidx]['imgid'];
     $prvidx=($imgidx + 1 > $lastidx ? $lastidx : $imgidx + 1);
     $prvid=$imglist[$prvidx]['imgid'];
-    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='First' TYPE='IMAGE' NAME='IMG[" . $firstid . "]' SRC='thumbnail.php?IMGID=" . $firstid . "&SIZE=80'></TD>\n";
-    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Next' TYPE='IMAGE' NAME='IMG[" . $nxtid . "]' SRC='thumbnail.php?IMGID=" . $nxtid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='First' TYPE='IMAGE' NAME='IMG[" . $firstid . "]' SRC='/wsgi-bin/thumbnail?IMGID=" . $firstid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Next' TYPE='IMAGE' NAME='IMG[" . $nxtid . "]' SRC='/wsgi-bin/thumbnail?IMGID=" . $nxtid . "&SIZE=80'></TD>\n";
     echo "<TD VALIGN='TOP' ALIGN='CENTER'><A HREF='collage.php?IMGID=" . getIdForImage($theImage) . "&SCALE=640&THUMBSZ=64' TITLE='Collage'><IMG ALT='Collage' SRC='/img/collage.jpg'></A></TD>\n";
     echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ALT='Index' TYPE='IMAGE' NAME='HOME' VALUE='GO THERE' SRC='/img/btn_up.jpg'></TD>\n";
     echo "<TD VALIGN='TOP' ALIGN='CENTER'>";
@@ -163,8 +163,8 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
       echo "<INPUT ALT='Slideshow' TYPE='IMAGE' NAME='SLIDESHOW[" .  $_REQUEST['SET'] . "]' SRC='/img/projector.GIF'>";
     }
     echo "</TD>\n";
-    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Previous' TYPE='IMAGE' NAME='IMG[" . $prvid . "]' SRC='thumbnail.php?IMGID=" . $prvid . "&SIZE=80'></TD>\n";
-    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Last' TYPE='IMAGE' NAME='IMG[" . $lastid . "]' SRC='thumbnail.php?IMGID=" . $lastid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Previous' TYPE='IMAGE' NAME='IMG[" . $prvid . "]' SRC='/wsgi-bin/thumbnail?IMGID=" . $prvid . "&SIZE=80'></TD>\n";
+    echo "<TD VALIGN='TOP' ALIGN='CENTER'><INPUT ID='IMGCELL' ALT='Last' TYPE='IMAGE' NAME='IMG[" . $lastid . "]' SRC='/wsgi-bin/thumbnail?IMGID=" . $lastid . "&SIZE=80'></TD>\n";
   }
   echo "</TR></TABLE>\n";
 } else {
@@ -174,14 +174,14 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
         echo "<OPTION " . ($fldr == $_REQUEST['SET'] ? " SELECTED " : "" ) . "VALUE='" . $fldr . "'>" . $fldr . "</OPTION>\n";
     echo "</SELECT><BR>\n";
     if($page > 0) {
-      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[($page - 1) * 100]['imgid'] . "' NAME='newpage[0]' VALUE='";
+      echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/wsgi-bin/thumbnail?IMGID=" . $imglist[($page - 1) * 100]['imgid'] . "' NAME='newpage[0]' VALUE='";
       echo $page - 1 . "' SRC='/img/btn_lt.jpg'>\n";
     }
     for($idx  = 0; $idx <= count($imglist) / 100; $idx++) 
       if($idx == $page)
         echo $page;
       else
-        echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumbnail.php?IMGID=" . $imglist[$idx * 100]['imgid'] . "' NAME='newpage[" . $idx . "]' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
+        echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/wsgi-bin/thumbnail?IMGID=" . $imglist[$idx * 100]['imgid'] . "' NAME='newpage[" . $idx . "]' VALUE='" . $idx . "' SRC='/img/btn_" . ($idx > $page ? "r" : "l") . "t.jpg'>\n";
     if($page + 1 < (count($imglist) / 100)) {
       echo "<INPUT ID='NAVCELL' TYPE='IMAGE' ALT='/thumblist.php?IMGID=" . $imglist[($page + 1) * 100]['imgid'] . "' NAME='newpage[";
       echo $page + 1 . "]' VALUE='";
@@ -192,7 +192,7 @@ if(array_key_exists('IMG',$_REQUEST) && is_array($_REQUEST['IMG']) && ! array_ke
       $file = $imglist[$idx]['fname'];
       if(inImageDb($file) || isImage($file)) {
         $imgID=$imglist[$idx]['imgid'];
-        echo "<INPUT TYPE='IMAGE' ID='IMGCELL' NAME='IMG[" . $imgID . "]' VALUE='" . basename($file) . "' SRC='/thumbnail.php?IMGID=" . $imgID . "&SIZE=64'>\n";
+        echo "<INPUT TYPE='IMAGE' ID='IMGCELL' NAME='IMG[" . $imgID . "]' VALUE='" . basename($file) . "' SRC='/wsgi-bin/thumbnail?IMGID=" . $imgID . "&SIZE=64'>\n";
       }
     } 
 }

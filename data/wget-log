@@ -1,0 +1,10 @@
+--2017-11-11 13:09:01--  http://73.231.88.66/wsgi-bin/thumbnail?IMGID=128617
+Connecting to 73.231.88.66:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 21944 (21K) [image/jpeg]
+Saving to: 'STDOUT'
+
+-                                        0%[                                                                          ]       0  --.-KB/s               -                                      100%[=========================================================================>]  21.43K  --.-KB/s    in 0.001s  
+
+2017-11-11 13:09:01 (26.0 MB/s) - written to stdout [21944/21944]
+

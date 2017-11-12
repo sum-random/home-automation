@@ -49,7 +49,8 @@ foreach($mysql->query("SELECT b.fname, a.imgdata, b.imgid FROM imgcache a INNER 
 }
 if(! $cached) {
   $pic->clear();
-  $pic->readImage($thefile);
+  $pic->readimage($thefile);
+  //$pic=new Gmagick($thefile);
 
   try {
     if(array_key_exists('NEWFORMAT',$_REQUEST)) {
