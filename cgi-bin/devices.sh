@@ -10,10 +10,10 @@ lname[50]="ctucker"
 lname[51]="ctucker"
 lname[64]="ctucker"
 lname[66]="ctucker"
-lname[102]="nathan"
-lname[106]="thanvalai"
-lname[107]="thanvalai"
-lname[113]="thanvalai"
+lname[102]="ctucker"
+lname[106]="ctucker"
+lname[107]="ctucker"
+lname[113]="ctucker"
 
 getRGB() {
 	NM=$1
