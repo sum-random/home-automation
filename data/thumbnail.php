@@ -11,6 +11,11 @@ $base="/storage/Image";
 $thefile=$base . "/NathansWallpaper.JPG";
 $size = (array_key_exists('SIZE',$_REQUEST) ? $_REQUEST['SIZE'] : "scaled64");
 if(array_key_exists('IMGID',$_REQUEST)) {
+  if($_REQUEST['IMGID'] == 'RANDOM') 
+    header('Cache-Control: no-cache,max-age=15, Pragma: no-cache');
+    foreach($mysql->query("SELECT COUNT(imgid) FROM thumblist") as $imgidcnt)
+      foreach($mysql->query("SELECT imgid FROM thumblist ORDER BY 1 LIMIT " . rand(0,$imgidcnt[0]) . ",1;") as $randimgid)
+        $_REQUEST['IMGID'] = $randimgid[0];
   $query="SELECT fname, imgid FROM thumblist WHERE imgid=" . $_REQUEST['IMGID'];
   foreach($mysql->query($query) as $row) {
       $thefile=$row[0];
@@ -61,6 +66,7 @@ if(! $cached) {
       error_log(datestamp() . "Image " . $thefile . " format problem: " . $_REQUEST['NEWFORMAT'] . " with error " . $e->getMessage() . "\n",3,$log);
   }
 
+  autoRotateImage($pic);
   $ph=$pic->getImageHeight();
   $pw=$pic->getImageWidth();
   if(array_key_exists('SIZE',$_REQUEST)) {
