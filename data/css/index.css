@@ -19,7 +19,7 @@ cursor:pointer;
 width:80%;
 display:none;
 padding:5px;
-padding-top:85px;
+padding-top:35px;
 }
 .devices
 {
@@ -46,13 +46,14 @@ border:none;
 width:95%;
 vertical-align:top;
 padding:10px;
+padding-top:35px;
 display:none;
 }
 .mixer
 {
 width:80%;
 display:none;
-padding-top:85px;
+padding-top:35px;
 }
 .track
 {
@@ -70,3 +71,4 @@ text-align:center;
 padding-left:15px;
 padding-right:15px;
 }
+
