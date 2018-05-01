@@ -18,6 +18,14 @@ function lightColors(idx) {
            'Auto': [128, 128, 128]}[idx];
 }
 
+function d3devices() {
+  d3.text('/wsgi-bin/getdevices', function(data) {
+      d3.select('#DEVICES')
+        .append('g')
+          .html(data);
+  });
+}
+
 function d3lights() {
     margin = {top: 10, bottom: 10, left: 20, right: 20};
     ldwidth = 600;
