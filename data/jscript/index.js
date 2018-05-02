@@ -237,15 +237,6 @@ function hideIt(id) {
     .style('visibility','hidden');
 }
 
-$(function () {
-        var allLinks = document.getElementsByClassName("weatherthumb");
-
-        for (var i=0; i< allLinks.length; i++) {
-                allLinks[i].onmouseover = showWImg;
-        }
-        //document.getElementById("WEATHER").onmouseout = hideWImg;
-
-});
 
 function showWImg(evt) {
         if (evt) {
