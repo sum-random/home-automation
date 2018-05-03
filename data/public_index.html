@@ -7,7 +7,7 @@
   <script type = "text/javascript" src = "/jscript/index.js"></script>
   <link rel="stylesheet" type="text/css" href="/css/index.css">
 </head>
-<body>
+<body onLoad="setupWeather();">
 <DIV CLASS='navicons' id='ICOBAR' >
 <A HREF='http://home.claytontucker.com/' onMouseOver='changeSrcImg("#myImage","/img/bookmark1.jpg", "Home")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A>
@@ -61,18 +61,6 @@ Image placeholder
 </SPAN>
 <DIV ID='WEATHERIMG' CLASS='weatherDiv'> </DIV>
 </CENTER>
-<script language="JavaScript">
-  d3.selectAll('.weatherthumb')
-    .on('mouseover', function() {
-      thethumb = d3.select(this);
-      thediv = d3.select('#WEATHERIMG');
-      thediv.select('svg').remove();
-      thediv.append('svg').append('svg:image')
-        .attr('width', '90%')
-        .attr('class', 'weatherShow')
-        .attr('xlink:href', thethumb.attr('src'));
-    });
-</script>
 </DIV>
 
 </body>

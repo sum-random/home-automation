@@ -1,4 +1,17 @@
+function setupWeather() {
+  d3.selectAll('.weatherthumb')
+    .on('mouseover', showWImg);
+}
 
+function d3weather() {
+      thethumb = d3.select(this);
+      thediv = d3.select('#WEATHERIMG');
+      thediv.select('svg').remove();
+      thediv.append('svg').append('svg:image')
+        .attr('width', '90%')
+        .attr('class', 'weatherShow')
+        .attr('xlink:href', thethumb.attr('src'));
+}
 function switchDiv(nextDiv) {
     [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES' ].forEach(function(d) {
         d3.select(d)
