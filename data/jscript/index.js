@@ -32,10 +32,64 @@ function lightColors(idx) {
 }
 
 function d3devices() {
-  d3.text('/wsgi-bin/getdevices', function(data) {
-      d3.select('#DEVICES')
-        .append('g')
-          .html(data);
+  margin = {top: 10, bottom: 10, left: 20, right: 20};
+  dwidth = 700;
+  ditemheight = 30;
+  fontsz = "12px";
+  d3.json('/wsgi-bin/getdevices', function(data) {
+      data = data.sort(function(d) {
+        return d3.ascending(d.hostname);
+      });
+      workspace = d3.select('#DEVICES')
+        .append('svg')
+          .attr('width', dwidth + margin.left + margin.right)
+          .attr('height', data.length * ditemheight + margin.top + margin.bottom)
+          .append('g')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+      items = 0;
+      grouping = d3.nest()
+                   .key(function(d) { return d.type; }).sortKeys(d3.ascending)
+                   .entries(data);
+      grouping.forEach(function(d,i) {
+        thisgrp = workspace.append('g')
+          .attr('transform', 'translate(0, ' + items * ditemheight + ')');
+        thisgrp.append('text')
+          .attr('x', 0)
+          .attr('y', 5)
+          .style("font-size", fontsz)
+          .text(d.key);
+        grpdevs = thisgrp.append('g')
+          .attr('transform', 'translate(80, 5)');
+        d.values.forEach(function(dev,i) {
+            items++;
+            thehost = grpdevs.append('text')
+              .attr('x', 0)
+              .attr('y', i * ditemheight)
+              .style("font-size", fontsz)
+              .text(dev.hostname);
+            if('maker' in dev) {
+              grpdevs.append('text')
+                .attr('x', 200)
+                .attr('y', i * ditemheight)
+                .style("font-size", fontsz)
+                .text(dev.maker);
+            }
+            if('model' in dev) {
+              grpdevs.append('text')
+                .attr('x', 300)
+                .attr('y', i * ditemheight)
+                .style("font-size", fontsz)
+                .text(dev.model);
+            }
+            if('load' in dev) {
+              grpdevs.append('text')
+                .attr('x', 400)
+                .attr('y', i * ditemheight)
+                .style("font-size", fontsz)
+                .text(dev.load);
+            }
+        });
+      });
   });
 }
 
@@ -103,7 +157,6 @@ function d3lights() {
         });
     });
     function setlight() {
-        console.log(this.classlist);
         therect = d3.select(this);
         thedata = this.classList.item(0).split(':');
         theidx = thedata[0];
@@ -113,7 +166,6 @@ function d3lights() {
           .style('fill', d3.rgb(128, 128, 128, 0.25));
         d3.select(this)
           .style('fill', d3.rgb(lc[0], lc[1], lc[2], 0.5));
-        console.log(theidx + '/' + thestate);
         d3.text('/wsgi-bin/setlight')
           .post('DEV=' + theidx + '\nSTATE=' + thestate, function(d) {  console.log(d);});
          
@@ -122,7 +174,6 @@ function d3lights() {
 
 function d3mixer() {
     margin = {top: 10, bottom: 10, left: 20, right: 20};
-    console.log(d3.select('#ICOBAR'));
     slwidth = 600;
     slheight = 35; 
     thumbwidth = 15;
