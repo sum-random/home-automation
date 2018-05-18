@@ -13,7 +13,7 @@ function d3weather() {
         .attr('xlink:href', thethumb.attr('src'));
 }
 function switchDiv(nextDiv) {
-    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES' ].forEach(function(d) {
+    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
