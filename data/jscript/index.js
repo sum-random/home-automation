@@ -12,6 +12,7 @@ function d3weather() {
         .attr('class', 'weatherShow')
         .attr('xlink:href', thethumb.attr('src'));
 }
+
 function switchDiv(nextDiv) {
     [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS' ].forEach(function(d) {
         d3.select(d)
@@ -321,51 +322,36 @@ function hideWImg(evt) {
         prevWin.style.visibility = "hidden";
 }
 
-function y2k(number) { return (number < 1000) ? number + 1900 : number; }
-function lz(number) { if(number < 10) document.write("0"); return number; }
-
-function printdatecode() {
-	//var date = new Date();
-	//var date = new Date(y2k(date.getYear()),date.getMonth(),date.getDate(),date.getHours(),date.getMinutes(),date.getSeconds(), 7*60*60*1000);
-	//document.write(y2k(date.getYear()));
-	//document.write(lz(date.getMonth() + 1));
-	//document.write(lz(date.getDate()));
-	//document.write(".");
-	//document.writeln(lz(date.getHours()));
-	document.write("LATEST");
+function showHostDetail(the_host) {
+  margin = {top: 20, bottom: 20, left: 20, right: 20};
+  width = 700;
+  itemheight = 20;
+  cpudiv = d3.select("#HOSTINFO");
+  cpudiv.selectAll('svg').remove();
+  d3.json('deviceinfo/' + the_host, function(error, data) {
+    cpudisplay = cpudiv.style('display','block').style('visibility','visible')
+      .append('svg')
+         .attr('width', width + margin.left + margin.right)
+         .attr('height', itemheight * (Object.keys(data).length + 1) + margin.top + margin.bottom)
+         .append('g')
+           .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+    Object.keys(data).forEach(function(key, i) {
+      nxttxt = cpudisplay.append('g')
+        .attr('transform', 'translate(0, ' + (i + 1) * itemheight + ')');
+      nxttxt.append('text')
+        .text(key);
+      nxttxt.append('text')
+        .attr('x', '120')
+        .text(data[key]);
+    });
+    cpudisplay.append('g').append('text')
+      .attr("font-size", "20px")
+      .text(the_host);
+  });
 }
 
-function printraindatecode() {
-	var date = new Date();
-	var date = new Date(y2k(date.getYear()),date.getMonth(),date.getDate(),date.getHours(),date.getMinutes(),date.getSeconds(), 7*60*60*1000);
-	document.write(y2k(date.getYear()));
-	document.write(lz(date.getMonth() + 1));
-	document.write(lz(date.getDate()));
-	document.write(".");
-	document.writeln(lz(date.getHours()));
-	document.writeln(lz(date.getMinutes() -  (date.getMinutes() % 30)));
-	//document.write("LATEST");
-}
-
-function vapor() {
-	document.write("<A HREF=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/pacus/vapor/");
-	printdatecode();
-	document.write(".jpg\" target=\"displayWin\"><IMG SRC=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/pacus/vapor/");
-	printdatecode();
-	document.write(".jpg\" alt=\"Water vapor image\" HEIGHT=150 WIDTH=200></A>");
-}
-function visible() {
-	document.write("<A HREF=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/monterey_bay/vis/");
-	printdatecode();
-	document.write(".jpg\" target=\"displayWin\"><IMG SRC=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/monterey_bay/vis/");
-	printdatecode();
-	document.write(".jpg\" alt=\"Visible\" HEIGHT=150 WIDTH=200></A>");
-}
-function rainrate() {
-	document.write("<A HREF=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/pacus/ir_color/");
-	printraindatecode();
-	document.write(".goes11.ir.pacus.jpg\" target=\"displayWin\">");
-	document.write("<IMG SRC=\"http://www.nrlmry.navy.mil/archdat/pacific/eastern/pacus/ir_color/");
-	printraindatecode();
-	document.write(".goes11.ir.pacus.jpg\" alt=\"Rain Rate\" HEIGHT=150 WIDTH=200></A>");
+function hideHostDetail() {
+  d3.select("#HOSTINFO")
+    .style('display','none')
+    .style('visibility','hidden');
 }
