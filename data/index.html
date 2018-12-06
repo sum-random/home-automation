@@ -246,6 +246,7 @@ function changeSrcImg(id, img, descr)
   $('#PLACES').hide();
   $('#WEATHER').hide();
   $('#DEVICES').hide();
+  $('#MASTODON').hide();
   }
 
 function changeSrcPage(id, page)
@@ -255,6 +256,7 @@ function changeSrcPage(id, page)
   $('#PLACES').hide();
   $('#WEATHER').hide();
   $('#DEVICES').hide();
+  $('#MASTODON').hide();
   $(id).css('visibility','visible');
   }
 
@@ -286,6 +288,26 @@ width:48px;
 height:32px;
 border: 0px solid black;
 cursor:pointer;
+}
+.social
+{
+width:80%;
+display:none;
+padding:15px;
+background-image: url("/img/thematrix.gif");
+width: 640;
+height: 480;
+color: white;
+}
+.circle
+{
+border-radius: 25px;
+width: 50;
+height: 50;
+}
+.whitelink
+{
+color: white;
 }
 .lights
 {
@@ -353,21 +375,23 @@ padding-right:15px;
 <IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A>
 <A HREF='/pix.php' onMouseOver='changeSrcImg("#myImage","/thumbnail.php?IMGID=84077&SIZE=FULL", "Family pix")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='NATICO' SRC='/thumbnail.php?IMGID=84077&SIZE=64x48' onMouseOver='changeSize("#NATICO",64,48);' onMouseOut='changeSize("#NATICO",48,32);'></A>
-<A onMouseOver="$('#LIGHTS').hide();$('#MIXER').hide();$('#WEATHER').hide();$('#DEVICES').hide();$('#PLACES').show();">
+<A onMouseOver="$('#LIGHTS').hide();$('#MIXER').hide();$('#WEATHER').hide();$('#MASTODON').hide();$('#DEVICES').hide();$('#PLACES').show();">
 <IMG CLASS='bstyle' ID='SETICO' SRC='http://chart.apis.google.com/chart?cht=t&chs=440x220&chtm=usa&chf=bg,s,336699&chco=d0d0d0,cc0000&chd=s:99999999999999999999&chld=ALAZCACOHIKSMDNVNMOHOKTXUTWAWYORINKYILMI' onMouseOver='changeSize("#SETICO",64,48);' onMouseOut='changeSize("#SETICO",48,32);'></A>
+<A HREF="https://mastodon.technology/web/accounts/149610" onMouseOver="$('#LIGHTS').hide();$('#MIXER').hide();$('#WEATHER').hide();$('#MASTODON').show();$('#DEVICES').hide();$('#PLACES').hide();">
+<IMG CLASS='bstyle' ID='MSTICO' SRC='/img/antlion.jpg' onMouseOver='changeSize("#MSTICO",64,48);' onMouseOut='changeSize("#MSTICO",48,32);'></A>
 <a href="http://www.facebook.com/people/Clayton-Tucker/100000813915752" title="Facebook" target="_blank"  onMouseOver="changeSrcImg('#myImage','http://badge.facebook.com/badge/100000813915752.224.1813268417.png', 'Facebook')" onMouseOut="hideIt('#myImage');" >
 <img CLASS='bstyle' src="http://badge.facebook.com/badge/100000813915752.224.1813268417.png" width="48" height="32" style="border: 0px;" ID='FBLINK' onMouseOver='changeSize("#FBLINK",64,48);' onMouseOut='changeSize("#FBLINK",48,32);' /></a>
-<A onMouseOver="$('#LIGHTS').hide();$('#PLACES').hide();$('#MIXER').hide();$('#DEVICES').hide();$('#WEATHER').show();">
+<A onMouseOver="$('#LIGHTS').hide();$('#PLACES').hide();$('#MIXER').hide();$('#MASTODON').hide();$('#DEVICES').hide();$('#WEATHER').show();">
 <IMG CLASS='bstyle' ID='WTHICO' SRC='http://icons.wunderground.com/data/nids/MUX19_0.gif' onMouseOver='changeSize("#WTHICO",64,48);' onMouseOut='changeSize("#WTHICO",48,32);'></A>
 <A HREF='/cgi-bin/lightsched' onMouseOver="changeSrcImg('#myImage','/img/AlarmClk.gif', 'Light scheduler')" onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='SCHICO' SRC='/img/AlarmClk.gif' onMouseOver='changeSize("#SCHICO",64,48);' onMouseOut='changeSize("#SCHICO",48,32);'></A>
-<A onMouseOver="$('#MIXER').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#DEVICES').hide();$('#LIGHTS').show();">
+<A onMouseOver="$('#MIXER').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MASTODON').hide();$('#DEVICES').hide();$('#LIGHTS').show();">
 <IMG CLASS='bstyle' ID='LITICO' SRC='/img/Light_Bulb.png' onMouseOver='changeSize("#LITICO",64,48);' onMouseOut='changeSize("#LITICO",48,32);'></A>
 <A HREF='/music.php' onMouseOver="changeSrcImg('#myImage','/img/MusicNote.gif', 'Play music')" onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='MUSICO' SRC='/img/MusicNote.gif' onMouseOver='changeSize("#MUSICO",64,48);' onMouseOut='changeSize("#MUSICO",48,32);'></A>
-<A onMouseOver="$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#DEVICES').hide();$('#MIXER').show();">
+<A onMouseOver="$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MASTODON').hide();$('#DEVICES').hide();$('#MIXER').show();">
 <IMG CLASS='bstyle' ID='MIXICO' SRC='/img/Mixer.gif' onMouseOver='changeSize("#MIXICO",64,48);' onMouseOut='changeSize("#MIXICO",48,32);'></A>
-<A onMouseOver="$('#DEVICES').load('/devices.php');$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MIXER').hide();$('#DEVICES').show();">
+<A onMouseOver="$('#DEVICES').load('/devices.php');$('#MASTODON').hide();$('#LIGHTS').hide();$('#PLACES').hide();$('#WEATHER').hide();$('#MIXER').hide();$('#DEVICES').show();">
 <IMG CLASS='bstyle' ID='DEVICO' SRC='/img/google_vs_apple_thm.jpg' onMouseOver='changeSize("#DEVICO",64,48);' onMouseOut='changeSize("#DEVICO",48,32);'></A>
 </DIV>
 
@@ -388,6 +412,13 @@ padding-right:15px;
 </DIV>
 
 <DIV CLASS='devices' ID='DEVICES'>
+</DIV>
+
+<DIV CLASS='social' ID='MASTODON' >
+<A CLASS='whitelink' HREF="https://mastodon.technology/web/accounts/149610">
+<IMG SRC='/img/antlion.jpg' CLASS='circle'><br>
+@sum_random@Mastodon.Technology
+</A>
 </DIV>
 
 <DIV CLASS='lights' ID='LIGHTS' >

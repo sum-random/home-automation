@@ -34,6 +34,22 @@ width:80%;
 display:none;
 padding:5px;
 }
+.social
+{
+width:80%;
+display:none;
+padding:15px;
+background-image: url("/img/thematrix.gif");
+width: 70%;
+height: 70%;
+color: white;
+}
+.circle
+{
+border-radius: 25px;
+width: 50;
+height: 50;
+}
 .weatherthumb
 {
 width:9%;

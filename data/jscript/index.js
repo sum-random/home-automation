@@ -14,7 +14,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS' ].forEach(function(d) {
+    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
