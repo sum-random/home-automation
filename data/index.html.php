@@ -425,7 +425,7 @@ padding-right:15px;
 <CENTER><FORM>
 <TABLE><TR>
 <script type="text/javascript">
-  var llist=new Array("1:Computer","2:Sofa right","3:Shoes","4:Entryway","5:Television","6:Sofa left","8:Lava lamp","9:Fish","10:Buffet","11:Flea trap","14:Nathans computer");
+  var llist=new Array("1:Computer","2:Sofa right","3:Shoes","4:Entryway","5:Television","6:Sofa left","10:Buffet Left","12:Buffet Right","14:Nathans computer");
   for(var lt in llist) {
     linf=llist[lt].split(":");
     document.write("<TD ID='LC" + linf[0] + "'><FONT SIZE='1'>"+linf[1]+"</FONT><BR>");
