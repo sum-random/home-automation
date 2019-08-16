@@ -16,8 +16,8 @@ function get_devices() {
   $droids = Array();
   $droids['GalaxyS3'] = '10.4.69.130';
   $droids['GalaxyS4'] = '10.4.69.138';
-  $droids['GalaxyS5'] = '10.4.69.140';
-  $droids['GalaxyS6'] = '10.4.69.142';
+  $droids['GalaxyS5'] = '10.4.69.120';
+  $droids['GalaxyS6'] = '10.4.69.121';
   $droids['GalaxyTab'] = '10.4.69.144';
   $droids['GalaxyNote'] = '10.4.69.136';
   foreach($droids as $host => $ip) {
