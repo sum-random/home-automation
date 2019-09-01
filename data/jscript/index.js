@@ -3,6 +3,26 @@ function setupWeather() {
     .on('mouseover', showWImg);
 }
 
+function populateMusicList() {
+    thediv = d3.select('#MUSIC')
+    thetextfield = thediv.select('#TUNEFILTER');
+    thetext = thetextfield.value();
+    thelistdisplay = thediv.select('#TUNELIST');
+    if(thetext.length > 4) {
+        d3.json('/wsgi-bin/getmusic?filter=' + thetext, function(data) {
+            thelistdisplay.selectAll("option")
+                .data(data)
+                .enter()
+                    .append("option")
+                    .attr("value", function(d) {return d.fileid;})
+                    .text(function(d) {return d.shortName;});
+        });
+    } else {
+        thelistdisplay.selectAll("option")
+            .remove();
+    }
+}
+
 function d3weather() {
       thethumb = d3.select(this);
       thediv = d3.select('#WEATHERIMG');
@@ -14,7 +34,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON' ].forEach(function(d) {
+    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSIC' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
