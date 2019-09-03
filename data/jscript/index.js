@@ -4,22 +4,22 @@ function setupWeather() {
 }
 
 function populateMusicList() {
-    thediv = d3.select('#MUSIC')
-    thetextfield = thediv.select('#TUNEFILTER');
-    thetext = thetextfield.value();
-    thelistdisplay = thediv.select('#TUNELIST');
-    if(thetext.length > 4) {
-        d3.json('/wsgi-bin/getmusic?filter=' + thetext, function(data) {
+    thetextfield = document.getElementById("TUNEFILTER");
+    thetext = thetextfield.value;
+    thelistdisplay = d3.select("#MUSICDIV").select("#TUNELIST");
+    if(thetext.length > 3) {
+        d3.csv('/wsgi-bin/getmusic?filter=' + thetext, function(data) {
+            theoptions = thelistdisplay.selectAll("option").data(data.sort(function(d){return d.shortName;}));
+            theoptions.exit().remove();
+            theoptions.enter().append("option");
             thelistdisplay.selectAll("option")
-                .data(data)
-                .enter()
-                    .append("option")
-                    .attr("value", function(d) {return d.fileid;})
-                    .text(function(d) {return d.shortName;});
+              .text(function(d) {return d.shortName;})
+              .attr("value", function(d) {return d.id;});
+            thelistdisplay.attr("size", data.length);
         });
     } else {
-        thelistdisplay.selectAll("option")
-            .remove();
+        thelistdisplay.selectAll("option").remove();
+        thelistdisplay.attr("size", 4);
     }
 }
 
@@ -34,7 +34,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSIC' ].forEach(function(d) {
+    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
@@ -52,7 +52,7 @@ function lightColors(idx) {
            'Auto': [128, 128, 128]}[idx];
 }
 
-function d3devices() {
+function remove_me_d3devices() {
   margin = {top: 10, bottom: 10, left: 20, right: 20};
   dwidth = 700;
   ditemheight = 30;
