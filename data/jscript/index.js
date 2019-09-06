@@ -8,12 +8,13 @@ function populateMusicList() {
     thetext = thetextfield.value;
     thelistdisplay = d3.select("#MUSICDIV").select("#TUNELIST");
     if(thetext.length > 3) {
-        d3.csv('/wsgi-bin/getmusic?filter=' + thetext, function(data) {
-            theoptions = thelistdisplay.selectAll("option").data(data.sort(function(d){return d.shortName;}));
+        d3.csv('/wsgi-bin/getmusic?filter=' + thetext, function(rawdata) {
+            data = rawdata.sort(function(d){return d.shortname;})
+            theoptions = thelistdisplay.selectAll("option").data(data, function(d){return d.shortname;});
             theoptions.exit().remove();
             theoptions.enter().append("option");
             thelistdisplay.selectAll("option")
-              .text(function(d) {return d.shortName;})
+              .text(function(d) {return d.shortname;})
               .attr("value", function(d) {return d.id;});
             thelistdisplay.attr("size", data.length);
         });
