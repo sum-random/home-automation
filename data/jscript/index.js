@@ -14,14 +14,31 @@ function populateMusicList() {
             theoptions.exit().remove();
             theoptions.enter().append("option");
             thelistdisplay.selectAll("option")
-              .text(function(d) {return d.shortname;})
-              .attr("value", function(d) {return d.id;});
+              .text(function(d) {return d.shortname;});
             thelistdisplay.attr("size", data.length);
         });
     } else {
         thelistdisplay.selectAll("option").remove();
         thelistdisplay.attr("size", 4);
     }
+}
+
+function addtunes() {
+    d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
+        .filter(function(d,i) { return this.selected;})
+        .selectAll(function(d, i) { 
+            d3.text('/wsgi-bin/addplaylist', function() {})
+                .post("fileid="+d.fileid);
+        });
+}
+
+function rmtunes() {
+    d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
+        .filter(function(d,i) { return this.selected;})
+        .selectAll(function(d, i) { 
+            d3.text('/wsgi-bin/rmplaylist', function() {})
+                .post("fileid="+d.fileid);
+        });
 }
 
 function d3weather() {
