@@ -18,6 +18,7 @@ HR=`date '+%H'`
 HR=`expr $HR + $OFFSET`
 
 echo "Content-type: text/html; charset=iso-8859-1"
+echo 'Cache-Control: no-cache,max-age=300, Pragma: no-cache'
 echo
 echo "<HTML><HEAD><TITLE>$TITLE</TITLE>"
 echo "</HEAD>"
