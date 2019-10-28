@@ -18,7 +18,8 @@ HR=`date '+%H'`
 HR=`expr $HR + $OFFSET`
 
 echo "Content-type: text/html; charset=iso-8859-1"
-echo 'Cache-Control: no-cache,max-age=300, Pragma: no-cache'
+echo 'cache-control: no-store'
+#echo 'cache-control: max-age=300'
 echo
 echo "<HTML><HEAD><TITLE>$TITLE</TITLE>"
 echo "</HEAD>"
@@ -57,7 +58,7 @@ echo "<TABLE BORDER='2'>"
 THISDEV=0
 DEVLIST=""
 #while [ $THISDEV -le $DEVCNT ] ; do
-for THISDEVID in 0 1 2 3 4 5 6 7 8 9 10 11 14; do
+for THISDEVID in 0 $(cat $DEVFILE  | cut -d , -f 1); do
   echo "<TR>"
   if [ $THISDEVID -eq 0 ] ; then
     echo "<TH>Description</TH><TH>Id</TH>"
