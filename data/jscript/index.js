@@ -8,7 +8,7 @@ function populateMusicList() {
     thetext = thetextfield.value;
     thelistdisplay = d3.select("#MUSICDIV").select("#TUNELIST");
     if(thetext.length > 3) {
-        d3.csv('/wsgi-bin/getmusic?filter=' + thetext, function(rawdata) {
+        d3.csv('/getmusic?filter=' + thetext, function(rawdata) {
             data = rawdata.sort(function(d){return d.shortname;})
             theoptions = thelistdisplay.selectAll("option").data(data, function(d){return d.shortname;});
             theoptions.exit().remove();
@@ -27,7 +27,7 @@ function addtunes() {
     d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
         .filter(function(d,i) { return this.selected;})
         .selectAll(function(d, i) { 
-            d3.text('/wsgi-bin/addplaylist', function() {})
+            d3.text('/addplaylist', function() {})
                 .post("fileid="+d.fileid);
         });
 }
@@ -36,7 +36,7 @@ function rmtunes() {
     d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
         .filter(function(d,i) { return this.selected;})
         .selectAll(function(d, i) { 
-            d3.text('/wsgi-bin/rmplaylist', function() {})
+            d3.text('/rmplaylist', function() {})
                 .post("fileid="+d.fileid);
         });
 }
@@ -52,7 +52,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV' ].forEach(function(d) {
+    [ '#PIX', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
@@ -64,73 +64,40 @@ function switchDiv(nextDiv) {
     }
 }
 
+function populateThumbs() {
+    margin = {top: 10, bottom: 10, left: 20, right: 20};
+    imgsz = { size: 32, spacing: 16 } ;
+    
+    fldr = d3.select("#PICKFOLDER").node().value;
+    d3.select("#PIX").select('svg').remove();
+    slider = d3.select("#PIX").append('svg')
+        .attr('width', '100%')
+        .attr('height', margin.top + margin.bottom + imgsz.size)
+        .append('g')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
+            .attr('height', imgsz.size);
+    d3.json("/getimages")
+        .post("the_folder_id="+fldr, function(error, data) {
+            if(error) throw error;
+            data.forEach(function(d,i) {
+              slider.append('svg:image')
+                .attr('x', i * (imgsz.size + imgsz.spacing))
+                .attr('y', 0)
+                .attr('href', "/thumbnail?IMGID="+d.imgid+"&SIZE="+imgsz.size)
+                .attr('alt', d.fname);
+            });
+        });
+}
+
+function scrollThumbs() {
+}
+
 function lightColors(idx) {
   return { 'On':  [0,255,0],
            'Off': [255,0,0],
            'Auto': [128, 128, 128]}[idx];
 }
 
-function remove_me_d3devices() {
-  margin = {top: 10, bottom: 10, left: 20, right: 20};
-  dwidth = 700;
-  ditemheight = 30;
-  fontsz = "12px";
-  d3.json('/wsgi-bin/getdevices', function(data) {
-      data = data.sort(function(d) {
-        return d3.ascending(d.hostname);
-      });
-      workspace = d3.select('#DEVICES')
-        .append('svg')
-          .attr('width', dwidth + margin.left + margin.right)
-          .attr('height', data.length * ditemheight + margin.top + margin.bottom)
-          .append('g')
-            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
-      items = 0;
-      grouping = d3.nest()
-                   .key(function(d) { return d.type; }).sortKeys(d3.ascending)
-                   .entries(data);
-      grouping.forEach(function(d,i) {
-        thisgrp = workspace.append('g')
-          .attr('transform', 'translate(0, ' + items * ditemheight + ')');
-        thisgrp.append('text')
-          .attr('x', 0)
-          .attr('y', 5)
-          .style("font-size", fontsz)
-          .text(d.key);
-        grpdevs = thisgrp.append('g')
-          .attr('transform', 'translate(80, 5)');
-        d.values.forEach(function(dev,i) {
-            items++;
-            thehost = grpdevs.append('text')
-              .attr('x', 0)
-              .attr('y', i * ditemheight)
-              .style("font-size", fontsz)
-              .text(dev.hostname);
-            if('maker' in dev) {
-              grpdevs.append('text')
-                .attr('x', 200)
-                .attr('y', i * ditemheight)
-                .style("font-size", fontsz)
-                .text(dev.maker);
-            }
-            if('model' in dev) {
-              grpdevs.append('text')
-                .attr('x', 300)
-                .attr('y', i * ditemheight)
-                .style("font-size", fontsz)
-                .text(dev.model);
-            }
-            if('load' in dev) {
-              grpdevs.append('text')
-                .attr('x', 400)
-                .attr('y', i * ditemheight)
-                .style("font-size", fontsz)
-                .text(dev.load);
-            }
-        });
-      });
-  });
-}
 
 function d3lights() {
     margin = {top: 10, bottom: 10, left: 20, right: 20};
@@ -139,7 +106,7 @@ function d3lights() {
     lcspacing = 15;
     lcwidth = (ldwidth - (lcspacing * lcols)) / lcols;
     lcheight = 70;
-    d3.csv('/wsgi-bin/listlight', function(error, data) {
+    d3.csv('/listlight', function(error, data) {
         if(error) throw error;
         lightsvg = d3.select('#LIGHTS')
             .append('svg')
@@ -205,7 +172,7 @@ function d3lights() {
           .style('fill', d3.rgb(128, 128, 128, 0.25));
         d3.select(this)
           .style('fill', d3.rgb(lc[0], lc[1], lc[2], 0.5));
-        d3.text('/wsgi-bin/setlight')
+        d3.text('/setlight')
           .post('DEV=' + theidx + '\nSTATE=' + thestate, function(d) {  console.log(d);});
          
     }
@@ -223,7 +190,7 @@ function d3mixer() {
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
     
 
-    d3.csv('/wsgi-bin/listmixer', function(error, data) {
+    d3.csv('/listmixer', function(error, data) {
       if(error) throw error;
       mixsvg = d3.select('#MIXER')
                  .append('svg')
@@ -297,7 +264,7 @@ function d3mixer() {
                 thethumb.attr("x", tp);
                 if(this.vp != vp) {
                     this.vp = vp;
-                    d3.text('/wsgi-bin/setmixer')
+                    d3.text('/setmixer')
                       .post('DEV=' + this.id + '\nVALUE=' + vp, function(d) {  console.log(d);});
                 }
             }
@@ -379,7 +346,7 @@ function showHostDetail(the_host) {
       nxttxt.append('text')
         .text(key);
       nxttxt.append('text')
-        .attr('x', '160')
+        .attr('x', '120')
         .text(data[key]);
     });
     cpudisplay.append('g').append('text')
