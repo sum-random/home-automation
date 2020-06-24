@@ -1,0 +1,90 @@
+<html>
+<head>
+<meta http-equiv='Refresh' content='300; url=/'>
+
+<TITLE>Launch Pad</TITLE>
+  <script type = "text/javascript" src = "https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+  <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+  <script src="https://d3js.org/d3-drag.v1.min.js"></script>
+  <script type="text/javascript" src="/jscript/jquery-1.3.2.js"></script>
+  <script type="text/javascript" src="/jscript/ui/ui.core.js"></script>
+  <script type="text/javascript" src="/jscript/index.js"></script>
+  <link type="text/css" href="/jscript/themes/base/ui.all.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="/css/index.css">
+</head>
+<body> <!-- onLoad='setupWeather();'-->
+<DIV CLASS='navicons' id='ICOBAR' >
+<A HREF='http://www.claytontucker.com' onMouseOver='changeSrcImg("#myImage","/img/display_showcase.jpg", "Public website")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='PUBICO' SRC='/img/display_showcase.jpg' onMouseOver='changeSize("#PUBICO",64,48);' onMouseOut='changeSize("#PUBICO",48,32);'></A>
+<!--A HREF='/~ctucker/bookmarks.html' onMouseOver='changeSrcImg("#myImage","/img/bookmark1.jpg", "Bookmarks")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A-->
+<A HREF='/~ctucker/bookmarks.html' onMouseOver="switchDiv('#BOOKMARKS');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A>
+<A onMouseOver="switchDiv('#PIX');">
+<IMG CLASS='bstyle' ID='NATICO' SRC='/thumbnail?IMGID=84077&SIZE=64x48' onMouseOver='changeSize("#NATICO",64,48);' onMouseOut='changeSize("#NATICO",48,32);'></A>
+<A HREF='https://mastodon.technology/@sum_random' rel="me" onMouseOver='switchDiv("#MASTODON");'>
+<IMG CLASS='bstyle' ID='MSTICO' SRC='/img/antlion.jpg' onMouseOver='changeSize("#MSTICO",64,48);' onMouseOut='changeSize("#MSTICO",48,32);'></A>
+<A onMouseOver="switchDiv('#WEATHER');">
+<IMG CLASS='bstyle' ID='WTHICO' SRC='http://icons.wunderground.com/data/nids/MUX19_0.gif' onMouseOver='changeSize("#WTHICO",64,48);' onMouseOut='changeSize("#WTHICO",48,32);'></A>
+<A HREF='/cgi-bin/lightsched' onMouseOver="changeSrcImg('#myImage','/img/AlarmClk.gif', 'Light scheduler')" onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='SCHICO' SRC='/img/AlarmClk.gif' onMouseOver='changeSize("#SCHICO",64,48);' onMouseOut='changeSize("#SCHICO",48,32);'></A>
+<A onMouseOver="switchDiv('#LIGHTS');">
+<IMG CLASS='bstyle' ID='LITICO' SRC='/img/Light_Bulb.png' onMouseOver='changeSize("#LITICO",64,48);' onMouseOut='changeSize("#LITICO",48,32);'></A>
+<!--A HREF='/music' onMouseOver="changeSrcImg('#myImage','/img/MusicNote.gif', 'Play music')" onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<IMG CLASS='bstyle' ID='MUSICO' SRC='/img/MusicNote.gif' onMouseOver='changeSize("#MUSICO",64,48);' onMouseOut='changeSize("#MUSICO",48,32);'></A-->
+<A onMouseOver="switchDiv('#MUSICDIV');">
+<IMG CLASS='bstyle' ID='MUSICO' SRC='/img/MusicNote.gif' onMouseOver='changeSize("#MUSICO",64,48);' onMouseOut='changeSize("#MUSICO",48,32);'></A>
+<A onMouseOver="switchDiv('#MIXER');">
+<IMG CLASS='bstyle' ID='MIXICO' SRC='/img/Mixer.gif' onMouseOver='changeSize("#MIXICO",64,48);' onMouseOut='changeSize("#MIXICO",48,32);'></A>
+<A onMouseOver="switchDiv('#DEVICES');">
+<IMG CLASS='bstyle' ID='DEVICO' SRC='/img/google_vs_apple_thm.jpg' onMouseOver='changeSize("#DEVICO",64,48);' onMouseOut='changeSize("#DEVICO",48,32);'></A>
+</DIV>
+
+<DIV CLASS='bookmarks' ID='BOOKMARKS'>
+{{ bookmarks|safe }}
+</DIV>
+
+<DIV CLASS='mixer' ID='MIXER' >
+<script  type="text/javascript">
+  d3mixer();
+</script>
+</DIV>
+
+<DIV CLASS='devices' ID='DEVICES'>
+{{ devices|safe }}
+<DIV CLASS='devices' ID='HOSTINFO'></DIV>
+</DIV>
+
+<DIV CLASS='lights' ID='LIGHTS' >
+<script type="text/javascript">
+  d3lights();
+</SCRIPT>
+</DIV>
+
+<DIV CLASS='social' ID='MASTODON' >
+<IMG SRC='/img/antlion.jpg' CLASS='circle'><br>
+@sum_random@Mastodon.Technology
+</DIV>
+
+<DIV CLASS='pix' ID='PIX'>
+{{ pix|safe }}
+</DIV>
+
+<DIV CLASS='pos_abs' id="myImage">
+Image placeholder
+</DIV>
+
+<DIV CLASS='musicDiv' ID='MUSICDIV' >
+{{ music|safe }}
+</DIV>
+
+<DIV CLASS='weatherDiv' ID='WEATHER' >
+<CENTER>
+{{ weather|safe }}
+<DIV ID='WEATHERIMG'> </DIV>
+</CENTER>
+</DIV>
+
+</body>
+</html>

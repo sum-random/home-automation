@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+
+# system libraries
+import os
+import time
+import re
+
+# local libraries here
+import db
+from logit import logit
+
+def get_pix_html():
+    retval = []
+
+    retval.append("<h1>Choose a folder to browse</h1>")
+    retval.append("<FORM METHOD='POST'>")
+    retval.append("<SELECT ID='PICKFOLDER' onChange='populateThumbs();'>")
+    folderlist = {}
+    try:
+        connection = db.get_sql_connection()
+        cursor = connection.cursor()
+        query = "SELECT fname,imgid FROM thumblist order by 1"
+        if cursor.execute(query):
+            for imgline in cursor.fetchall():
+                the_dir = os.path.dirname(imgline['fname'])
+                the_id = imgline['imgid']
+                if not the_dir in folderlist:
+                    #folderlist[the_dir] = os.path.basename(the_dir)
+                    folderlist[the_dir] = {'imgid': the_id, 'fname': os.path.basename(the_dir)}
+    except Exception as ex:
+        folderlist['exception']="{}".format(ex)
+    defaultfolder = re.compile('nathan12')
+    for folder_name in sorted(folderlist):
+        the_folder = folderlist[folder_name]
+        the_id = the_folder['imgid']
+        the_name = the_folder['fname']
+        slashes = folder_name.count('/') - 3
+        if defaultfolder.search(folder_name):
+            selected = "SELECTED "
+        else:
+            selected = ""
+        retval.append("<OPTION {}VALUE='{}'>{}{}</OPTION>".format(selected, the_id, '-' * slashes, the_name))
+    retval.append("</SELECT>")
+    retval.append("<DIV ID='pickathumb' WIDTH='100%' onMouseOver='scrollThumbs();'></DIV>")
+    retval.append("<DIV ID='displayimg' WIDTH='100%'>displayimg</DIV>")
+    retval.append("")
+    retval.append("</FORM>")
+
+    return '\n'.join(retval)
+
+def list_folder(the_folder_id):
+    imglist = []
+    try:
+        connection = db.get_sql_connection()
+        cursor = connection.cursor()
+        the_img_id = the_folder_id * 1
+        query = "SELECT fname,imgid FROM thumblist where imgid={}".format(the_img_id)
+        the_folder = False
+        if cursor.execute(query):
+            for imgline in cursor.fetchall():
+                the_file = os.path.basename(imgline['fname'])
+                the_folder = os.path.dirname(imgline['fname'])
+        cursor.close()
+        if the_folder:
+            query = "SELECT fname,imgid FROM thumblist where fname LIKE '{}%'".format(the_folder)
+            cursor = connection.cursor()
+            if cursor.execute(query):
+                for imgline in cursor.fetchall():
+                    imglist.append({'imgid': imgline['imgid'], 'fname': imgline['fname']})
+    except Exception as ex:
+        imglist.append({'exception': "{}".format(ex)})
+
+    return imglist
+
+if __name__ == '__main__':
+    the_html = get_pix_html()
+    for the_endpoint in the_html.split('\n'):
+        print(the_endpoint)

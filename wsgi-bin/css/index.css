@@ -1,0 +1,109 @@
+div.pos_abs
+{
+position:absolute;
+visibility:hidden;
+}
+div.navicons
+{
+}
+img.bstyle
+{
+vertical-align:top;
+width:48px;
+height:32px;
+border: 0px solid black;
+cursor:pointer;
+}
+.lights
+{
+width:80%;
+display:none;
+padding:5px;
+padding-top:35px;
+}
+.bookmarks
+{
+width:80%;
+display:none;
+padding:5px;
+padding-top:35px;
+}
+.musicDiv
+{
+width:80%;
+display:none;
+padding:5px;
+}
+.devices
+{
+width:80%;
+display:none;
+padding:5px;
+}
+.social
+{
+width:80%;
+display:none;
+padding:15px;
+background-image: url("/img/thematrix.gif");
+width: 70%;
+height: 70%;
+color: white;
+}
+.circle
+{
+border-radius: 25px;
+width: 50;
+height: 50;
+}
+.weatherthumb
+{
+width:9%;
+padding:1px;
+border:1px solid black;
+vertical-align:top;
+}
+.weathershow
+{
+width:80%;
+padding:10px;
+vertical-align:top;
+border:none;
+}
+.weatherDiv
+{
+width:95%;
+vertical-align:top;
+padding:10px;
+padding-top:35px;
+display:none;
+}
+.pix
+{
+width:85%;
+display:none;
+padding-top:15px;
+}
+.mixer
+{
+width:80%;
+display:none;
+padding-top:35px;
+}
+.track
+{
+width:80%;
+text-align:center;
+}
+.loader
+{
+display:none;
+}
+td
+{
+border:1px solid black;
+text-align:center;
+padding-left:15px;
+padding-right:15px;
+}
+
