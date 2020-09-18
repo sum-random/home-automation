@@ -224,6 +224,7 @@ def get_device_info(the_host):
     return retval
     
 if __name__ == '__main__':
+    print("get_sql_connection")
     connection = db.get_sql_connection()
 
     for nextdev in scandevices():
