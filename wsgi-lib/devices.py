@@ -82,7 +82,8 @@ def check_ping(device):
                              dev_name], stdout=PIPE)
                           .communicate()[0].decode('utf-8').split('\n'))
     recd_pkts = ping_pat.match(output)
-    device['recd_pkts'] = recd_pkts.groups(0)[0]
+    if recd_pkts:
+        device['recd_pkts'] = recd_pkts.groups(0)[0]
     return device
 
 
