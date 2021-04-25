@@ -35,7 +35,10 @@ def _shortname(longname):
 
 def readdevice(ipaddr):
     the_srv_type = {}
-    hostname = socket.gethostbyaddr(ipaddr)
+    try:
+    	hostname = socket.gethostbyaddr(ipaddr)
+    except:
+        hostname = ["unknown"]
     dom = re.compile('.claytontucker.org')
     long = hostname[0]
     short = _shortname(long)
