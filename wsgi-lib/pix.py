@@ -22,11 +22,13 @@ def get_pix_html():
         query = "SELECT fname,imgid FROM thumblist order by 1"
         if cursor.execute(query):
             for imgline in cursor.fetchall():
-                the_dir = os.path.dirname(imgline['fname'])
-                the_id = imgline['imgid']
+                the_dir = os.path.dirname(imgline[0])
+                the_id = imgline[1]
                 if not the_dir in folderlist:
                     #folderlist[the_dir] = os.path.basename(the_dir)
                     folderlist[the_dir] = {'imgid': the_id, 'fname': os.path.basename(the_dir)}
+        cursor.close()
+        connection.close()
     except Exception as ex:
         folderlist['exception']="{}".format(ex)
     defaultfolder = re.compile('nathan12')
@@ -58,15 +60,17 @@ def list_folder(the_folder_id):
         the_folder = False
         if cursor.execute(query):
             for imgline in cursor.fetchall():
-                the_file = os.path.basename(imgline['fname'])
-                the_folder = os.path.dirname(imgline['fname'])
+                the_file = os.path.basename(imgline[0])
+                the_folder = os.path.dirname(imgline[0])
         cursor.close()
         if the_folder:
             query = "SELECT fname,imgid FROM thumblist where fname LIKE '{}%'".format(the_folder)
             cursor = connection.cursor()
             if cursor.execute(query):
                 for imgline in cursor.fetchall():
-                    imglist.append({'imgid': imgline['imgid'], 'fname': imgline['fname']})
+                    imglist.append({'imgid': imgline[1], 'fname': imgline[0]})
+            cursor.close()
+        connection.close()
     except Exception as ex:
         imglist.append({'exception': "{}".format(ex)})
 

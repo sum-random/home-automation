@@ -38,7 +38,7 @@ def readdevice(ipaddr):
     try:
     	hostname = socket.gethostbyaddr(ipaddr)
     except:
-        hostname = ["unknown"]
+        hostname = [ipaddr]
     dom = re.compile('.claytontucker.org')
     long = hostname[0]
     short = _shortname(long)
@@ -103,7 +103,7 @@ def find_open_port(device, port):
 def check_ssh(device):
     """ Look for open SSH port, if found, log in and gather hardware info """
     dev_name = device['hostname']
-    if device['recd_pkts'] != '0':
+    if 'recd_pkts' in device and device['recd_pkts'] != '0':
         for portnum in [22, 2222]:
             if find_open_port(device, portnum):
                 for key in CMDS[portnum]:
@@ -155,8 +155,9 @@ def renderdevices():
     the_sql = "SELECT devjson FROM devices"
     if tablecursor.execute(the_sql) > 0:
         for nexttable in tablecursor.fetchall():
-            the_host_json = json.loads(nexttable['devjson'])
-            if the_host_json['recd_pkts'] != '0':
+            # logit("nexttable is {}".format(nexttable))
+            the_host_json = json.loads(nexttable[0])
+            if 'recd_pkts' in the_host_json and the_host_json['recd_pkts'] != '0':
                 retval.append(the_host_json)
     tablecursor.close()
     connection.close()
@@ -220,7 +221,7 @@ def get_device_info(the_host):
     the_sql = "SELECT devjson FROM devices WHERE hostname='{}'".format(the_host)
     if tablecursor.execute(the_sql) > 0:
         for nexttable in tablecursor.fetchall():
-            the_host_json = json.loads(nexttable['devjson'])
+            the_host_json = json.loads(nexttable[0])
             if the_host_json['recd_pkts'] != '0' and 'cpuinfo' in the_host_json:
                 retval = the_host_json['cpuinfo']
     tablecursor.close()

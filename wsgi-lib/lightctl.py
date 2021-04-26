@@ -44,10 +44,11 @@ def get_light_list():
     lights = { 1: 'Computer',
                2: 'Sofa right',
                3: 'Shoes',
-               4: 'Entryway',
                5: 'Television',
                6: 'Sofa left',
+               9: 'Entryway',
                10: 'Buffet Left',
+               11: 'Tomatoes',
                12: 'Buffet Right',
                14: 'Nathans computer' }
     return lights
@@ -62,16 +63,17 @@ def get_light_state(the_light):
     status = 'Auto'
     devpath = dev_path(the_light)
     if os.path.exists(devpath):
-        f = open(devpath, 'rb')
+        f = open(devpath, 'rt')
         status = f.readline()
         f.close()
+    logit("light {} status {}".format(the_light, status))
     return status.strip()
 
 
 def apply_light_state(the_light, the_state):
     _getlock()
     cmd = "-{}".format(the_state[1:2])
-    brcmd = [BRCMD, '-x', '/dev/cuau0', '-c','I', '-r', '5', cmd, the_light]
+    brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, the_light]
     brout = Popen(brcmd, stdout=PIPE).communicate()
     if brout[0]:
         logit(brout[0])
@@ -104,20 +106,86 @@ def set_light_state(the_light, the_state):
             retval = "Unknown STATE: {}".format(the_state)
     return retval
 
-def get_desired_light_states():
+def get_desired_light_states(the_light):
+    retval = []
     connection = db.get_sql_connection()
     cursor = connection.cursor()
     logit("read light schedule from database")
-    if cursor.execute("SELECT hhcode, lightcode, monthmatch, daymatch, turnon, turnoff FROM lightschedule"):
+    if the_light == -1:
+        where = '' #  all light codes
+    else:
+        where = " WHERE lightcode={}".format(the_light)
+    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
             logit("light state row: {}".format(nextrow))
-            if nextrow['monthmatch'] is not none:
-                pass
-            else:
-                monthvalid = True
+            retval.append({'id': nextrow[0], 'hhcode': nextrow[6], 'lightcode': nextrow[1], 
+                           'monthmatch': nextrow[2], 'daymatch': nextrow[3], 
+                           'turnon': nextrow[4], 'turnoff': nextrow[5] })
+    cursor.close()
+    connection.close()
+    return retval
 
+def monthmatchcheck(monthmatch):
+    valid = False;
+    if monthmatch == '*':
+        valid = True
+    elif int(monthmatch) > 0:
+        if int(monthmatch) <13:
+            valid = True
+    return valid
+
+def lightsched(cgi_options):
+    retval = []
+    monthmatch = '*'
+    daymatch = '*'
+    turnon = 'HHMM'
+    turnoff = 'HHMM'
+    pickalight = -1
+    if cgi_options:
+        if 'PICKALIGHT' in cgi_options:
+            pickalight = int(cgi_options['PICKALIGHT'])
+        if 'MONTHMATCH' in cgi_options:
+            monthmatch = cgi_options['MONTHMATCH']
+        if 'DAYMATCH' in cgi_options:
+            daymatch = cgi_options['DAYMATCH']
+        if 'TURNON' in cgi_options:
+            turnon = cgi_options['TURNON']
+        if 'TURNOFF' in cgi_options:
+            turnoff = cgi_options['TURNOFF']
+        if 'MAKENEW' in cgi_options and 'PICKALIGHT' in cgi_options and pickalight > -1:
+            valid = True
+            if not monthmatchcheck(monthmatch):
+                valid = False
+                retval.append("{} is not a valid month spec".format(monthmatch))
+            nextlight = pickalight
+            if valid:
+                sql = ("INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff) "
+                       "VALUES ('I', {}, '{}', '{}', '{}', '{}')"
+                       "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
+                db.update_sql(sql)
+    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' onChange='submit();'>")
+    retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
+    the_lights = get_light_list()
+    for nextlight in the_lights:
+        selected = ''
+        if nextlight == pickalight:
+            selected = ' SELECTED'
+        retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
+    retval.append("</SELECT>")
+    retval.append('<HR/>Schedule')
+    for nextsched in get_desired_light_states(pickalight):
+        retval.append("{}<BR>".format(nextsched))
+    retval.append('<HR/>New schedule<BR>')
+    retval.append('Month <INPUT TYPE=TEXT NAME=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
+    retval.append('Day <INPUT TYPE=TEXT NAME=DAYMATCH VALUE={}><BR>'.format(daymatch))
+    retval.append('Time On <INPUT TYPE=TEXT NAME=TURNON VALUE={}><BR>'.format(turnon))
+    retval.append('Time Off <INPUT TYPE=TEXT NAME=TURNOFF VALUE={}><BR>'.format(turnoff))
+    retval.append('<INPUT TYPE=SUBMIT NAME=MAKENEW VALUE=New>')
+    retval.append("</FORM>")
+    return retval
 
 if __name__ == '__main__':
     for the_light in get_light_list():
         logit("Light {} state {}".format(the_light, get_light_state(the_light)))
-    get_desired_light_states()
+    for nextrow in get_desired_light_states():
+        logit(nextrow)

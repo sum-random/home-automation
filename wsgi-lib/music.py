@@ -85,6 +85,7 @@ def pop_playlist():
                 retval.append("/storage/{}".format(filename))
                 rm_playlist(row['fileid'])
         cursor.close()
+        connection.close()
     except pymysql.err.IntegrityError as ie:
         print(ie)
     return '\n'.join(retval)
@@ -113,6 +114,7 @@ def add_playlist(fileid,timestamp=0):
                 else:
                     logit("add_playlist.not_adding: {}".format(musicline))
         cursor.close()
+        connection.close()
     except pymysql.err.IntegrityError as ie:
         print(ie)
 
@@ -137,6 +139,7 @@ def rm_playlist(fileid):
                 #remover.commit()
                 remover.close()
         cursor.close()
+        connection.close()
     except pymysql.err.IntegrityError as ie:
         print(ie)
 
@@ -158,3 +161,4 @@ if __name__ == '__main__':
 
     for tune in get_playlist(True):
         print("removing: {}".format(rm_playlist(tune['fileid'])))
+    connection.close()

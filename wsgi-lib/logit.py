@@ -21,7 +21,7 @@ def logit(loglines):
         loglines = [loglines]
     for nextlog in loglines:
         for nextline in str(nextlog).split("\n"):
-            syslog.syslog(nextlog)
+            syslog.syslog(nextline)
             timestamp = datetime.datetime.now()
             thelogfile.write("{} {} [{}]: {}\n".format(timestamp.isoformat(), thename, thepid, nextline))
             thelogfile.flush()

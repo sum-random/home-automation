@@ -19,22 +19,31 @@ write_lock = Lock()
 
 def get_img_sized(imgid, size):
     """ Return an Image in the requested size """
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT fname FROM thumblist WHERE imgid={};".format(imgid)):
+    sql = "SELECT fname FROM thumblist WHERE imgid={};".format(imgid)
+    logit("sql is {}".format(sql))
+    if cursor.execute(sql):
+        fname = cursor.fetchone()[0]
         cursor.close()
-        fname = cursor.fetchone()['fname']
         # logit("{} {}".format(fname, size))
         if size == 'FULL':
+            connection.close()
             return open(fname, 'rb').read()
         cursor = connection.cursor()
         if cursor.execute("SELECT imgdata FROM imgcache WHERE imgid={} AND size='{}'".format(imgid, size)):
-            return base64.b64decode(cursor.fetchone()['imgdata'])
+            retval = base64.b64decode(cursor.fetchone()[0])
+            cursor.close()
+            connection.close()
+            return retval
         else:
-            store_image(fname, [size])
-            return get_img_sized(imgid, size)
-    else:
-        return False
+            if store_image(fname, [size]):
+                cursor.close()
+                connection.close()
+                return get_img_sized(imgid, size)
+    cursor.close()
+    connection.close()
+    return False
  
 def get_exif_dict(image):
     """ Return exif data in a dict """
@@ -66,28 +75,16 @@ def auto_rotate(image):
     return image
 
 
-def get_imgid(img_path):
-    connection = db.get_sql_connection()
-    cursor = connection.cursor()
-    if cursor.execute("SELECT imgid FROM thumblist WHERE fname='{}';".format(img_path)):
-        imgid = cursor.fetchone()['imgid']
-        # logit("found imgid: {}".format(imgid))
-    else:
-        logit("not in db: {}".format(img_path))
-        imgid = False
-    cursor.close()
-    return imgid
-
-
 def clean_image(img_path):
     """ remove an entry for a deleted image file """
-    imgid = get_imgid(img_path)
-    connection = db.get_sql_connection()
+    imgid = db.get_imgid(img_path)
+    connection = db.open_sql_connection()
     cursor = connection.cursor()
     cursor.execute("DELETE FROM imgcache WHERE imgid = {0};"
                    "DELETE FROM thumblist WHERE imgid = {0};".format(imgid))
     cursor.close()
     connection.commit()
+    connection.close()
       
 
 def store_image(img_path, sizes=[ '16x16',
@@ -97,7 +94,6 @@ def store_image(img_path, sizes=[ '16x16',
                                   '64',
                                   '64x64' ]):
     """ Load image from disk and store in db resized per the sizes list """
-    connection = db.get_sql_connection()
     im = False
     if re.search('/jpg|jpeg/', img_path):
         exif = get_exif_dict(Image.open(img_path))
@@ -108,44 +104,29 @@ def store_image(img_path, sizes=[ '16x16',
         for keys in exif:
             keylist = "{} {}".format(keylist, keys)
         logit("{}: {}\n{}".format(img_path, exif['Model'], keylist))
-    imgid = get_imgid(img_path)
+    imgid = db.get_imgid(img_path)
     retval = []
     if not imgid and os.path.exists(img_path):
-        try:
-            logit("attempt to open {}".format(img_path))
-            im = auto_rotate(Image.open(img_path))
-            im_copy = im.copy()
-            im_copy = im_copy.resize((2,2), resample=Image.LANCZOS)
-            print(im_copy.format, im_copy.size, im_copy.mode)
-            (ur,ul,lr,ll) = im_copy.getdata()
-            sql = ("INSERT INTO thumblist(fname, urr, urg, urb, ulr, ulg, ulb, lrr, lrg, lrb, llr, llg, llb) "
-                   "VALUES('{}', {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})"
-                   "".format(img_path, ur[0], ur[1], ur[2], ul[0], ul[1], ul[2], lr[0], lr[1], lr[2], ll[0], ll[1], ll[2]))
-            write_lock.acquire()
-            logit("{} lock acquired for connection {}".format(write_lock, connection))
-            logit(sql)
-            connection = db.get_sql_connection(True)
-            cursor = connection.cursor()
-            if cursor.execute(sql) > 0:
-                connection.commit()
-                cursor.close()
-                cursor = connection.cursor()
-                if cursor.execute("SELECT imgid FROM thumblist WHERE fname='{}';".format(img_path)):
-                    imgid = cursor.fetchone()['imgid']
-            cursor.close()
-            write_lock.release()
-            logit("{} lock released".format(write_lock))
-        except Exception as e:
-            logit("failed to insert {} because exception {}".format(img_path, e))
+        logit("attempt to open {}".format(img_path))
+        im = auto_rotate(Image.open(img_path))
+        im_copy = im.copy()
+        im_copy = im_copy.resize((2,2), resample=Image.LANCZOS)
+        print(im_copy.format, im_copy.size, im_copy.mode)
+        (ur,ul,lr,ll) = im_copy.getdata()
+        sql = ("INSERT INTO thumblist(fname, urr, urg, urb, ulr, ulg, ulb, lrr, lrg, lrb, llr, llg, llb) "
+               "VALUES('{}', {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})"
+               "".format(img_path, ur[0], ur[1], ur[2], ul[0], ul[1], ul[2], lr[0], lr[1], lr[2], ll[0], ll[1], ll[2]))
+        logit(sql)
+        if db.update_sql(sql):
+            imgid = db.get_imgid(img_path)
     elif not imgid:
         logit("Cannot open {}".format(img_path))
-    
+        
     if imgid:
+        connection = db.open_sql_connection()
         for next_size in sizes:
-            connection = db.get_sql_connection()
             cursor = connection.cursor()
             if not cursor.execute("SELECT imgdatalen FROM imgcache WHERE imgid={} AND size='{}'".format(imgid, next_size)):
-                cursor.close()
                 logit("{} imgid {} size {} missing".format(img_path, imgid, next_size))
                 if not im:
                     im = auto_rotate(Image.open(img_path))
@@ -162,35 +143,28 @@ def store_image(img_path, sizes=[ '16x16',
                 logit("resize {} {}".format(width, height))
                 im_copy = im.resize((int(width), int(height)), resample=Image.LANCZOS)
                 stringbuffer = io.BytesIO()
-                im_copy.save(stringbuffer, 'jpeg')
+                try:
+                    im_copy.save(stringbuffer, 'jpeg')
+                except Exception as e:
+                    stringbuffer.write(('{}'.format(e)).encode("UTF-8"))
                 sql = ("INSERT INTO imgcache (imgid, size, imgdata) "
                        "VALUES ({}, '{}', '{}')"
-                       "".format(imgid, next_size, base64.b64encode(stringbuffer.getvalue())))
-                logit("would like to lock now {}".format(imgid))
-                retval.append(sql)
-                write_lock.acquire()
-                logit("{} write lock acquired for {}".format(write_lock, connection))
+                       "".format(imgid, next_size, base64.b64encode(stringbuffer.getvalue()).decode('utf-8')))
                 logit(sql[:100])
                 try:
-                    cursor.close()
-                    #w_connection = db.get_sql_connection(True)
-                    #logit("my new connection {}".format(w_connection))
-                    cursor = connection.cursor()
-                    if cursor.execute(sql, (imgid, next_size, base64.b64encode(stringbuffer.getvalue()))):
-                        cursor.close()
-                        connection.commit()
-                        #w_connection.close()
+                    if db.update_sql(sql):
                         logit("success")
-                    #else:
-                    #    logit("cannot save {} imgid {} size {}".format(img_path, imgid, next_size))
+                        retval.append(True)
+                    else:
+                        retval.append(False)
                 except Exception as oops:
                     logit('{}'.format(oops))
-                write_lock.release()
-                logit("{} lock released".format(write_lock))
-            else:
-                # logit("{} imgid {} size {} present {} bytes".format(img_path, imgid, next_size, cursor.fetchone()['imgdatalen']))
-                cursor.close()
-    return '\n'.join(retval)
+                    retval.append(False)
+            cursor.close()
+        connection.close()
+    else:
+        retval.append(False)
+    return retval
 
 
 def check_folder(expr, dirname, names):
@@ -206,23 +180,23 @@ def check_folder(expr, dirname, names):
 
 if __name__ == '__main__':
     """ main functionality is to scan filesystem and database and to throw out deleted files and read new file data into db """
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     cursor = connection.cursor()
     logit("fixup incomplete thumbs")
     if cursor.execute("SELECT imgid, fname, llb FROM thumblist"):
         for nextrow in cursor.fetchall():
-            if os.path.isfile(nextrow['fname']):
-                if nextrow['llb'] == -1:
-                    logit("fix thumb {}".format(nextrow['fname']))
-                    store_image(nextrow['fname'])
+            if os.path.isfile(nextrow[1]):
+                if nextrow[2] == -1:
+                    logit("fix thumb {}".format(nextrow[1]))
+                    store_image(nextrow[1])
             else:
-                logit("file removed {}".format(nextrow['fname']))
-                clean_image(nextrow['fname'])
+                logit("file removed {}".format(nextrow[1]))
+                clean_image(nextrow[1])
         for (dirpath, dirnames, filenames) in os.walk('/storage/Image'):
             for nextfile in filenames:
                 if re.search(u'jpg$|jpeg$|png$|tiff$|ico$', nextfile):
                     filepath = os.path.join(dirpath, nextfile)
-                    imgid = get_imgid(filepath)
+                    imgid = db.get_imgid(filepath)
                     if not imgid:
                         logit("store image {}".format(filepath))
                         store_image(filepath)

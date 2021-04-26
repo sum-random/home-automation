@@ -52,7 +52,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#PIX', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV' ].forEach(function(d) {
+    [ '#PIX', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV', '#LIGHTSCHED' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
@@ -111,7 +111,7 @@ function d3lights() {
         lightsvg = d3.select('#LIGHTS')
             .append('svg')
                 .attr('width', ldwidth + (lcspacing * lcols) + margin.left + margin.right)
-                .attr('height', (lcheight + lcspacing) * parseInt(data.length / lcols + 0.5) + margin.top + margin.bottom)
+                .attr('height', (lcheight + lcspacing) * parseInt(data.length / lcols + lcols) + margin.top + margin.bottom)
                 .append('g')
                      .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
         data.forEach(function(d,i) {

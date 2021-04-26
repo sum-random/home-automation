@@ -27,7 +27,7 @@
 <IMG CLASS='bstyle' ID='MSTICO' SRC='/img/antlion.jpg' onMouseOver='changeSize("#MSTICO",64,48);' onMouseOut='changeSize("#MSTICO",48,32);'></A>
 <A onMouseOver="switchDiv('#WEATHER');">
 <IMG CLASS='bstyle' ID='WTHICO' SRC='http://icons.wunderground.com/data/nids/MUX19_0.gif' onMouseOver='changeSize("#WTHICO",64,48);' onMouseOut='changeSize("#WTHICO",48,32);'></A>
-<A HREF='/cgi-bin/lightsched' onMouseOver="changeSrcImg('#myImage','/img/AlarmClk.gif', 'Light scheduler')" onMouseOut="hideIt('#myImage');" TARGET='_blank'>
+<A onMouseOver="switchDiv('#LIGHTSCHED')">
 <IMG CLASS='bstyle' ID='SCHICO' SRC='/img/AlarmClk.gif' onMouseOver='changeSize("#SCHICO",64,48);' onMouseOut='changeSize("#SCHICO",48,32);'></A>
 <A onMouseOver="switchDiv('#LIGHTS');">
 <IMG CLASS='bstyle' ID='LITICO' SRC='/img/Light_Bulb.png' onMouseOver='changeSize("#LITICO",64,48);' onMouseOut='changeSize("#LITICO",48,32);'></A>
@@ -71,8 +71,8 @@
 {{ pix|safe }}
 </DIV>
 
-<DIV CLASS='pos_abs' id="myImage">
-Image placeholder
+<DIV CLASS='lightsched' id="LIGHTSCHED">
+{{ lightsched | safe }}
 </DIV>
 
 <DIV CLASS='musicDiv' ID='MUSICDIV' >

@@ -39,6 +39,7 @@ def index():
                            devices=devices.get_device_html(),
                            weather=weather.get_weather_html(),
                            pix=pix.get_pix_html(),
+                           lightsched=lightctl.lightsched(False),
                            music=music.get_music_html())
 
 @app.route('/getimages', methods = ['POST'])
@@ -65,6 +66,7 @@ def listlight():
     lights = lightctl.get_light_list()
     for key in lights:
         retval.append('{},{},{}'.format(key, lights[key], lightctl.get_light_state(key)))
+    logit(retval)
     return Response("\n".join(retval),mimetype='text/csv')
 
 
@@ -104,6 +106,19 @@ def setlight():
     logit(retval)
     return Response(retval,mimetype='text/html')
 
+@app.route('/lightsched', methods = ['POST','GET'])
+def schedlight():
+    retval = 'Undefined'
+    requestobj = False
+    if request.method == 'POST':
+        logit("request {}".format(request))
+        #for subs in request.form:
+            #logit("request value {}: {}".format(subs, request.form[subs]))
+        requestobj = request.form
+        logit("requestobj {}".format(requestobj))
+    retval = lightctl.lightsched(requestobj)
+    logit("/lightsched {}".format(retval))
+    return Response(retval,mimetype='text/html')
 
 @app.route('/listmixer')
 def listmixer():
@@ -195,6 +210,7 @@ def thumbnail_handler():
         requestobj = request.form
     if requestobj:
         try:
+            logit("requestobj is {}".format(requestobj))
             if 'COLLAGEQUERY' in requestobj:
                 imgid = db.match_image(requestobj['COLLAGEQUERY'])['imgid']
             if 'IMGID' in requestobj:
