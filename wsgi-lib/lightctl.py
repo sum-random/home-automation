@@ -66,7 +66,7 @@ def get_light_state(the_light):
         f = open(devpath, 'rt')
         status = f.readline()
         f.close()
-    logit("light {} status {}".format(the_light, status))
+    #logit("light {} status {}".format(the_light, status))
     return status.strip()
 
 
@@ -110,14 +110,14 @@ def get_desired_light_states(the_light):
     retval = []
     connection = db.get_sql_connection()
     cursor = connection.cursor()
-    logit("read light schedule from database")
+    #logit("read light schedule from database")
     if the_light == -1:
         where = '' #  all light codes
     else:
         where = " WHERE lightcode={}".format(the_light)
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
-            logit("light state row: {}".format(nextrow))
+            #logit("light state row: {}".format(nextrow))
             retval.append({'id': nextrow[0], 'hhcode': nextrow[6], 'lightcode': nextrow[1], 
                            'monthmatch': nextrow[2], 'daymatch': nextrow[3], 
                            'turnon': nextrow[4], 'turnoff': nextrow[5] })

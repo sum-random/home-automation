@@ -346,7 +346,7 @@ function showHostDetail(the_host) {
       nxttxt.append('text')
         .text(key);
       nxttxt.append('text')
-        .attr('x', '120')
+        .attr('x', '160')
         .text(data[key]);
     });
     cpudisplay.append('g').append('text')
