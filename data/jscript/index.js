@@ -3,6 +3,20 @@ function setupWeather() {
     .on('mouseover', showWImg);
 }
 
+function showOneLightSchedule() {
+    thelight = document.getElementById("#PICKALIGHT");
+    thelightcode = thelight.options[thelight.selectedIndex].value
+    console.log(thelight.selectedIndex)
+    console.log(thelightcode)
+    the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
+    d3.json('/getonelightsched/' + thelightcode, function(data) {
+        the_list = the_display.selectAll("option");
+        the_list.data(data, function(d){return d.id;});
+        the_list.text(data, function(d){return "Housecode: " + d.hhcode + " Month: " + d.monthmatch + " Day: " + d.daymatch + " Turn On: " + d.turnon + " Turn Off: " + d.turnoff});
+        the_list.exit().remove();
+        the_list.enter().append("option");
+    });
+}
 function populateMusicList() {
     thetextfield = document.getElementById("TUNEFILTER");
     thetext = thetextfield.value;

@@ -163,7 +163,8 @@ def lightsched(cgi_options):
                        "VALUES ('I', {}, '{}', '{}', '{}', '{}')"
                        "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
                 db.update_sql(sql)
-    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' onChange='submit();'>")
+                retval.append("Added new item to schedule<BR>")
+    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' onChange='showOneLightSchedule();'>")
     retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
     the_lights = get_light_list()
     for nextlight in the_lights:
@@ -172,17 +173,16 @@ def lightsched(cgi_options):
             selected = ' SELECTED'
         retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
     retval.append("</SELECT>")
-    retval.append('<HR/>Schedule')
-    for nextsched in get_desired_light_states(pickalight):
-        retval.append("{}<BR>".format(nextsched))
+    retval.append('<HR/>Schedule<BR>')
+    retval.append('<SELECT NAME=SCHEDLIST ID=SCHEDLIST SIZE=10 onChange="showSchedulueItem();"></SELECT>')
     retval.append('<HR/>New schedule<BR>')
     retval.append('Month <INPUT TYPE=TEXT NAME=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
     retval.append('Day <INPUT TYPE=TEXT NAME=DAYMATCH VALUE={}><BR>'.format(daymatch))
     retval.append('Time On <INPUT TYPE=TEXT NAME=TURNON VALUE={}><BR>'.format(turnon))
     retval.append('Time Off <INPUT TYPE=TEXT NAME=TURNOFF VALUE={}><BR>'.format(turnoff))
-    retval.append('<INPUT TYPE=SUBMIT NAME=MAKENEW VALUE=New>')
+    retval.append('<INPUT TYPE=BUTTON ID=MAKENEW NAME=MAKENEW VALUE=New onClick="submitScheduleUpdate()">')
     retval.append("</FORM>")
-    return retval
+    return '\n'.join(retval)
 
 if __name__ == '__main__':
     for the_light in get_light_list():
