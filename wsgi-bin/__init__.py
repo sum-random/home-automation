@@ -124,7 +124,7 @@ def schedlight():
 def getlightsched(the_light):
     retval = lightctl.get_desired_light_states(the_light)
     logit("/getonelightsched {}".format(retval))
-    return jsonify(retval)
+    return Response("\n".join(retval),mimetype='text/csv')
 
 @app.route('/listmixer')
 def listmixer():

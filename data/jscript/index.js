@@ -4,19 +4,20 @@ function setupWeather() {
 }
 
 function showOneLightSchedule() {
-    thelight = document.getElementById("#PICKALIGHT");
-    thelightcode = thelight.options[thelight.selectedIndex].value
-    console.log(thelight.selectedIndex)
-    console.log(thelightcode)
-    the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
-    d3.json('/getonelightsched/' + thelightcode, function(data) {
-        the_list = the_display.selectAll("option");
-        the_list.data(data, function(d){return d.id;});
-        the_list.text(data, function(d){return "Housecode: " + d.hhcode + " Month: " + d.monthmatch + " Day: " + d.daymatch + " Turn On: " + d.turnon + " Turn Off: " + d.turnoff});
-        the_list.exit().remove();
-        the_list.enter().append("option");
+    thelight = d3.select("#PICKALIGHT").node().value;
+    the_display = d3.select("#SCHEDLIST");
+    d3.csv('/getonelightsched/' + thelight, function(rawdata) {
+        data = rawdata.sort(function(d){return d.hhcode + d.lightcode + d.monthmatch + d.daymatch + d.turnon;})
+        the_list = the_display.selectAll("option").data(data).exit().remove().enter().append("option").attr("value",function(d){return d.id;})
+                .text(data, function(d){return "Housecode: " + d.hhcode + " Month: " + d.monthmatch + " Day: " + d.daymatch + " Turn On: " + d.turnon + " Turn Off: " + d.turnoff});
     });
 }
+
+function showScheduleItem() {
+    the_item = d3.select("#SCHEDLIST").node().value;
+    console.log("the selected item is " + the_item);
+}
+
 function populateMusicList() {
     thetextfield = document.getElementById("TUNEFILTER");
     thetext = thetextfield.value;

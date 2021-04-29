@@ -107,7 +107,7 @@ def set_light_state(the_light, the_state):
     return retval
 
 def get_desired_light_states(the_light):
-    retval = []
+    retval = ['id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode']
     connection = db.get_sql_connection()
     cursor = connection.cursor()
     #logit("read light schedule from database")
@@ -117,10 +117,8 @@ def get_desired_light_states(the_light):
         where = " WHERE lightcode={}".format(the_light)
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
-            #logit("light state row: {}".format(nextrow))
-            retval.append({'id': nextrow[0], 'hhcode': nextrow[6], 'lightcode': nextrow[1], 
-                           'monthmatch': nextrow[2], 'daymatch': nextrow[3], 
-                           'turnon': nextrow[4], 'turnoff': nextrow[5] })
+            logit("light state row: {}".format(nextrow))
+            retval.append(','.join(list(map(str,nextrow))))
     cursor.close()
     connection.close()
     return retval
@@ -164,7 +162,7 @@ def lightsched(cgi_options):
                        "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
                 db.update_sql(sql)
                 retval.append("Added new item to schedule<BR>")
-    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' onChange='showOneLightSchedule();'>")
+    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' ID=PICKALIGHT onChange='showOneLightSchedule();'>")
     retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
     the_lights = get_light_list()
     for nextlight in the_lights:
@@ -174,7 +172,7 @@ def lightsched(cgi_options):
         retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
     retval.append("</SELECT>")
     retval.append('<HR/>Schedule<BR>')
-    retval.append('<SELECT NAME=SCHEDLIST ID=SCHEDLIST SIZE=10 onChange="showSchedulueItem();"></SELECT>')
+    retval.append('<SELECT NAME=SCHEDLIST ID=SCHEDLIST SIZE=10 onChange="showScheduleItem();"></SELECT>')
     retval.append('<HR/>New schedule<BR>')
     retval.append('Month <INPUT TYPE=TEXT NAME=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
     retval.append('Day <INPUT TYPE=TEXT NAME=DAYMATCH VALUE={}><BR>'.format(daymatch))
