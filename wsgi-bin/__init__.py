@@ -126,6 +126,12 @@ def getlightsched(the_light):
     logit("/getonelightsched {}".format(retval))
     return Response("\n".join(retval),mimetype='text/csv')
 
+@app.route('/getlightscheddetail/<the_index>', methods = ['GET', 'POST'])
+def getscheddetail(the_index):
+    retval = lightctl.get_light_schedule_detail(the_index)
+    logit("/getlightscheddetail/{} {}".format(the_index, retval))
+    return jsonify(retval)
+   
 @app.route('/listmixer')
 def listmixer():
     retval = ['device,left,right']

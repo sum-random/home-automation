@@ -38,12 +38,12 @@ def get_music_filtered(filter):
     for subfilter in filter.split('|'):
         if len(subfilter) > 2:
             cursor = connection.cursor()
-            query = ("SELECT * FROM musicfiles "
+            query = ("SELECT fileid,shortname,size FROM musicfiles "
                      "WHERE filename LIKE '%{}%' "
                      "ORDER BY shortname".format(subfilter.replace(' ','%')))
             if cursor.execute(query):
                 for musicline in cursor.fetchall():
-                    retval.append({'fileid': musicline['fileid'], 'shortname': musicline['shortname'], 'size': musicline['size']})
+                    retval.append({'fileid': musicline[0], 'shortname': musicline[1], 'size': musicline[2]})
         cursor.close()
     connection.close()
     return sorted(retval,key=lambda k: k['shortname'])

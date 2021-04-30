@@ -5,17 +5,38 @@ function setupWeather() {
 
 function showOneLightSchedule() {
     thelight = d3.select("#PICKALIGHT").node().value;
-    the_display = d3.select("#SCHEDLIST");
-    d3.csv('/getonelightsched/' + thelight, function(rawdata) {
-        data = rawdata.sort(function(d){return d.hhcode + d.lightcode + d.monthmatch + d.daymatch + d.turnon;})
-        the_list = the_display.selectAll("option").data(data).exit().remove().enter().append("option").attr("value",function(d){return d.id;})
-                .text(data, function(d){return "Housecode: " + d.hhcode + " Month: " + d.monthmatch + " Day: " + d.daymatch + " Turn On: " + d.turnon + " Turn Off: " + d.turnoff});
-    });
+    the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
+    if(thelight > -1) {
+        d3.csv('/getonelightsched/' + thelight, function(rawdata) {
+            data = rawdata.sort(function(d){return d.descr;})
+            the_options = the_display.selectAll("option").data(data, function(d){return d.id;});
+            the_options.exit().remove();
+            the_options.enter().append("option");
+            the_display.selectAll("option")
+                .attr('value', function(d) {return d.id;})
+                .text(function(d){return d.descr;});
+            the_display.attr("size", data.length<2?2:data.length);
+        });
+    } else {
+        the_display.selectAll("option").remove();
+        the_display.attr("size", 4);
+    }
+    showScheduleItem();
 }
 
 function showScheduleItem() {
     the_item = d3.select("#SCHEDLIST").node().value;
     console.log("the selected item is " + the_item);
+    d3.json('/getlightscheddetail/' + the_item, function(data) {
+        d3.select('#MONTHMATCH')
+            .attr('value', data[0]['monthmatch']);
+        d3.select('#DAYMATCH')
+            .attr('value', data[0]['daymatch']);
+        d3.select('#TURNON')
+            .attr('value', data[0]['turnon']);
+        d3.select('#TURNOFF')
+            .attr('value', data[0]['turnoff']);
+    });
 }
 
 function populateMusicList() {
@@ -29,6 +50,7 @@ function populateMusicList() {
             theoptions.exit().remove();
             theoptions.enter().append("option");
             thelistdisplay.selectAll("option")
+              .attr('value', function(d) {return d.fileid;})
               .text(function(d) {return d.shortname;});
             thelistdisplay.attr("size", data.length);
         });

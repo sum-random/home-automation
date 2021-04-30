@@ -5,6 +5,7 @@ import pymysql
 import multiprocessing
 from os import path
 import pymysqlpool
+import traceback
 
 
 # local libraries
@@ -21,7 +22,8 @@ config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'da
 pool1 = pymysqlpool.ConnectionPool(size=8, name='pool1', **config)
 
 def open_sql_connection():
-  logit("open new connection")
+  #logit("open new connection")
+  #traceback.print_stack()
   return pool1.get_connection()
   # return pymysql.connect(db='*db_name*',user='*db_login*',password='*db_password*',host='*db_host*',charset='utf8mb4',autocommit=True,cursorclass=pymysql.cursors.DictCursor)
 

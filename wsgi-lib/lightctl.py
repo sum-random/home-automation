@@ -3,7 +3,10 @@
 # system libraries
 import os
 from subprocess import Popen, PIPE
+import datetime
 import time
+import re
+from multiprocessing import Pool
 
 # local libraries here
 import db
@@ -73,7 +76,8 @@ def get_light_state(the_light):
 def apply_light_state(the_light, the_state):
     _getlock()
     cmd = "-{}".format(the_state[1:2])
-    brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, the_light]
+    brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, str(the_light)]
+    logit("brcmd {}".format(brcmd))
     brout = Popen(brcmd, stdout=PIPE).communicate()
     if brout[0]:
         logit(brout[0])
@@ -107,7 +111,7 @@ def set_light_state(the_light, the_state):
     return retval
 
 def get_desired_light_states(the_light):
-    retval = ['id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode']
+    retval = ['id,descr']
     connection = db.get_sql_connection()
     cursor = connection.cursor()
     #logit("read light schedule from database")
@@ -118,19 +122,90 @@ def get_desired_light_states(the_light):
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
             logit("light state row: {}".format(nextrow))
-            retval.append(','.join(list(map(str,nextrow))))
+            retval.append("{},Housecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[1], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
     cursor.close()
     connection.close()
     return retval
 
-def monthmatchcheck(monthmatch):
-    valid = False;
-    if monthmatch == '*':
-        valid = True
-    elif int(monthmatch) > 0:
-        if int(monthmatch) <13:
-            valid = True
-    return valid
+def get_light_state_ids(the_light):
+    retval = []
+    connection = db.get_sql_connection()
+    cursor = connection.cursor()
+    #logit("read light schedule from database")
+    if the_light == -1:
+        where = '' #  all light codes
+    else:
+        where = " WHERE lightcode={}".format(the_light)
+    if cursor.execute("SELECT id FROM lightschedule{}".format(where)):
+        for nextrow in cursor.fetchall():
+            logit("light state row: {}".format(nextrow))
+            retval.append(nextrow[0])
+    cursor.close()
+    connection.close()
+    return retval
+    
+def get_light_schedule_detail(the_id):
+    retval = {}
+    connection = db.get_sql_connection()
+    cursor = connection.cursor()
+    logit("get_light_schedule_detail({})".format(the_id))
+    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(the_id)):
+        for nextrow in cursor.fetchall():
+            retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
+    return retval
+
+def set_light_schedule_detail(the_id, the_month, the_day, the_on_time, the_off_time):
+    pass
+
+
+def date_match(light_schedule):
+    month = False
+    day = False
+    hour = False
+    logit("light_schedule = {}".format(light_schedule))
+    monthmatch = light_schedule['monthmatch']
+    try:
+        if monthmatch == '*':
+            month = True
+        elif '-' in monthmatch:
+            (first, last) = monthmatch.split('-')
+            if first <= datetime.datetime.now().month and last >= datetime.datetime.now().month:
+                month = True
+        else:
+            if int(monthmatch) == datetime.datetime.now().month:
+                month = True
+    except Exception as ex:
+        logit("Unable to parse month match {} {}".format(monthmatch, ex))
+        month = False
+    daymatch = light_schedule['daymatch']
+    try:
+        if daymatch == '*':
+            day = True
+        elif '-' in daymatch:
+            (first, last) = daymatch.split('-')
+            if first <= datetime.datetime.now().day and last >= datetime.datetime.now().day:
+                day = True
+        else:
+            if int(monthmatch) == datetime.datetime.now().day:
+                day = True
+    except:
+        logit("Unable to parse day match {}".format(daymatch))
+        day = False
+    try:
+        curtime = datetime.datetime.now().strftime('%H%M')
+        logit("curtime {}".format(curtime))
+        if light_schedule['turnon'] <= curtime and light_schedule['turnoff'] >= curtime:
+            hour = True
+    except Exception as ex:
+        logit("Unable to parse hour match {} {} {}".format(light_schedule['turnon'], light_schedule['turnoff'], ex))
+        hour = False
+    override = get_light_state(the_light) 
+    logit("override = {}".format(override))
+    if re.match('Auto',override):
+        return month and day and hour
+    else:
+        logit("Light override: {}".format(override))
+        return re.match('On',override)
 
 def lightsched(cgi_options):
     retval = []
@@ -162,7 +237,7 @@ def lightsched(cgi_options):
                        "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
                 db.update_sql(sql)
                 retval.append("Added new item to schedule<BR>")
-    retval.append("<FORM METHOD=POST><SELECT NAME='PICKALIGHT' ID=PICKALIGHT onChange='showOneLightSchedule();'>")
+    retval.append("<HR/><FORM METHOD=POST><SELECT NAME='PICKALIGHT' ID='PICKALIGHT' onChange='showOneLightSchedule();'>")
     retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
     the_lights = get_light_list()
     for nextlight in the_lights:
@@ -172,18 +247,36 @@ def lightsched(cgi_options):
         retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
     retval.append("</SELECT>")
     retval.append('<HR/>Schedule<BR>')
-    retval.append('<SELECT NAME=SCHEDLIST ID=SCHEDLIST SIZE=10 onChange="showScheduleItem();"></SELECT>')
+    retval.append('<SELECT NAME=SCHEDLIST ID="SCHEDLIST" SIZE=10 onChange="showScheduleItem();"></SELECT>')
     retval.append('<HR/>New schedule<BR>')
-    retval.append('Month <INPUT TYPE=TEXT NAME=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
-    retval.append('Day <INPUT TYPE=TEXT NAME=DAYMATCH VALUE={}><BR>'.format(daymatch))
-    retval.append('Time On <INPUT TYPE=TEXT NAME=TURNON VALUE={}><BR>'.format(turnon))
-    retval.append('Time Off <INPUT TYPE=TEXT NAME=TURNOFF VALUE={}><BR>'.format(turnoff))
-    retval.append('<INPUT TYPE=BUTTON ID=MAKENEW NAME=MAKENEW VALUE=New onClick="submitScheduleUpdate()">')
+    retval.append('Month <INPUT TYPE=TEXT ID=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
+    retval.append('Day <INPUT TYPE=TEXT ID=DAYMATCH VALUE={}><BR>'.format(daymatch))
+    retval.append('Time On <INPUT TYPE=TEXT ID=TURNON VALUE={}><BR>'.format(turnon))
+    retval.append('Time Off <INPUT TYPE=TEXT ID=TURNOFF VALUE={}><BR>'.format(turnoff))
+    retval.append('<INPUT TYPE=BUTTON ID="MAKENEW" ID=MAKENEW VALUE=New onClick="submitScheduleUpdate()">')
     retval.append("</FORM>")
     return '\n'.join(retval)
 
+def process_light_schedule(the_light):
+    current_state = get_light_state(the_light)
+    logit("Light {} state {}".format(light_list[the_light], current_state))
+    if re.match('Auto', current_state):
+        new_state = "Off"
+        for nextrow in get_light_state_ids(the_light):
+            logit("next id: {}".format(nextrow))
+            if date_match(get_light_schedule_detail(nextrow)):
+                new_state = "On"
+        logit("Light {} new {}".format(light_list[the_light], new_state))
+        apply_light_state(the_light, new_state)
+    else:
+        logit("Light {} current {}".format(light_list[the_light], new_state))
+        apply_light_state(the_light, current_state)
+
+
 if __name__ == '__main__':
-    for the_light in get_light_list():
-        logit("Light {} state {}".format(the_light, get_light_state(the_light)))
-    for nextrow in get_desired_light_states():
-        logit(nextrow)
+    light_list = get_light_list()
+    for the_light in light_list:
+        process_light_schedule(the_light)
+    #pool = Pool()
+    #pool.map(process_light_schedule, light_list)
+    #pool.close()
