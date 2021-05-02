@@ -33,7 +33,7 @@ def get_music_html():
     return '\n'.join(retval)
 
 def get_music_filtered(filter):
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     retval = []
     for subfilter in filter.split('|'):
         if len(subfilter) > 2:
@@ -51,7 +51,7 @@ def get_music_filtered(filter):
 def get_playlist(randomize=False):
     retval = []
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         if randomize:
             randclause = "pl.timestamp+RAND() AS ordering"
         else:
@@ -73,7 +73,7 @@ def get_playlist(randomize=False):
 def pop_playlist():
     retval = []
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         cursor = connection.cursor()
         query = ("SELECT mf.fileid, mf.filename, pl.timestamp+RAND() AS ordering "
                  "FROM musicfiles mf "
@@ -93,7 +93,7 @@ def pop_playlist():
 def add_playlist(fileid,timestamp=0):
     retval = []
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         cursor = connection.cursor()
         query=("SELECT mf.fileid, pl.fileid AS existing, mf.shortname "
                "FROM musicfiles mf "
@@ -123,7 +123,7 @@ def add_playlist(fileid,timestamp=0):
 def rm_playlist(fileid):
     retval = []
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         cursor = connection.cursor()
         query=("SELECT mf.fileid, mf.shortname "
                "FROM musicfiles mf "
@@ -147,7 +147,7 @@ def rm_playlist(fileid):
 
 
 if __name__ == '__main__':
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
 
     print(get_music_html())
 

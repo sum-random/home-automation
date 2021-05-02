@@ -124,7 +124,7 @@ def schedlight():
 def getlightsched(the_light):
     retval = lightctl.get_desired_light_states(the_light)
     logit("/getonelightsched {}".format(retval))
-    return Response("\n".join(retval),mimetype='text/csv')
+    return Response("\n".join(retval),mimetype='text/tsv')
 
 @app.route('/getlightscheddetail/<the_index>', methods = ['GET', 'POST'])
 def getscheddetail(the_index):
@@ -132,6 +132,20 @@ def getscheddetail(the_index):
     logit("/getlightscheddetail/{} {}".format(the_index, retval))
     return jsonify(retval)
    
+@app.route('/setlightscheddetail', methods = ['POST'])
+def setscheddetail():
+    retval = 'Undefined'
+    requestobj = False
+    if request.method == 'POST':
+        logit("request {}".format(request))
+        #for subs in request.form:
+            #logit("request value {}: {}".format(subs, request.form[subs]))
+        requestobj = request.form
+        logit("requestobj {}".format(requestobj))
+    retval = lightctl.set_light_schedule_detail(requestobj['the_id'], requestobj['the_hhcode'], requestobj['the_lightcode'], requestobj['the_month'], requestobj['the_day'], requestobj['the_on_time'], requestobj['the_off_time'])
+    logit("/setlightscheddetail/{} {}".format(the_index, retval))
+    return Response(retval,mimetype='text/html')
+
 @app.route('/listmixer')
 def listmixer():
     retval = ['device,left,right']

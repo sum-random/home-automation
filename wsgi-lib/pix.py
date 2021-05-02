@@ -17,7 +17,7 @@ def get_pix_html():
     retval.append("<SELECT ID='PICKFOLDER' onChange='populateThumbs();'>")
     folderlist = {}
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         cursor = connection.cursor()
         query = "SELECT fname,imgid FROM thumblist order by 1"
         if cursor.execute(query):
@@ -53,7 +53,7 @@ def get_pix_html():
 def list_folder(the_folder_id):
     imglist = []
     try:
-        connection = db.get_sql_connection()
+        connection = db.open_sql_connection()
         cursor = connection.cursor()
         the_img_id = the_folder_id * 1
         query = "SELECT fname,imgid FROM thumblist where imgid={}".format(the_img_id)

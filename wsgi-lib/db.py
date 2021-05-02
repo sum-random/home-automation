@@ -54,13 +54,10 @@ def update_sql(the_sql):
     return True
 
     
-def get_sql_connection(force_new=False):
-    return open_sql_connection()
-
 def match_image(values):
   reetval = False
   sql = "SELECT fname,imgid, ABS(ulr-{0})+ABS(ulg-{1})+ABS(ulb-{2})+ABS(urr-{3})+ABS(urg-{4})+ABS(urb-{5})+ABS(llr-{6})+ABS(llg-{7})+ABS(llb-{8})+ABS(lrr-{9})+ABS(lrg-{10})+ABS(lrb-{11}) AS score FROM thumblist a WHERE a.fname LIKE '%jpg' ORDER BY 3 LIMIT 1".format(*(values.split(':')))
-  connection = get_sql_connection()
+  connection = open_sql_connection()
   thecursor = connection.cursor()
   if thecursor.execute(sql) > 0:
       retval = thecursor.fetchone()
@@ -71,7 +68,7 @@ def match_image(values):
 def list_img_folders():
     retval = []
     sql = "SELECT fname FROM thumblist;"
-    connection = get_sql_connection()
+    connection = open_sql_connection()
     cursor = connection.cursor()
     if thecursor.execute(sql) > 0:
         for row in thecursor.fetchall():
@@ -96,7 +93,7 @@ def get_imgid(img_path):
     return imgid
 
 if __name__ == "__main__":
-  connection = get_sql_connection()
+  connection = open_sql_connection()
   #tablecursor = connection.cursor()
   #if tablecursor.execute("show tables") > 0:
   #  for nexttable in tablecursor.fetchall():
@@ -108,7 +105,7 @@ if __name__ == "__main__":
   #        print(nextrow)
   #    detailcursor.close()
   #tablecursor.close()
-  #connection.close()
+  connection.close()
   print(match_image('219:244:251:218:243:252:221:246:252:220:245:252'))
   print(list_img_folders())
 

@@ -7,7 +7,7 @@ function showOneLightSchedule() {
     thelight = d3.select("#PICKALIGHT").node().value;
     the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
     if(thelight > -1) {
-        d3.csv('/getonelightsched/' + thelight, function(rawdata) {
+        d3.tsv('/getonelightsched/' + thelight, function(rawdata) {
             data = rawdata.sort(function(d){return d.descr;})
             the_options = the_display.selectAll("option").data(data, function(d){return d.id;});
             the_options.exit().remove();
@@ -29,14 +29,20 @@ function showScheduleItem() {
     console.log("the selected item is " + the_item);
     d3.json('/getlightscheddetail/' + the_item, function(data) {
         d3.select('#MONTHMATCH')
-            .attr('value', data[0]['monthmatch']);
+            .attr('value', data['monthmatch']);
         d3.select('#DAYMATCH')
-            .attr('value', data[0]['daymatch']);
+            .attr('value', data['daymatch']);
         d3.select('#TURNON')
-            .attr('value', data[0]['turnon']);
+            .attr('value', data['turnon']);
         d3.select('#TURNOFF')
-            .attr('value', data[0]['turnoff']);
+            .attr('value', data['turnoff']);
     });
+}
+
+function submitScheduleUpdate() {
+    d3.json('/setlightscheddetail')
+      .post('the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').attr('value')+'\nthe_day='+d3.select('#DAYMATCH').attr('value')+'\nthe_on_time='+d3.select('#TURNON').attr('value')+'\nthe_off_time='+d3.select('#TURNOFF').attr('value'));
+    showScheduleItem();
 }
 
 function populateMusicList() {

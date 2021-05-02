@@ -150,7 +150,7 @@ def renderdevices():
     most recent poll
     """
     retval = []
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     tablecursor = connection.cursor()
     the_sql = "SELECT devjson FROM devices"
     if tablecursor.execute(the_sql) > 0:
@@ -216,7 +216,7 @@ def get_device_html():
 def get_device_info(the_host):
     """ Return device info """
     retval = False
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     tablecursor = connection.cursor()
     the_sql = "SELECT devjson FROM devices WHERE hostname='{}'".format(the_host)
     if tablecursor.execute(the_sql) > 0:
@@ -229,8 +229,8 @@ def get_device_info(the_host):
     return retval
     
 if __name__ == '__main__':
-    print("get_sql_connection")
-    connection = db.get_sql_connection()
+    print("open_sql_connection")
+    connection = db.open_sql_connection()
 
     for nextdev in scandevices():
         tablecursor = connection.cursor()

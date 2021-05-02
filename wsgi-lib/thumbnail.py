@@ -200,4 +200,6 @@ if __name__ == '__main__':
                     if not imgid:
                         logit("store image {}".format(filepath))
                         store_image(filepath)
+    cursor.close()
+    connection.close()
 
