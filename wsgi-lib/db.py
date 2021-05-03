@@ -11,15 +11,13 @@ import traceback
 # local libraries
 from logit import logit
 
-theconnections = {}
-
 write_lock = multiprocessing.Lock()
 
-pymysqlpool.logger.setLevel('DEBUG')
+pymysqlpool.logger.setLevel('INFO')
 config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'database':'*db_name*', 'autocommit':True}
 
 ### Create a connection pool with 2 connection in it
-pool1 = pymysqlpool.ConnectionPool(size=8, name='pool1', **config)
+pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **config)
 
 def open_sql_connection():
   #logit("open new connection")
