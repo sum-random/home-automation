@@ -2,6 +2,7 @@
 
 # system libraries
 import os
+import sys
 from subprocess import Popen, PIPE
 import datetime
 import time
@@ -21,6 +22,7 @@ def logit(loglines):
         loglines = [loglines]
     for nextlog in loglines:
         for nextline in str(nextlog).split("\n"):
+            print(nextline,file=sys.stderr)
             syslog.syslog(nextline)
             timestamp = datetime.datetime.now()
             thelogfile.write("{} {} [{}]: {}\n".format(timestamp.isoformat(), thename, thepid, nextline))
