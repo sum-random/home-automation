@@ -24,8 +24,8 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'batcap': 'cat /sys/class/power_supply/battery/uevent | grep CAPACITY | cut -d = -f 2'},
          22:   {'load': '[ -f /proc/loadavg ] && cat /proc/loadavg || sysctl vm.loadavg',
                 'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "temperature|^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; cat /usr/local/www/apache24/cgi-data/disk_report.dat)',
-                'batstat': 'cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
-                'batcap': 'cat /sys/class/power_supply/BAT0/capacity' } }
+                'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
+                'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
 LOCKFILE = "/tmp/br.lock"
 
 
@@ -66,11 +66,15 @@ def _device_ip_list():
     f = open('/usr/local/etc/namedb/master/claytontucker.org', 'r')
     pat1 = re.compile('^[A-Za-z]')
     pat2 = re.compile('10.4.69.[0-9]*')
+    pat3 = re.compile('10.10.10.[0-9]*')
     while True:
         line = f.readline()
         if not line: break
         if(pat1.search(line) and pat2.search(line)):
             match = pat2.search(line)
+            hosts.append(readdevice(match.group()))
+        if(pat1.search(line) and pat3.search(line)):
+            match = pat3.search(line)
             hosts.append(readdevice(match.group()))
     f.close()
     return hosts
