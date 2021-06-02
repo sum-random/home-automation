@@ -21,10 +21,10 @@ class lockobject():
     _lockfile = False
     def getlock(self):
         while os.access(LOCKFILE, os.F_OK):
-            logit("I sleep for the lock")
+            #logit("I sleep for the lock")
             time.sleep(2)
         self._touch(LOCKFILE)
-        logit("I have the lock")
+        #logit("I have the lock")
         return True
 
     def droplock(self):
@@ -32,9 +32,9 @@ class lockobject():
             self._lockfile.close()
         if os.access(LOCKFILE, os.F_OK):
             os.unlink(LOCKFILE)
-            logit("I release the lock")
+            #logit("I release the lock")
         else:
-            logit("Strange, {} not present".format(LOCKFILE))
+            #logit("Strange, {} not present".format(LOCKFILE))
             return False
         return True
     
@@ -81,7 +81,7 @@ def apply_light_state(the_light, the_state):
     mylock.getlock()
     cmd = "-{}".format(the_state[1:2])
     brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, str(the_light)]
-    logit("brcmd {}".format(brcmd))
+    #logit("brcmd {}".format(brcmd))
     brout = Popen(brcmd, stdout=PIPE).communicate()
     if brout[0]:
         logit(brout[0])
@@ -125,7 +125,7 @@ def get_desired_light_states(the_light):
         where = " WHERE lightcode={}".format(the_light)
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
-            logit("light state row: {}".format(nextrow))
+            #logit("light state row: {}".format(nextrow))
             retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
     cursor.close()
     connection.close()
@@ -151,7 +151,7 @@ def get_light_schedule_detail(the_id):
     retval = {}
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    logit("get_light_schedule_detail({})".format(the_id))
+    #logit("get_light_schedule_detail({})".format(the_id))
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(the_id)):
         for nextrow in cursor.fetchall():
             retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
@@ -181,7 +181,7 @@ def date_match(light_schedule):
     month = False
     day = False
     hour = False
-    logit("{}".format(light_schedule))
+    #logit("{}".format(light_schedule))
     monthmatch = light_schedule['monthmatch']
     try:
         if monthmatch == '*':
@@ -298,10 +298,10 @@ def process_light_schedule(the_light):
         for nextrow in get_light_state_ids(the_light):
             if date_match(get_light_schedule_detail(nextrow)):
                 new_state = "On"
-        logit("Light {} update state {}".format(light_list[the_light], new_state))
+        #logit("Light {} update state {}".format(light_list[the_light], new_state))
         apply_light_state(the_light, new_state)
     else:
-        logit("Light {} override {}".format(light_list[the_light], current_state))
+        #logit("Light {} override {}".format(light_list[the_light], current_state))
         apply_light_state(the_light, current_state)
 
 

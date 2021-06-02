@@ -30,20 +30,20 @@ def update_sql(the_sql):
     thewriteconnection = False
     try:
         write_lock.acquire()
-        logit("write lock acquired")
+        #logit("write lock acquired")
         thewriteconnection = open_sql_connection()
-        logit("connection acquired")
+        #logit("connection acquired")
     
         cursor = thewriteconnection.cursor()
         if cursor.execute(the_sql):
             logit("successfully executed: {:.100}".format(the_sql))
         cursor.close()
         thewriteconnection.commit()
-        logit("transaction committed")
+        #logit("transaction committed")
         thewriteconnection.close()
-        logit("connection released")
+        #logit("connection released")
         write_lock.release()
-        logit("write lock released")
+        #logit("write lock released")
     except Exception as e:
         logit("update query {} failed {}".format(the_sql, e))
         if thewriteconnection:
