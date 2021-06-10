@@ -186,13 +186,17 @@ def date_match(light_schedule):
     try:
         if monthmatch == '*':
             month = True
-        elif '-' in monthmatch:
-            (first, last) = monthmatch.split('-')
-            if first <= datetime.datetime.now().month and last >= datetime.datetime.now().month:
-                month = True
         else:
-            if int(monthmatch) == datetime.datetime.now().month:
-                month = True
+            for monthset in monthmatch.split(','):
+                if '-' in monthset:
+                    (first, last) = monthset.split('-')
+                    if int(first) <= datetime.datetime.now().month and int(last) >= datetime.datetime.now().month:
+                        month = True
+                    else:
+                        logit("month {} is not in range {} and {}".format(datetime.datetime.now().month, first, last))
+                else:
+                    if int(monthset) == datetime.datetime.now().month:
+                        month = True
     except Exception as ex:
         logit("Unable to parse month match {} {}".format(monthmatch, ex))
         month = False
