@@ -17,6 +17,18 @@ from logit import logit
 
 write_lock = Lock()
 
+def get_any_imgid():
+    imgid = 1
+    sql = "select imgid from thumblist order by rand() limit 1;"
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute(sql):
+        imgid = cursor.fetchone()[0]
+    cursor.close()
+    connection.close()
+    logit("picked random imgid {}".format(imgid))
+    return imgid
+
 def get_img_sized(imgid, size):
     """ Return an Image in the requested size """
     connection = db.open_sql_connection()

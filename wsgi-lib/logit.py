@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE
 import datetime
 import time
 import multiprocessing
-import syslog
+#import syslog
 
 
 wwwfldr = '/usr/local/www/apache24/'
@@ -17,19 +17,19 @@ def logit(loglines):
     thepid = multiprocessing.current_process().pid
     thename = multiprocessing.current_process().name
     thelogfile = open(datafldr + "flask.log", 'a')
-    syslog.openlog()
+    #syslog.openlog()
     if isinstance(loglines, str):
         loglines = [loglines]
     for nextlog in loglines:
         for nextline in str(nextlog).split("\n"):
             print(nextline,file=sys.stderr)
-            syslog.syslog(nextline)
+            #syslog.syslog(nextline)
             timestamp = datetime.datetime.now()
             thelogfile.write("{} {} [{}]: {}\n".format(timestamp.isoformat(), thename, thepid, nextline))
             thelogfile.flush()
             time.sleep(0.001)
     thelogfile.close()
-    syslog.closelog()
+    #syslog.closelog()
 
 
 

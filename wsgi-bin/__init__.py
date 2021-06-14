@@ -241,6 +241,8 @@ def thumbnail_handler():
                 imgid = db.match_image(requestobj['COLLAGEQUERY'])['imgid']
             if 'IMGID' in requestobj:
                 imgid = requestobj.get('IMGID')
+                if imgid == 'RANDOM':
+                    imgid = thumbnail.get_any_imgid()
             if 'SIZE' in requestobj:
                 size = requestobj.get('SIZE')
             if 'IMG' in requestobj:

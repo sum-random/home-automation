@@ -31,7 +31,7 @@ def get_pix_html():
         connection.close()
     except Exception as ex:
         folderlist['exception']="{}".format(ex)
-    defaultfolder = re.compile('nathan12')
+    defaultfolder = re.compile('nathan14')
     for folder_name in sorted(folderlist):
         the_folder = folderlist[folder_name]
         the_id = the_folder['imgid']
