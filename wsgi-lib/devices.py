@@ -169,6 +169,7 @@ def renderdevices():
 
 
 def get_device_html():
+  try:
     """ Render devices in a table for browser """
     # get the JSON data for rendering
     retval = ["<table><tr><th>Host</th><th>Type</th><th>Status</th><th>CPU</th><th>Charge</th></tr>"]
@@ -215,6 +216,8 @@ def get_device_html():
                                                                                 batstat))
     retval.append("</table><div name='cpuinfo'></div>")
     return '\n'.join(retval)
+  except Exception as e:
+    return "{}".format(e)
     
 
 def get_device_info(the_host):
