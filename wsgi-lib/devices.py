@@ -156,7 +156,7 @@ def renderdevices():
     retval = []
     connection = db.open_sql_connection()
     tablecursor = connection.cursor()
-    the_sql = "SELECT devjson FROM devices"
+    the_sql = "SELECT devjson FROM devices where json_value(devjson,'$.type') is not null;"
     if tablecursor.execute(the_sql) > 0:
         for nexttable in tablecursor.fetchall():
             # logit("nexttable is {}".format(nexttable))
