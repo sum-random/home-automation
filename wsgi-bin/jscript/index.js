@@ -109,7 +109,7 @@ function switchDiv(nextDiv) {
 
 function populateThumbs() {
     margin = {top: 10, bottom: 10, left: 20, right: 20};
-    imgsz = { size: 32, spacing: 16 } ;
+    imgsz = { size: 32, spacing: 4 } ;
     
     fldr = d3.select("#PICKFOLDER").node().value;
     d3.select("#PIX").select('svg').remove();
