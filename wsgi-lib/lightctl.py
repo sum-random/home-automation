@@ -308,11 +308,22 @@ def process_light_schedule(the_light):
         #logit("Light {} override {}".format(light_list[the_light], current_state))
         apply_light_state(the_light, current_state)
 
+def check_router():
+    do_reset = True
+    for check_site in ['1.1.1.1', '8.8.8.8']:
+        if os.system("ping -qc 3 " + check_site) == 0:
+            do_reset = False
+    if do_reset:
+        logit("Resetting router")
+        apply_light_state(16, 'Off')
+        time.sleep(5);
+        apply_light_state(16, 'On')
 
 if __name__ == '__main__':
     light_list = get_light_list()
     for the_light in light_list:
         process_light_schedule(the_light)
+    check_router()
     #pool = Pool()
     #pool.map(process_light_schedule, light_list)
     #pool.close()
