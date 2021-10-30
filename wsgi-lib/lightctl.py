@@ -310,9 +310,10 @@ def process_light_schedule(the_light):
 
 def check_router():
     do_reset = True
-    for check_site in ['1.1.1.1', '8.8.8.8']:
+    for check_site in ['1.1.1.1', '8.8.8.8', '9.9.9.9']:
         if os.system("ping -qc 3 " + check_site) == 0:
             do_reset = False
+            break
     if do_reset:
         logit("Resetting router")
         apply_light_state(16, 'Off')
