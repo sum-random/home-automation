@@ -13,7 +13,7 @@ from logit import logit
 
 write_lock = multiprocessing.Lock()
 
-pymysqlpool.logger.setLevel('DEBUG')
+pymysqlpool.logger.setLevel('WARNING')
 config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'database':'*db_name*', 'autocommit':True}
 
 ### Create a connection pool with 2 connection in it
