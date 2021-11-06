@@ -194,7 +194,7 @@ if __name__ == '__main__':
     """ main functionality is to scan filesystem and database and to throw out deleted files and read new file data into db """
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    logit("fixup incomplete thumbs")
+    #logit("fixup incomplete thumbs")
     if cursor.execute("SELECT imgid, fname, llb FROM thumblist"):
         for nextrow in cursor.fetchall():
             if os.path.isfile(nextrow[1]):
