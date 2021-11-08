@@ -16,33 +16,69 @@ function showOneLightSchedule() {
                 .attr('value', function(d) {return d.id;})
                 .text(function(d){return d.descr;});
             the_display.attr("size", data.length<2?2:data.length);
+            showScheduleItem();
         });
+        d3.select('#DIVSCHED').style('visibility','visible');
     } else {
         the_display.selectAll("option").remove();
         the_display.attr("size", 4);
+        d3.select('#UPDATE').style('visibility','hidden');
+        d3.select('#DELETE').style('visibility','hidden');
+        d3.select('#DIVSCHED').style('visibility','hidden');
     }
-    showScheduleItem();
 }
 
 function showScheduleItem() {
     the_item = d3.select("#SCHEDLIST").node().value;
-    console.log("the selected item is " + the_item);
-    d3.json('/getlightscheddetail/' + the_item, function(data) {
-        d3.select('#MONTHMATCH')
-            .attr('value', data['monthmatch']);
-        d3.select('#DAYMATCH')
-            .attr('value', data['daymatch']);
-        d3.select('#TURNON')
-            .attr('value', data['turnon']);
-        d3.select('#TURNOFF')
-            .attr('value', data['turnoff']);
-    });
+    if(the_item.length > 0)
+        d3.json('/getlightscheddetail/' + the_item, function(data) {
+            d3.select('#MONTHMATCH').node().value = data['monthmatch'];
+            d3.select('#DAYMATCH').node().value = data['daymatch'];
+            d3.select('#TURNON').node().value = data['turnon'];
+            d3.select('#TURNOFF').node().value = data['turnoff'];
+            d3.select('#UPDATE').style('visibility','visible');
+            d3.select('#DELETE').style('visibility','visible');
+            d3.select('#MAKENEW').style('visibility','hidden');
+        });
+    else {
+        d3.select('#MONTHMATCH').node().value = '*';
+        d3.select('#DAYMATCH').node().value = '*';
+        d3.select('#TURNON').node().value = 'HHMM';
+        d3.select('#TURNOFF').node().value = 'HHMM';
+        d3.select('#UPDATE').style('visibility','hidden');
+        d3.select('#MAKENEW').style('visibility','hidden');
+        d3.select('#DELETE').style('visibility','hidden');
+    }
 }
 
-function submitScheduleUpdate() {
+function showNewButton() {
+    if(
+       d3.select('#TURNON').node().value * 1 > 0 &&
+       d3.select('#TURNON').node().value.length == 4 &&
+       d3.select('#TURNOFF').node().value * 1 > 0 &&
+       d3.select('#TURNOFF').node().value.length == 4 &&
+       true
+)
+        d3.select('#MAKENEW').style('visibility','visible');
+    else
+        d3.select('#MAKENEW').style('visibility','hidden');
+}
+
+function submitScheduleUpdate(newItem=false) {
     d3.json('/setlightscheddetail')
-      .post('the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').attr('value')+'\nthe_day='+d3.select('#DAYMATCH').attr('value')+'\nthe_on_time='+d3.select('#TURNON').attr('value')+'\nthe_off_time='+d3.select('#TURNOFF').attr('value'));
-    showScheduleItem();
+      .post('the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').node().value+'\nthe_day='+d3.select('#DAYMATCH').node().value+'\nthe_on_time='+d3.select('#TURNON').node().value+'\nthe_off_time='+d3.select('#TURNOFF').node().value+'\nnew_item='+(newItem?'true':'false')+'\n', function(data) {
+        showOneLightSchedule();
+        showScheduleItem();
+       });
+}
+
+function deleteScheduleItem() {
+    d3.json('/deletelightscheddetail')
+        .post('the_id='+d3.select('#SCHEDLIST').node().value, function(data) {
+            showOneLightSchedule();
+            //showScheduleItem();
+       });
+
 }
 
 function populateMusicList() {
@@ -320,15 +356,16 @@ function changeSrcImg(id, img, descr) {
   switchDiv(id);
   var thebody = d3.select("body").node().getBoundingClientRect();
   d3.select(id)
-    .html("<IMG ID='REPLIMG' SRC='" + img + "'><BR><CENTER>" + descr + "</CENTER>");
-  var theimg = d3.select("#REPLIMG").node().getBoundingClientRect();
-  d3.select(id)
-    .style('position','absolute')
-    .style('top',thebody.height / 2 - ((theimg.height/2)))
-    .style('left',thebody.width / 2  - ((theimg.width/2)))
-    .style('visibility','visible')
-    .style('display','block')
-    .style('z-index','-1');
+    .html("<IMG ID='REPLIMG' SRC='" + img + "'><BR><CENTER>" + descr + "</CENTER>",function(){
+      var theimg = d3.select("#REPLIMG").node().getBoundingClientRect();
+      d3.select(id)
+        .style('position','absolute')
+        .style('top',thebody.height / 2 - ((theimg.height/2)))
+        .style('left',thebody.width / 2  - ((theimg.width/2)))
+        .style('visibility','visible')
+        .style('display','block')
+        .style('z-index','-1');
+    });
 }
 
 function changeSrcPage(id, page) {
@@ -376,7 +413,7 @@ function showHostDetail(the_host) {
   itemheight = 20;
   cpudiv = d3.select("#HOSTINFO");
   cpudiv.selectAll('svg').remove();
-  d3.json('deviceinfo/' + the_host, function(error, data) {
+  d3.json('/deviceinfo/' + the_host, function(error, data) {
     cpudisplay = cpudiv.style('display','block').style('visibility','visible')
       .append('svg')
          .attr('width', width + margin.left + margin.right)

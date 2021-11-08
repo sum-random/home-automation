@@ -53,9 +53,6 @@ def get_light_list():
                5: 'Television',
                6: 'Sofa left',
                9: 'Dad chair',
-               10: 'Buffet Left',
-               11: 'Tomatoes',
-               12: 'Buffet Right',
                14: 'Nathans computer' }
     return lights
 
@@ -157,31 +154,56 @@ def get_light_schedule_detail(the_id):
             retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
     cursor.close()
     connection.close()
+    #logit("get_light_schedule_detail {}: {}".format(the_id, retval))
     return retval
 
-def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time):
+def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, is_new):
+    logit('set_light_schedule_detail({}, {}, {}, {}, {}, {}, {}, {})'
+          .format(the_id, the_hhcode, the_lightcode, the_month,
+                  the_day, the_on_time, the_off_time, is_new))
     connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if the_id > -1:
-        the_sql = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
-                     WHERE id={}
-                  """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, the_id)
-    else:
+    the_cursor = connection.cursor()
+    if is_new == 'true':
         the_sql = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
                      VALUES ('{}', {}, '{}', '{}', '{}', '{}')
                   """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time)
+    else:
+        the_sql = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
+                     WHERE id={}
+                  """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, the_id)
+    #logit("sql: " + the_sql)
+    the_response = "no error"
     try:
         the_cursor.execute(the_sql)
+        the_response = the_sql
     except Exception as ex:
         logit("failed to execute {} because {}".format(the_sql, ex))
-    cursor.close()
+        the_response = "{}".format(ex)
+    the_cursor.close()
     connection.close()
+    return the_response
+
+def delete_light_schedule_detail(the_id):
+    logit('delete_light_schedule_detail({})'.format(the_id))
+    the_response = "no error"
+    connection = db.open_sql_connection()
+    the_cursor = connection.cursor()
+    the_sql = "DELETE FROM lightschedule WHERE id = {}".format(the_id)
+    try:
+        the_cursor.execute(the_sql)
+        the_response = the_sql
+    except Exception as ex:
+        logit("failed to execute {} because {}".format(the_sql, ex))
+        the_response = "{}".format(ex)
+    the_cursor.close()
+    connection.close()
+    return the_response
 
 def date_match(light_schedule):
     month = False
     day = False
     hour = False
-    #logit("{}".format(light_schedule))
+    #logit("date_match {}".format(light_schedule))
     monthmatch = light_schedule['monthmatch']
     try:
         if monthmatch == '*':
@@ -192,18 +214,12 @@ def date_match(light_schedule):
                     (first, last) = monthset.split('-')
                     if int(first) <= datetime.datetime.now().month and int(last) >= datetime.datetime.now().month:
                         month = True
-                    else:
-                        logit("month {} is not in range {} and {}".format(datetime.datetime.now().month, first, last))
                 else:
                     if int(monthset) == datetime.datetime.now().month:
                         month = True
     except Exception as ex:
         logit("Unable to parse month match {} {}".format(monthmatch, ex))
         month = False
-    if month:
-        pass
-    else:
-        logit("month {} no match: {}".format(datetime.datetime.now().month, monthmatch))
     daymatch = light_schedule['daymatch']
     try:
         if daymatch == '*':
@@ -214,18 +230,12 @@ def date_match(light_schedule):
                     (first, last) = dayset.split('-')
                     if int(first) <= datetime.datetime.now().weekday() and int(last) >= datetime.datetime.now().weekday():
                         day = True
-                    else:
-                        logit("today {} is not between {} and {}".format(datetime.datetime.now().weekday(), first, last))
                 else:
                     if int(dayset) == datetime.datetime.now().weekday():
                         day = True
     except Exception as ex:
         logit("Unable to parse day match {} because {}".format(daymatch, ex))
         day = False
-    if day:
-        pass
-    else:
-        logit("day no match: {} {}".format(daymatch, datetime.datetime.now().weekday()))
     try:
         curtime = datetime.datetime.now().strftime('%H%M')
         if light_schedule['turnon'] <= curtime and light_schedule['turnoff'] >= curtime:
@@ -233,16 +243,13 @@ def date_match(light_schedule):
     except Exception as ex:
         logit("Unable to parse hour match {} {} {}".format(light_schedule['turnon'], light_schedule['turnoff'], ex))
         hour = False
-    if hour:
-        pass
-    else:
-        logit("hour {} no match: {} {}".format(curtime, light_schedule['turnon'], light_schedule['turnoff']))
     override = get_light_state(the_light) 
     if re.match('Auto',override):
-        logit("Schedule = {} {} {} {}".format(override, month, day, hour))
+        if(month and day and hour):
+            logit("date_match {}".format(light_schedule))
         return month and day and hour
     else:
-        logit("Override: {}".format(override))
+        logit("Override: {} {}".format(light_schedule['lightcode'],override))
         return re.match('On',override)
 
 def lightsched(cgi_options):
@@ -284,14 +291,20 @@ def lightsched(cgi_options):
             selected = ' SELECTED'
         retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
     retval.append("</SELECT>")
-    retval.append('<HR/>Schedule<BR>')
+    retval.append('<DIV STYLE="visibility:hidden;" ID=DIVSCHED>');
+    retval.append('<HR/>Schedules<BR>')
     retval.append('<SELECT NAME=SCHEDLIST ID="SCHEDLIST" SIZE=10 onChange="showScheduleItem();"></SELECT>')
-    retval.append('<HR/>New schedule<BR>')
-    retval.append('Month <INPUT TYPE=TEXT ID=MONTHMATCH VALUE={}><BR>'.format(monthmatch))
-    retval.append('Day <INPUT TYPE=TEXT ID=DAYMATCH VALUE={}><BR>'.format(daymatch))
-    retval.append('Time On <INPUT TYPE=TEXT ID=TURNON VALUE={}><BR>'.format(turnon))
-    retval.append('Time Off <INPUT TYPE=TEXT ID=TURNOFF VALUE={}><BR>'.format(turnoff))
-    retval.append('<INPUT TYPE=BUTTON ID="MAKENEW" ID=MAKENEW VALUE=New onClick="submitScheduleUpdate()">')
+    retval.append('<HR/>Modify<BR>')
+    retval.append('<TABLE>')
+    retval.append('<TR><TH>Month</TH><TD CLASS="borderless"><INPUT TYPE=TEXT ID=MONTHMATCH VALUE={} onChange="showNewButton();"></TD></TR>'.format(monthmatch))
+    retval.append('<TR><TH>Day</TH><TD CLASS="borderless"><INPUT TYPE=TEXT ID=DAYMATCH VALUE={} onChange="showNewButton();"></TD></TR>'.format(daymatch))
+    retval.append('<TR><TH>Time On</TH><TD CLASS="borderless"><INPUT TYPE=TEXT ID=TURNON VALUE={} onChange="showNewButton();"></TD></TR>'.format(turnon))
+    retval.append('<TR><TH>Time Off</TH><TD CLASS="borderless"><INPUT TYPE=TEXT ID=TURNOFF VALUE={} onChange="showNewButton();"></TD></TR>'.format(turnoff))
+    retval.append('</TABLE>')
+    retval.append('<INPUT TYPE=BUTTON ID="MAKENEW" VALUE=New onClick="submitScheduleUpdate(true)">')
+    retval.append('<INPUT TYPE=BUTTON ID="UPDATE" VALUE=Update onClick="submitScheduleUpdate(false)" STYLE="visibility:hidden;">')
+    retval.append('<INPUT TYPE=BUTTON ID="DELETE" VALUE=Delete onClick="deleteScheduleItem()" STYLE="visibility:hidden;">')
+    retval.append('</DIV>');
     retval.append("</FORM>")
     return '\n'.join(retval)
 

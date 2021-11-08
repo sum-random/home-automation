@@ -19,6 +19,7 @@ import pix
 from logit import logit
 
 app=Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 wwwfldr = '/usr/local/www/apache24/'
 datafldr = wwwfldr + 'cgi-data/'
 
@@ -26,11 +27,17 @@ datafldr = wwwfldr + 'cgi-data/'
 def parseData(requestdata):
     retval = {}
     for line in requestdata.decode('utf8').split('\n'):
-        (key, val) = line.split('=')
-        logit([key,val])
-        retval[key] = val
+        if line:
+            (key, val) = line.split('=')
+            logit('{}: {}'.format(key,val))
+            retval[key] = val
     return retval
 
+
+@app.after_request
+def add_header(response):
+    response.cache_control.max_age = 0
+    return response
 
 @app.route('/')
 def index():
@@ -138,12 +145,30 @@ def setscheddetail():
     requestobj = False
     if request.method == 'POST':
         logit("request {}".format(request))
-        #for subs in request.form:
-            #logit("request value {}: {}".format(subs, request.form[subs]))
-        requestobj = request.form
+        for subs in request.form:
+            logit("request value {}: {}".format(subs, request.form[subs]))
+        requestobj = parseData(request.data)
+        #requestobj = request.form
         logit("requestobj {}".format(requestobj))
-    retval = lightctl.set_light_schedule_detail(requestobj['the_id'], requestobj['the_hhcode'], requestobj['the_lightcode'], requestobj['the_month'], requestobj['the_day'], requestobj['the_on_time'], requestobj['the_off_time'])
-    logit("/setlightscheddetail/{} {}".format(the_index, retval))
+        for key in requestobj:
+            logit("key: " + key + " val: " + requestobj[key]);
+    retval = lightctl.set_light_schedule_detail(the_id = requestobj['the_id'],
+                                                the_hhcode = requestobj['the_hhcode'],
+                                                the_lightcode = requestobj['the_lightcode'],
+                                                the_month = requestobj['the_month'],
+                                                the_day = requestobj['the_day'],
+                                                the_on_time = requestobj['the_on_time'],
+                                                the_off_time = requestobj['the_off_time'],
+                                                is_new = requestobj['new_item'])
+    logit("/setlightscheddetail/ {}".format(retval))
+    return Response(retval,mimetype='text/html')
+
+@app.route('/deletelightscheddetail', methods = ['POST'])
+def deletescheddetail():
+    retval = 'Undefined'
+    requestobj = parseData(request.data)
+    retval = lightctl.delete_light_schedule_detail(the_id = requestobj['the_id'])
+    logit("/deletelightscheddetail/ {}".format(retval))
     return Response(retval,mimetype='text/html')
 
 @app.route('/listmixer')

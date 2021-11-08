@@ -165,6 +165,7 @@ def renderdevices():
                 retval.append(the_host_json)
     tablecursor.close()
     connection.close()
+    logit("renderdevices {}".format(retval))
     return retval
 
 
