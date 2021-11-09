@@ -33,6 +33,7 @@ def get_pix_html():
         folderlist['exception']="{}".format(ex)
     defaultfolder = re.compile('nathan14')
     for folder_name in sorted(folderlist):
+        logit("folder_name {}".format(folder_name))
         the_folder = folderlist[folder_name]
         the_id = the_folder['imgid']
         the_name = the_folder['fname']

@@ -11,13 +11,13 @@ from logit import logit
     
 def get_weather_list():
     wlinks = { '4San_Fran_R': { 'url': 'http://www.wunderground.com/',
-                                'ttl': 'San Francisco radar',
-                                'uri': 'https://radblast.wunderground.com/cgi-bin/radar/WUNIDS_map?station=MUX&brand=wui&num=6&delay=15&type=N0R&frame=0&scale=1.000&noclutter=0&showstorms=0&mapx=400&mapy=240&centerx=400&centery=240&transx=0&transy=0&showlabels=1&severe=0&rainsnow=0&lightning=0&smooth=0&rand=24768313&lat=0&lon=0&label=you',
-                                'alt': 'Current RADR San Francisco CA' },
+                                'ttl': 'Tampa radar',
+                                'uri': 'https://radblast.wunderground.com/cgi-bin/radar/WUNIDS_map?num=6&amp;type=N0Q&amp;mapx=400&amp;mapy=240&amp;brand=wui&amp;delay=15&amp;frame=0&amp;scale=1&amp;transx=0&amp;transy=0&amp;severe=0&amp;smooth=0&amp;centerx=400&amp;centery=240&amp;station=TBW&amp;rainsnow=0&amp;lightning=0&amp;noclutter=0&amp;showlabels=1&amp;showstorms=0&amp;rand=27272981',
+                                'alt': 'Current RADR Tampa FL' },
                '5SoWe_radar': { 'url': 'http://www.wunderground.com/',
                                 'ttl': 'SW radar',
-                                'uri': 'https://s.w-x.co/staticmaps/wu/wu/wxtype1200_cur/usrno/current.png',
-                                'alt': 'Reno NV Regional Radar' },
+                                'uri': 'https://s.w-x.co/staticmaps/wu/wu/wxtype1200_cur/uspie/current.png',
+                                'alt': 'St Petersburg FL Regional Radar' },
                '6UnSt_radar': { 'url': 'http://www.wunderground.com/',
                                 'ttl': 'US radar',
                                 'uri': 'http://icons-ak.wxug.com/data/640x480/2xus_sf_anim.gif',

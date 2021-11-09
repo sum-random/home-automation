@@ -168,7 +168,18 @@ function populateThumbs() {
         });
 }
 
-function scrollThumbs() {
+function scrollThumbs(src) {
+  var thebody = d3.select("body").node().getBoundingClientRect();
+  //d3.select(id)
+    //.html("<IMG ID='REPLIMG' SRC='" + img + "'><BR><CENTER>" + descr + "</CENTER>",function(){
+      //var theimg = d3.select("#REPLIMG").node().getBoundingClientRect();
+      //d3.select(id)
+        //.style('position','absolute')
+        //.style('top',thebody.height / 2 - ((theimg.height/2)))
+        //.style('left',thebody.width / 2  - ((theimg.width/2)))
+        //.style('visibility','visible')
+  console.log(thebody);
+  console.log(src);
 }
 
 function lightColors(idx) {
