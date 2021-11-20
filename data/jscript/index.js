@@ -162,8 +162,9 @@ function populateThumbs() {
               slider.append('svg:image')
                 .attr('x', i * (imgsz.size + imgsz.spacing))
                 .attr('y', 0)
-                .attr('href', "/thumbnail?IMGID="+d.imgid+"&SIZE="+imgsz.size)
-                .attr('alt', d.fname);
+                .attr('href', "/thumbnail?IMGID="+d.imgid)
+                .attr('alt', d.fname)
+                .on('mouseover', expandImage);
             });
         });
 }
@@ -398,6 +399,26 @@ function hideIt(id) {
     .style('visibility','hidden');
 }
 
+
+function expandImage(evt) {
+    if (!evt) {
+        evt = window.event;
+    }
+    console.log(evt.srcElement.href);
+    d3.select("#FULLSZ").select('svg').remove();
+    display = d3.select("#FULLSZ").append('svg')
+        .attr('width', '100%')
+        .attr('height', '100%')
+        .append('g')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
+            .attr('height', 320)
+            .attr('href',evt.srcElement.href.baseVal+"&SIZE=FULL");
+    display.append('svg:image')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr("xlink:href", evt.srcElement.href.baseVal+"&SIZE=FULL")
+        .attr('alt', evt.srcElement.href.baseVal);
+}
 
 function showWImg(evt) {
         if (evt) {
