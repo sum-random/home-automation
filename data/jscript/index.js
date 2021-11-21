@@ -131,7 +131,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#PIX', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV', '#LIGHTSCHED' ].forEach(function(d) {
+    [ '#PIX', '#FULLSZ', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV', '#LIGHTSCHED' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
@@ -154,7 +154,9 @@ function populateThumbs() {
         .attr('height', margin.top + margin.bottom + imgsz.size)
         .append('g')
             .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-            .attr('height', imgsz.size);
+            .attr('height', imgsz.size)
+            .attr('id','IMGSLIDER')
+            .on('mousemove', scrollThumbs);
     d3.json("/getimages")
         .post("the_folder_id="+fldr, function(error, data) {
             if(error) throw error;
@@ -164,23 +166,42 @@ function populateThumbs() {
                 .attr('y', 0)
                 .attr('href', "/thumbnail?IMGID="+d.imgid)
                 .attr('alt', d.fname)
-                .on('mouseover', expandImage);
+                .on('mouseout', function(d,i) {
+                    d3.select(this)
+                      .attr("fill", "black");
+                })
+                .on('mouseenter', function(d,i) {
+                    d3.select(this)
+                        .attr("fill", "green");
+                    expandImage(d3.select(this).event);
+                });
             });
         });
 }
 
-function scrollThumbs(src) {
-  var thebody = d3.select("body").node().getBoundingClientRect();
-  //d3.select(id)
-    //.html("<IMG ID='REPLIMG' SRC='" + img + "'><BR><CENTER>" + descr + "</CENTER>",function(){
-      //var theimg = d3.select("#REPLIMG").node().getBoundingClientRect();
-      //d3.select(id)
-        //.style('position','absolute')
-        //.style('top',thebody.height / 2 - ((theimg.height/2)))
-        //.style('left',thebody.width / 2  - ((theimg.width/2)))
-        //.style('visibility','visible')
-  console.log(thebody);
-  console.log(src);
+function scrollThumbs() {
+    evt = window.event;
+    console.log(evt);
+    var scale = d3.scaleLinear()
+       .domain([0, window.innerWidth])
+       .range([-4000, 0]);
+    panel = d3.select("#IMGSLIDER");
+    var element = document.getElementById("IMGSLIDER");
+    var textOut = "";
+    textOut += "Height with padding: " + element.clientHeight + "px" + "<br>";
+    textOut += "Width with padding: " + element.innerWidth + "px" + "<br>";
+    textOut += "Height with padding + border: " + element.offsetHeight + "px" + "<br>";
+    textOut += "Width with padding + border: " + element.offsetWidth + "px";
+    console.log(textOut);
+    console.log(d3.select('#IMGSLIDER').node().style.width);
+    pw = panel.attr("width");
+    if(window.innerWidth < pw) {
+        console.log(evt);
+        panel
+            .style('position','absolute')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
+            .style('left',0-evt.pageX / window.innerWidth * (pw - window.innerWidth));
+    }
 }
 
 function lightColors(idx) {
@@ -404,20 +425,24 @@ function expandImage(evt) {
     if (!evt) {
         evt = window.event;
     }
-    console.log(evt.srcElement.href);
-    d3.select("#FULLSZ").select('svg').remove();
+    ht = window.innerHeight - 40;
+    d3.select("#FULLSZ")
+      .style('visibility', 'visible')
+      .style('display', 'block')
+      .select('svg').remove();
     display = d3.select("#FULLSZ").append('svg')
         .attr('width', '100%')
         .attr('height', '100%')
         .append('g')
             .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-            .attr('height', 320)
-            .attr('href',evt.srcElement.href.baseVal+"&SIZE=FULL");
+            .attr('height', ht)
+            .attr('href',evt.srcElement.href.baseVal+"&SIZE=" + ht);
     display.append('svg:image')
         .attr('x', 0)
         .attr('y', 0)
-        .attr("xlink:href", evt.srcElement.href.baseVal+"&SIZE=FULL")
+        .attr("xlink:href", evt.srcElement.href.baseVal+"&SIZE=" + ht)
         .attr('alt', evt.srcElement.href.baseVal);
+    scrollThumbs();
 }
 
 function showWImg(evt) {

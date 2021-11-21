@@ -45,7 +45,7 @@ def get_pix_html():
         retval.append("<OPTION {}VALUE='{}'>{}{}</OPTION>".format(selected, the_id, '-' * slashes, the_name))
     retval.append("</SELECT>")
     retval.append("<DIV ID='pickathumb' WIDTH='100%' onMouseOver='scrollThumbs();'></DIV>")
-    retval.append("<DIV ID='displayimg' WIDTH='100%'>displayimg</DIV>")
+    retval.append("<DIV ID='displayimg' WIDTH='100%'></DIV>")
     retval.append("")
     retval.append("</FORM>")
 
