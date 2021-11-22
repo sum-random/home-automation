@@ -145,63 +145,106 @@ function switchDiv(nextDiv) {
 
 function populateThumbs() {
     margin = {top: 10, bottom: 10, left: 20, right: 20};
-    imgsz = { size: 32, spacing: 4 } ;
+    imgsz = { size: 48, spacing: 0 } ;
+    breakpt = 200;
     
     fldr = d3.select("#PICKFOLDER").node().value;
     d3.select("#PIX").select('svg').remove();
     slider = d3.select("#PIX").append('svg')
+        .attr('id','SLIDESVG')
         .attr('width', '100%')
-        .attr('height', margin.top + margin.bottom + imgsz.size)
-        .append('g')
-            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-            .attr('height', imgsz.size)
-            .attr('id','IMGSLIDER')
-            .on('mousemove', scrollThumbs);
+        .on('mousemove', scrollThumbs);
+    slider.append('rect')
+        .attr('width',3)
+        .attr('color','red;')
+        .style('visibility', 'hidden')
+        .style('opacity','0.5;')
+        .attr('id','TRACKER');
+    imgrect = slider.append('g')
+        .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
+        .attr('id','IMGSLIDER');
     d3.json("/getimages")
         .post("the_folder_id="+fldr, function(error, data) {
             if(error) throw error;
+            slider.attr('height', Math.floor(data.length/breakpt + 1)*(imgsz.size + imgsz.spacing) + 'px');
             data.forEach(function(d,i) {
-              slider.append('svg:image')
-                .attr('x', i * (imgsz.size + imgsz.spacing))
-                .attr('y', 0)
-                .attr('href', "/thumbnail?IMGID="+d.imgid)
+              imgrect.append('svg:image')
+                .attr('x', (i % breakpt) * (imgsz.size + imgsz.spacing))
+                .attr('y', Math.floor(i/breakpt) * (imgsz.size + imgsz.spacing))
+                .attr('height', imgsz.size)
+                .attr('href', "/thumbnail?IMGID="+d.imgid+"&SIZE="+imgsz.size)
                 .attr('alt', d.fname)
                 .on('mouseout', function(d,i) {
                     d3.select(this)
-                      .attr("fill", "black");
+                      .attr("border", "0px,black");
                 })
-                .on('mouseenter', function(d,i) {
+                .on('mouseenter', function(d2,i) {
                     d3.select(this)
-                        .attr("fill", "green");
-                    expandImage(d3.select(this).event);
+                        .attr("border", "1px,green");
+                    expandImage("/thumbnail?IMGID="+d.imgid);
                 });
             });
         });
 }
 
-function scrollThumbs() {
+function expandImage(uri) {
     evt = window.event;
-    console.log(evt);
-    var scale = d3.scaleLinear()
-       .domain([0, window.innerWidth])
-       .range([-4000, 0]);
-    panel = d3.select("#IMGSLIDER");
-    var element = document.getElementById("IMGSLIDER");
-    var textOut = "";
-    textOut += "Height with padding: " + element.clientHeight + "px" + "<br>";
-    textOut += "Width with padding: " + element.innerWidth + "px" + "<br>";
-    textOut += "Height with padding + border: " + element.offsetHeight + "px" + "<br>";
-    textOut += "Width with padding + border: " + element.offsetWidth + "px";
-    console.log(textOut);
-    console.log(d3.select('#IMGSLIDER').node().style.width);
-    pw = panel.attr("width");
-    if(window.innerWidth < pw) {
-        console.log(evt);
-        panel
-            .style('position','absolute')
+    console.log(uri);
+    ht = window.innerHeight - 40;
+    d3.select("#FULLSZ")
+      .style('visibility', 'visible')
+      .style('display', 'block')
+      .select('svg').remove();
+    display = d3.select("#FULLSZ").append('svg')
+        .attr('width', '100%')
+        //.attr('height', '100%')
+        .attr('id', 'BIGIMGSVG')
+        .append('g')
             .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-            .style('left',0-evt.pageX / window.innerWidth * (pw - window.innerWidth));
+            //.attr('height', ht)
+            .attr('href',uri+"&SIZE=" + ht);
+    display.append('svg:image')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr("xlink:href", uri+"&SIZE=" + ht)
+        .attr('alt', evt.srcElement.href.baseVal)
+        .attr('id','BIGIMG')
+        .on('load', function(){
+            var element = document.getElementById("BIGIMG");
+            //console.log(pw);
+            d3.select('#FULLSZ')
+                .attr('height',element.getBoundingClientRect().height + "px");
+            d3.select('#BIGIMGSVG')
+                .attr('height',element.getBoundingClientRect().height + "px");
+        });
+    scrollThumbs();
+}
+
+function scrollThumbs() {
+    var evt = window.event;
+    var track = d3.select("#TRACKER");
+    var panel = d3.select("#IMGSLIDER");
+    var element = document.getElementById("IMGSLIDER");
+    var pw = element.getBoundingClientRect().width;
+    var wrapper = document.getElementById("SLIDESVG");
+    var span = wrapper.getBoundingClientRect().width;
+    var scale = d3.scaleLinear()
+       .domain([10,span-10])
+       .range([0,-(pw-span)]);
+    if(window.innerWidth < pw) {
+        var moveTo =  scale(evt.pageX);
+        if(moveTo > 20)
+            moveTo = 20;
+        if(moveTo < -(pw-span))
+            moveTo = -(pw-span); 
+        track
+            .style('visibility', 'visible')
+            .attr('height',wrapper.getBoundingClientRect().height+'px')
+            .attr('transform','translate(' + (evt.pageX - 9) + ',0)');
+        panel
+            .attr('transform', 'translate(' + moveTo + ',10)');
     }
+    //console.log('pw:' + pw + ' pageX:' + evt.pageX + ' innerWidth:' + window.innerWidth + ' scale:' + scale(evt.pageX) + ' span:' + span);
 }
 
 function lightColors(idx) {
@@ -209,6 +252,7 @@ function lightColors(idx) {
            'Off': [255,0,0],
            'Auto': [128, 128, 128]}[idx];
 }
+
 
 
 function d3lights() {
@@ -420,30 +464,6 @@ function hideIt(id) {
     .style('visibility','hidden');
 }
 
-
-function expandImage(evt) {
-    if (!evt) {
-        evt = window.event;
-    }
-    ht = window.innerHeight - 40;
-    d3.select("#FULLSZ")
-      .style('visibility', 'visible')
-      .style('display', 'block')
-      .select('svg').remove();
-    display = d3.select("#FULLSZ").append('svg')
-        .attr('width', '100%')
-        .attr('height', '100%')
-        .append('g')
-            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
-            .attr('height', ht)
-            .attr('href',evt.srcElement.href.baseVal+"&SIZE=" + ht);
-    display.append('svg:image')
-        .attr('x', 0)
-        .attr('y', 0)
-        .attr("xlink:href", evt.srcElement.href.baseVal+"&SIZE=" + ht)
-        .attr('alt', evt.srcElement.href.baseVal);
-    scrollThumbs();
-}
 
 function showWImg(evt) {
         if (evt) {

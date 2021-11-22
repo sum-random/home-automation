@@ -84,11 +84,15 @@ padding:10px;
 padding-top:35px;
 display:none;
 }
+.no-border {
+border:none;
+vertical-align:top;
+}
 .pix,.fullsz
 {
 width:90%;
 display:none;
-padding-top:15px;
+padding-top:10px;
 }
 .mixer
 {
