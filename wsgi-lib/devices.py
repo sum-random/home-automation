@@ -65,7 +65,7 @@ def _device_ip_list():
     hosts = []
     f = open('/usr/local/etc/namedb/master/claytontucker.org', 'r')
     pat1 = re.compile('^[A-Za-z]')
-    pat2 = re.compile('10.4.69.[0-9]*')
+    pat2 = re.compile('10.4.[67][09].[0-9]*')
     pat3 = re.compile('10.10.10.[0-9]*')
     while True:
         line = f.readline()
