@@ -58,6 +58,9 @@ def readdevice(ipaddr):
             break
     f.close()
     the_srv_type['hostname'] = short
+    if not 'type' in the_srv_type:
+        the_srv_type['type'] = 'server'
+    logit("the_srv_type = {}".format(the_srv_type))
     return(the_srv_type)
 
 
@@ -165,7 +168,6 @@ def renderdevices():
                 retval.append(the_host_json)
     tablecursor.close()
     connection.close()
-    logit("renderdevices {}".format(retval))
     return retval
 
 
