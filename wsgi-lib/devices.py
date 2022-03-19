@@ -131,7 +131,10 @@ def check_ssh(device):
                                 if ':' in devitem:
                                     cpu = devitem.split(':')
                                     if len(cpu) >= 2:
+                                        jskeys = cpu[0].split('.')
+                                        logit("{}".format(jskeys))
                                         device[key][cpu[0].strip()] = cpu[1].strip()
+                                        logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
                         else:
                             device[key] = outtxt[:-1]
     print(device)
