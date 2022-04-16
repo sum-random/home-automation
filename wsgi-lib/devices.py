@@ -60,7 +60,7 @@ def readdevice(ipaddr):
     the_srv_type['hostname'] = short
     if not 'type' in the_srv_type:
         the_srv_type['type'] = 'server'
-    logit("the_srv_type = {}".format(the_srv_type))
+    #logit("the_srv_type = {}".format(the_srv_type))
     return(the_srv_type)
 
 
@@ -132,9 +132,9 @@ def check_ssh(device):
                                     cpu = devitem.split(':')
                                     if len(cpu) >= 2:
                                         jskeys = cpu[0].split('.')
-                                        logit("{}".format(jskeys))
+                                        #logit("{}".format(jskeys))
                                         device[key][cpu[0].strip()] = cpu[1].strip()
-                                        logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
+                                        #logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
                         else:
                             device[key] = outtxt[:-1]
     print(device)

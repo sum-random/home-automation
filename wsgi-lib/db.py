@@ -20,7 +20,7 @@ config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'da
 pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **config)
 
 def open_sql_connection():
-  #logit("open new connection")
+  logit("open new connection")
   #traceback.print_stack()
   return pool1.get_connection()
   # return pymysql.connect(db='*db_name*',user='*db_login*',password='*db_password*',host='*db_host*',charset='utf8mb4',autocommit=True,cursorclass=pymysql.cursors.DictCursor)
@@ -30,7 +30,7 @@ def update_sql(the_sql):
     thewriteconnection = False
     try:
         write_lock.acquire()
-        #logit("write lock acquired")
+        logit("write lock acquired")
         thewriteconnection = open_sql_connection()
         #logit("connection acquired")
     
