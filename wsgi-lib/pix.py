@@ -35,6 +35,7 @@ def get_pix_html():
     for folder_name in sorted(folderlist):
         logit("folder_name {}".format(folder_name))
         the_folder = folderlist[folder_name]
+        logit("pix.py line 38 the_folder = {}".format(the_folder));
         the_id = the_folder['imgid']
         the_name = the_folder['fname']
         slashes = folder_name.count('/') - 3
