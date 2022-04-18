@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 from subprocess import Popen, PIPE
-from flask import Flask, render_template, Response, request, jsonify
+from flask import Flask, g, render_template, Response, request, jsonify
 import base64
 import datetime
 
@@ -346,6 +346,11 @@ def pop_playlist():
     logit("rm_playlist: {}".format(tunename))
     return Response(tunename,mimetype="text/html")
 
+@app.teardown_appcontext
+def close_db(error):
+    '''Closes the database connection at the end of request.'''    
+    if hasattr(g, 'db'):
+        g.db.close()    
 
 if __name__ == '__main__':
   app.run(debug=True)

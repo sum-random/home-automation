@@ -67,13 +67,14 @@ def list_img_folders():
     retval = []
     sql = "SELECT fname FROM thumblist;"
     connection = open_sql_connection()
-    cursor = connection.cursor()
+    thecursor = connection.cursor()
     if thecursor.execute(sql) > 0:
         for row in thecursor.fetchall():
-            thedir = path.basename(path.dirname(row['fname']))
+            logit("{}".format(row))
+            thedir = path.basename(path.dirname(row[0]))
             if thedir not in retval:
                 retval.append(thedir)
-    cursor.close()
+    thecursor.close()
     connection.close()
     return retval
 
