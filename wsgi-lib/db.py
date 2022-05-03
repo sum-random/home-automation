@@ -30,7 +30,7 @@ def update_sql(the_sql):
     thewriteconnection = False
     try:
         write_lock.acquire()
-        logit("write lock acquired")
+        #logit("write lock acquired")
         thewriteconnection = open_sql_connection()
         #logit("connection acquired")
     
