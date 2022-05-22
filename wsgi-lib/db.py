@@ -20,7 +20,7 @@ config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'da
 pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **config)
 
 def open_sql_connection():
-  logit("open new connection")
+  #logit("open new connection")
   #traceback.print_stack()
   return pool1.get_connection()
   # return pymysql.connect(db='*db_name*',user='*db_login*',password='*db_password*',host='*db_host*',charset='utf8mb4',autocommit=True,cursorclass=pymysql.cursors.DictCursor)
@@ -35,8 +35,8 @@ def update_sql(the_sql):
         #logit("connection acquired")
     
         cursor = thewriteconnection.cursor()
-        if cursor.execute(the_sql):
-            logit("successfully executed: {:.100}".format(the_sql))
+        #if cursor.execute(the_sql):
+            #logit("successfully executed: {:.100}".format(the_sql))
         cursor.close()
         thewriteconnection.commit()
         #logit("transaction committed")
@@ -70,7 +70,7 @@ def list_img_folders():
     thecursor = connection.cursor()
     if thecursor.execute(sql) > 0:
         for row in thecursor.fetchall():
-            logit("{}".format(row))
+            #logit("{}".format(row))
             thedir = path.basename(path.dirname(row[0]))
             if thedir not in retval:
                 retval.append(thedir)
