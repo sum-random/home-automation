@@ -47,12 +47,12 @@ def _shortname(longname):
 
     
 def get_light_list():
-    lights = { 1: 'Corner',
-               2: 'Dining area',
+    lights = { 1: 'Bedroom',
+               2: 'Living room',
                3: 'Shoes',
-               5: 'Television',
+               5: 'Freezer',
                6: 'Sofa left',
-               9: 'Dad chair',
+               9: 'Kitchen',
                14: 'Nathans computer' }
     return lights
 
