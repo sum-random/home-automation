@@ -6,6 +6,7 @@ import multiprocessing
 from os import path
 import pymysqlpool
 import traceback
+import json
 
 
 # local libraries
@@ -14,16 +15,16 @@ from logit import logit
 write_lock = multiprocessing.Lock()
 
 pymysqlpool.logger.setLevel('WARNING')
-config={'host':'*db_host*', 'user':'*db_login*', 'password':'*db_password*', 'database':'*db_name*', 'autocommit':True}
+f = open('/usr/local/www/apache24/cgi-data/db.json')
+config = json.load(f)
+f.close()
 
-### Create a connection pool with 2 connection in it
+### Create the connection pool
 pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **config)
 
 def open_sql_connection():
   #logit("open new connection")
-  #traceback.print_stack()
   return pool1.get_connection()
-  # return pymysql.connect(db='*db_name*',user='*db_login*',password='*db_password*',host='*db_host*',charset='utf8mb4',autocommit=True,cursorclass=pymysql.cursors.DictCursor)
 
 
 def update_sql(the_sql):
@@ -35,6 +36,7 @@ def update_sql(the_sql):
         #logit("connection acquired")
     
         cursor = thewriteconnection.cursor()
+        cursor.execute(the_sql)
         #if cursor.execute(the_sql):
             #logit("successfully executed: {:.100}".format(the_sql))
         cursor.close()
@@ -53,7 +55,7 @@ def update_sql(the_sql):
 
     
 def match_image(values):
-  reetval = False
+  retval = False
   sql = "SELECT fname,imgid, ABS(ulr-{0})+ABS(ulg-{1})+ABS(ulb-{2})+ABS(urr-{3})+ABS(urg-{4})+ABS(urb-{5})+ABS(llr-{6})+ABS(llg-{7})+ABS(llb-{8})+ABS(lrr-{9})+ABS(lrg-{10})+ABS(lrb-{11}) AS score FROM thumblist a WHERE a.fname LIKE '%jpg' ORDER BY 3 LIMIT 1".format(*(values.split(':')))
   connection = open_sql_connection()
   thecursor = connection.cursor()
@@ -96,7 +98,7 @@ if __name__ == "__main__":
   #tablecursor = connection.cursor()
   #if tablecursor.execute("show tables") > 0:
   #  for nexttable in tablecursor.fetchall():
-  #    nexttablename = nexttable['Tables_in_*db_name*']
+  #    nexttablename = nexttable['Tables_in_jupiter']
   #    print("querying {}".format(nexttablename))
   #    detailcursor = connection.cursor()
   #    if detailcursor.execute("select * from {} limit 10".format(nexttablename)) > 0:
