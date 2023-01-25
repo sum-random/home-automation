@@ -48,11 +48,11 @@ def _shortname(longname):
     
 def get_light_list():
     lights = { 1: 'Bedroom',
-               2: 'Living room',
-               3: 'Shoes',
+               2: 'Living room L',
+               3: 'Living room R',
                5: 'Freezer',
-               6: 'Sofa left',
-               9: 'Kitchen',
+               6: 'Sun room',
+               9: 'Office',
                14: 'Nathans computer' }
     return lights
 
@@ -315,10 +315,10 @@ def process_light_schedule(the_light):
         for nextrow in get_light_state_ids(the_light):
             if date_match(get_light_schedule_detail(nextrow)):
                 new_state = "On"
-        #logit("Light {} update state {}".format(light_list[the_light], new_state))
+        logit("Light {} update state {}".format(light_list[the_light], new_state))
         apply_light_state(the_light, new_state)
     else:
-        #logit("Light {} override {}".format(light_list[the_light], current_state))
+        logit("Light {} override {}".format(light_list[the_light], current_state))
         apply_light_state(the_light, current_state)
 
 def check_router():
