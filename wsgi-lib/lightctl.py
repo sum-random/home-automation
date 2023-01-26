@@ -78,7 +78,7 @@ def apply_light_state(the_light, the_state):
     mylock.getlock()
     cmd = "-{}".format(the_state[1:2])
     brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, str(the_light)]
-    #logit("brcmd {}".format(brcmd))
+    logit("brcmd {}".format(brcmd))
     brout = Popen(brcmd, stdout=PIPE).communicate()
     if brout[0]:
         logit(brout[0])
