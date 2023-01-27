@@ -50,6 +50,7 @@ def get_light_list():
     lights = { 1: 'Bedroom',
                2: 'Living room L',
                3: 'Living room R',
+               4: 'Sofa',
                5: 'Freezer',
                6: 'Sun room',
                9: 'Office',
