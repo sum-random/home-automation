@@ -166,7 +166,7 @@ def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_
     the_cursor = connection.cursor()
     if is_new == 'true':
         the_sql = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
-                     VALUES ('{}', {}, '{}', '{}', '{}', '{}')
+                     VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
                   """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time)
     else:
         the_sql = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
