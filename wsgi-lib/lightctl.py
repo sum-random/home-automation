@@ -53,7 +53,7 @@ def get_light_list():
                4: 'Sofa',
                5: 'Freezer',
                6: 'Sun room',
-               9: 'Office',
+               9: 'Salt rock',
                14: 'Nathans computer' }
     return lights
 
