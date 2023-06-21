@@ -338,6 +338,7 @@ if __name__ == '__main__':
     light_list = get_light_list()
     for the_light in light_list:
         process_light_schedule(the_light)
+        time.sleep(5)
     #check_router()
     #pool = Pool()
     #pool.map(process_light_schedule, light_list)
