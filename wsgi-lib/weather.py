@@ -11,8 +11,8 @@ from logit import logit
     
 def get_weather_list():
     wlinks = { 
-               '5SoWe_radar': { 'url': 'http://www.wunderground.com/',
-                                'ttl': 'SW radar',
+               '5SoWe_radar': { 'url': 'https://www.wunderground.com/weather/us/fl/sarasota/KFLSARAS2114',
+                                'ttl': 'Local radar',
                                 'uri': 'https://s.w-x.co/staticmaps/wu/wu/wxtype1200_cur/uspie/current.png',
                                 'alt': 'St Petersburg FL Regional Radar' },
                '8Prec_fcast': { 'url': 'http://wxmaps.org/pix/clim.html',
