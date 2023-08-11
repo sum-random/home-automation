@@ -9,6 +9,7 @@ import socket
 import json
 import syslog
 import time
+from datetime import datetime
 
 import db
 from logit import logit
@@ -23,10 +24,11 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'batstat': 'cat /sys/class/power_supply/battery/uevent | grep STATUS | cut -d = -f 2',
                 'batcap': 'cat /sys/class/power_supply/battery/uevent | grep CAPACITY | cut -d = -f 2'},
          22:   {'load': '[ -f /proc/loadavg ] && cat /proc/loadavg || sysctl vm.loadavg',
-                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "temperature|^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; cat /usr/local/www/apache24/cgi-data/disk_report.dat)',
+                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c)',
                 'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
                 'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
 LOCKFILE = "/tmp/br.lock"
+CURTIME = '{}'.format(int(datetime.timestamp(datetime.now())))
 
 
 def _shortname(longname):
@@ -87,56 +89,60 @@ def check_ping(device):
     dev_name = device['hostname']
     ping_pat = re.compile('.*(\d) packets received.*')
     output = ','.join(Popen(["/sbin/ping",
-                             "-c", "1",
+                             "-c", "5",
                              "-t", "1",
                              dev_name], stdout=PIPE)
                           .communicate()[0].decode('utf-8').split('\n'))
     recd_pkts = ping_pat.match(output)
     if recd_pkts:
         device['recd_pkts'] = recd_pkts.groups(0)[0]
+    else:
+        device['recd_pkts'] = '0'
+    device['last_checked'] = CURTIME
+    if device['recd_pkts'] != '0':
+        for port in [22,2222]:
+            try:
+                socket.setdefaulttimeout(3)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect((dev_name, port))
+            except OSError as error:
+                pass
+                #logit('{} not port {} error {}'.format(dev_name,port,error))
+            else:
+                s.close()
+                device['sshport'] = port
     return device
 
 
-def find_open_port(device, port):
-    output = Popen(["/usr/bin/nc",
-                    "-z",
-                    "-d",
-                    "-w", "1",
-                    device['hostname'],
-                    "{}".format(port)], stdout=PIPE, stderr=PIPE)
-    return output.wait() == 0
-
-    
 def check_ssh(device):
     """ Look for open SSH port, if found, log in and gather hardware info """
     dev_name = device['hostname']
-    if 'recd_pkts' in device and device['recd_pkts'] != '0':
-        for portnum in [22, 2222]:
-            if find_open_port(device, portnum):
-                for key in CMDS[portnum]:
-                    output = Popen(["/usr/bin/ssh",
-                                    "-n",
-                                    "-o", "StrictHostKeyChecking=no",
-                                    "-o", "PasswordAuthentication=no",
-                                    "-i", "{}/.ssh/id_rsa".format(CGIDATA),
-                                    "-p", "{}".format(portnum),
-                                    "{}@{}".format(SSHUSER, device['hostname']),
-                                    '{}'.format(CMDS[portnum][key])], stdout=PIPE, stderr=PIPE)
-                    output.wait()
-                    outtxt = output.communicate()[0].decode('utf-8')
-                    if outtxt:
-                        if '\n' in outtxt[:-1]:
-                            device[key] = {}
-                            for devitem in outtxt.split('\n'):
-                                if ':' in devitem:
-                                    cpu = devitem.split(':')
-                                    if len(cpu) >= 2:
-                                        jskeys = cpu[0].split('.')
-                                        #logit("{}".format(jskeys))
-                                        device[key][cpu[0].strip()] = cpu[1].strip()
-                                        #logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
-                        else:
-                            device[key] = outtxt[:-1]
+    if 'recd_pkts' in device and device['recd_pkts'] != '0' and 'sshport' in device:
+        for key in CMDS[device['sshport']]:
+            output = Popen(["/usr/bin/ssh",
+                            "-n",
+                            "-o", "StrictHostKeyChecking=no",
+                            "-o", "PasswordAuthentication=no",
+                            "-o", "ConnectTimeout=10",
+                            "-i", "{}/.ssh/id_rsa".format(CGIDATA),
+                            "-p", "{}".format(device['sshport']),
+                            "{}@{}".format(SSHUSER, device['hostname']),
+                            '{}'.format(CMDS[device['sshport']][key])], stdout=PIPE, stderr=PIPE)
+            output.wait()
+            outtxt = output.communicate()[0].decode('utf-8')
+            if outtxt:
+                if '\n' in outtxt[:-1]:
+                    device[key] = {}
+                    for devitem in outtxt.split('\n'):
+                        if ':' in devitem:
+                            cpu = devitem.split(':')
+                            if len(cpu) >= 2:
+                                jskeys = cpu[0].split('.')
+                                #logit("{}".format(jskeys))
+                                device[key][cpu[0].strip()] = cpu[1].strip()
+                                #logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
+                else:
+                    device[key] = outtxt[:-1]
     print(device)
     return device
 
