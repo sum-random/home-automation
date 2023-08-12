@@ -24,7 +24,7 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'batstat': 'cat /sys/class/power_supply/battery/uevent | grep STATUS | cut -d = -f 2',
                 'batcap': 'cat /sys/class/power_supply/battery/uevent | grep CAPACITY | cut -d = -f 2'},
          22:   {'load': '[ -f /proc/loadavg ] && cat /proc/loadavg || sysctl vm.loadavg',
-                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c)',
+                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c | tr -d : | awk \'{print $2" "$3": "$1}\')',
                 'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
                 'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
 LOCKFILE = "/tmp/br.lock"
@@ -124,6 +124,8 @@ def check_ssh(device):
                             "-o", "StrictHostKeyChecking=no",
                             "-o", "PasswordAuthentication=no",
                             "-o", "ConnectTimeout=10",
+                            "-o", "ServerAliveInterval=15",
+                            "-o", "TCPKeepAlive=yes",
                             "-i", "{}/.ssh/id_rsa".format(CGIDATA),
                             "-p", "{}".format(device['sshport']),
                             "{}@{}".format(SSHUSER, device['hostname']),
@@ -143,7 +145,7 @@ def check_ssh(device):
                                 #logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
                 else:
                     device[key] = outtxt[:-1]
-    print(device)
+    #print(device)
     return device
 
 
