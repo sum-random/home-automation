@@ -24,7 +24,7 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'batstat': 'cat /sys/class/power_supply/battery/uevent | grep STATUS | cut -d = -f 2',
                 'batcap': 'cat /sys/class/power_supply/battery/uevent | grep CAPACITY | cut -d = -f 2'},
          22:   {'load': '[ -f /proc/loadavg ] && cat /proc/loadavg || sysctl vm.loadavg',
-                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c | tr -d : | awk \'{print $2" "$3": "$1}\')',
+                'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\s*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c | tr -d : | awk \'{print $2" "$3": "$1}\')',
                 'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
                 'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
 LOCKFILE = "/tmp/br.lock"
@@ -32,7 +32,7 @@ CURTIME = '{}'.format(int(datetime.timestamp(datetime.now())))
 
 
 def _shortname(longname):
-    """ return short form of hostname """
+    """ return short form of hostname and parse out host info from dhcpd.conf """
     return longname.split('.')[0]
 
 def readdevice(ipaddr):
@@ -62,6 +62,19 @@ def readdevice(ipaddr):
     the_srv_type['hostname'] = short
     if not 'type' in the_srv_type:
         the_srv_type['type'] = 'server'
+
+    # get SSH port number, if previously saved
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    the_sql = "SELECT JSON_EXTRACT(devjson,'$.sshport') FROM devices where hostname='{}';".format(short)
+    if cursor.execute(the_sql) > 0:
+        for nextrow in cursor.fetchall():
+            #logit("SSH port: {}".format(nextrow))
+            if nextrow[0] is not None:
+                the_srv_type['sshport'] = int(nextrow[0])
+    cursor.close()
+    connection.close()
+
     #logit("the_srv_type = {}".format(the_srv_type))
     return(the_srv_type)
 
@@ -99,7 +112,7 @@ def check_ping(device):
     else:
         device['recd_pkts'] = '0'
     device['last_checked'] = CURTIME
-    if device['recd_pkts'] != '0':
+    if device['recd_pkts'] != '0' and 'sshport' not in device:
         for port in [22,2222]:
             try:
                 socket.setdefaulttimeout(3)
@@ -120,12 +133,12 @@ def check_ssh(device):
     if 'recd_pkts' in device and device['recd_pkts'] != '0' and 'sshport' in device:
         for key in CMDS[device['sshport']]:
             output = Popen(["/usr/bin/ssh",
-                            "-n",
+                            "-f",
                             "-o", "StrictHostKeyChecking=no",
                             "-o", "PasswordAuthentication=no",
-                            "-o", "ConnectTimeout=10",
-                            "-o", "ServerAliveInterval=15",
-                            "-o", "TCPKeepAlive=yes",
+                            #"-o", "ConnectTimeout=10",
+                            #"-o", "ServerAliveInterval=15",
+                            #"-o", "TCPKeepAlive=yes",
                             "-i", "{}/.ssh/id_rsa".format(CGIDATA),
                             "-p", "{}".format(device['sshport']),
                             "{}@{}".format(SSHUSER, device['hostname']),
@@ -183,6 +196,11 @@ def renderdevices():
 
 
 def get_device_html():
+  # CPU type indexes
+  lnx = 'model name'
+  bsd = 'hw.model'
+  arm = 'Processor'
+  armalt = 'CPU architecture'
   try:
     """ Render devices in a table for browser """
     # get the JSON data for rendering
@@ -199,13 +217,9 @@ def get_device_html():
             batred = 255 if batcap < 50 else (100 - batcap) * 5
             batgrn = 255 if batcap > 50 else batcap * 5
             batcolor = "rgb({},{},0)".format(batred, batgrn)
-            batstat = "<td style='background-color: {};'>{}</td>".format(batcolor, batcap)
+            batstat = "<td style='background-color: {};'>{}<!--{} {}--></td>".format(batcolor, batcap,CURTIME, thehost['last_checked'])
         else:
             batstat = ''
-        lnx = 'model name'
-        bsd = 'hw.model'
-        arm = 'Processor'
-        armalt = 'CPU architecture'
         tropt = ''
         alttext = ''
         if 'cpuinfo' in thehost:
