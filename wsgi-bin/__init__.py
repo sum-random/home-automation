@@ -43,7 +43,6 @@ def add_header(response):
 def index():
     return render_template('index.html',
                            bookmarks=bookmarks.get_bookmarks(),
-                           devices=devices.get_device_html(),
                            weather=weather.get_weather_html(),
                            pix=pix.get_pix_html(),
                            lightsched=lightctl.lightsched(False),
@@ -61,7 +60,7 @@ def getimages():
 
 @app.route('/getdevices')
 def getdevices():
-    return jsonify(devices.renderdevices())
+    return devices.get_device_html()
 
 @app.route('/deviceinfo/<the_host>')
 def cpuinfo(the_host):

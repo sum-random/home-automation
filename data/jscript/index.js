@@ -484,13 +484,29 @@ function hideWImg(evt) {
         prevWin.style.visibility = "hidden";
 }
 
+function refreshHostList() {
+  d3.text("/getdevices", function(error,data) {
+    d3.select("#DEVICES")
+      .html(data);
+    d3.select("#DEVICES")
+      .selectAll('tr')
+      .on('mouseout', hideHostDetail)
+      .on('mouseover', showHostDetail);
+  });
+}
+
 function showHostDetail(the_host) {
+  td = d3.select(this).select('td');
+  if(td.empty())
+    return;
+  the_host = td.text();
   margin = {top: 20, bottom: 20, left: 20, right: 20};
   width = 700;
   itemheight = 20;
   cpudiv = d3.select("#HOSTINFO");
   cpudiv.selectAll('svg').remove();
   d3.json('/deviceinfo/' + the_host, function(error, data) {
+    if(! data) return;
     cpudisplay = cpudiv.style('display','block').style('visibility','visible')
       .append('svg')
          .attr('width', width + margin.left + margin.right)

@@ -217,10 +217,9 @@ def get_device_html():
             batred = 255 if batcap < 50 else (100 - batcap) * 5
             batgrn = 255 if batcap > 50 else batcap * 5
             batcolor = "rgb({},{},0)".format(batred, batgrn)
-            batstat = "<td style='background-color: {};'>{}<!--{} {}--></td>".format(batcolor, batcap,CURTIME, thehost['last_checked'])
+            batstat = "<td style='background-color: {};'>{}</td>".format(batcolor, batcap)
         else:
             batstat = ''
-        tropt = ''
         alttext = ''
         if 'cpuinfo' in thehost:
             cpuinfo = thehost['cpuinfo']
@@ -234,10 +233,8 @@ def get_device_html():
             if arm in cpuinfo:
                 the_cpu = cpuinfo[arm]
             if the_cpu:
-                tropt = ' onMouseOver="showHostDetail(\'{}\');" onMouseOut="hideHostDetail();"'.format(shorthost)
                 alttext = '<td>{}</td>'.format(the_cpu)
-        retval.append("<tr{}><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(tropt,
-                                                                                thehost['hostname'],
+        retval.append("<tr><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(thehost['hostname'],
                                                                                 thehost['type'],
                                                                                 hoststat,
                                                                                 alttext,

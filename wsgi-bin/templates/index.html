@@ -1,7 +1,5 @@
 <html>
 <head>
-<meta http-equiv='Refresh' content='300; url=/'>
-
 <TITLE>Launch Pad</TITLE>
   <script type = "text/javascript" src = "https://d3js.org/d3.v4.min.js"></script>
   <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
@@ -13,7 +11,7 @@
   <script type="text/javascript" src="/jscript/index.js"></script>
   <link rel="stylesheet" type="text/css" href="/css/index.css">
 </head>
-<body> <!-- onLoad='setupWeather();'-->
+<body>
 <DIV CLASS='navicons' id='ICOBAR' >
 <A HREF='http://www.claytontucker.com' onMouseOver='changeSrcImg("#myImage","/img/display_showcase.jpg", "Public website")' onMouseOut="hideIt('#myImage');" TARGET='_blank'>
 <IMG CLASS='bstyle' ID='PUBICO' SRC='/img/display_showcase.jpg' onMouseOver='changeSize("#PUBICO",64,48);' onMouseOut='changeSize("#PUBICO",48,32);'></A>
@@ -23,8 +21,6 @@
 <IMG CLASS='bstyle' ID='BKMICO' SRC='/img/bookmark1.jpg' onMouseOver='changeSize("#BKMICO",64,48);' onMouseOut='changeSize("#BKMICO",48,32);'></A>
 <A onMouseOver="switchDiv('#PIX');">
 <IMG CLASS='bstyle' ID='NATICO' SRC='/thumbnail?IMGID=84077&SIZE=64x48' onMouseOver='changeSize("#NATICO",64,48);' onMouseOut='changeSize("#NATICO",48,32);'></A>
-<A HREF='https://mastodon.technology/@sum_random' rel="me" onMouseOver='switchDiv("#MASTODON");'>
-<IMG CLASS='bstyle' ID='MSTICO' SRC='/img/antlion.jpg' onMouseOver='changeSize("#MSTICO",64,48);' onMouseOut='changeSize("#MSTICO",48,32);'></A>
 <A onMouseOver="switchDiv('#WEATHER');">
 <IMG CLASS='bstyle' ID='WTHICO' SRC='https://s.w-x.co/staticmaps/wu/wu/wxtype1200_cur/uspie/current.png' onMouseOver='changeSize("#WTHICO",64,48);' onMouseOut='changeSize("#WTHICO",48,32);'></A>
 <A onMouseOver="switchDiv('#LIGHTSCHED')">
@@ -46,25 +42,13 @@
 </DIV>
 
 <DIV CLASS='mixer' ID='MIXER' >
-<script  type="text/javascript">
-  d3mixer();
-</script>
 </DIV>
 
 <DIV CLASS='devices' ID='DEVICES'>
-{{ devices|safe }}
-<DIV CLASS='devices' ID='HOSTINFO'></DIV>
 </DIV>
+<DIV CLASS='devices' ID='HOSTINFO'></DIV>
 
 <DIV CLASS='lights' ID='LIGHTS' >
-<script type="text/javascript">
-  d3lights();
-</SCRIPT>
-</DIV>
-
-<DIV CLASS='social' ID='MASTODON' >
-<IMG SRC='/img/antlion.jpg' CLASS='circle'><br>
-@sum_random@Mastodon.Technology
 </DIV>
 
 <TABLE><TBODY><TR><TD WIDTH='40%' CLASS='no-border'>
@@ -90,6 +74,15 @@
 <DIV ID='WEATHERIMG'> </DIV>
 </CENTER>
 </DIV>
+
+<SCRIPT type="text/javascript">
+  d3mixer();
+  setInterval(d3mixer,1800000);
+  d3lights();
+  setInterval(d3lights,3600000);
+  refreshHostList();
+  setInterval(refreshHostList,300000);
+</SCRIPT>
 
 </body>
 </html>
