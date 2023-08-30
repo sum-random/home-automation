@@ -264,6 +264,7 @@ function d3lights() {
     lcheight = 70;
     d3.csv('/listlight', function(error, data) {
         if(error) throw error;
+        d3.select('#LIGHTS').selectAll('svg').remove();
         lightsvg = d3.select('#LIGHTS')
             .append('svg')
                 .attr('width', ldwidth + (lcspacing * lcols) + margin.left + margin.right)
@@ -348,6 +349,8 @@ function d3mixer() {
 
     d3.csv('/listmixer', function(error, data) {
       if(error) throw error;
+      // 
+      d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')
                    .attr('width', slwidth + margin.left + margin.right)
