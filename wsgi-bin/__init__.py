@@ -16,6 +16,7 @@ import weather
 import thumbnail
 import music
 import pix
+import json
 from logit import logit
 
 app=Flask(__name__)
@@ -72,7 +73,7 @@ def listlight():
     lights = lightctl.get_light_list()
     for key in lights:
         retval.append('{},{},{}'.format(key, lights[key], lightctl.get_light_state(key)))
-    logit(retval)
+    #logit(retval)
     return Response("\n".join(retval),mimetype='text/csv')
 
 
@@ -92,7 +93,7 @@ def getlight():
             retval = "Error missing DEV variable"
     else:
         retval = "Error no request found"
-    logit(retval)
+    #logit(retval)
     return Response(retval,mimetype='text/html')
 
 @app.route('/setlight', methods = ['POST'])
@@ -109,7 +110,7 @@ def setlight():
             retval = "Error missing DEV and/or STATE"
     else:
         retval = "Error no request found"
-    logit(retval)
+    #logit(retval)
     return Response(retval,mimetype='text/html')
 
 @app.route('/lightsched', methods = ['POST','GET'])
@@ -117,25 +118,25 @@ def schedlight():
     retval = 'Undefined'
     requestobj = False
     if request.method == 'POST':
-        logit("request {}".format(request))
+        #logit("request {}".format(request))
         #for subs in request.form:
             #logit("request value {}: {}".format(subs, request.form[subs]))
         requestobj = request.form
-        logit("requestobj {}".format(requestobj))
+        #logit("requestobj {}".format(requestobj))
     retval = lightctl.lightsched(requestobj)
-    logit("/lightsched {}".format(retval))
+    #logit("/lightsched {}".format(retval))
     return Response(retval,mimetype='text/html')
 
 @app.route('/getonelightsched/<the_light>', methods = ['GET','POST'])
 def getlightsched(the_light):
     retval = lightctl.get_desired_light_states(the_light)
-    logit("/getonelightsched {}".format(retval))
+    #logit("/getonelightsched {}".format(retval))
     return Response("\n".join(retval),mimetype='text/tsv')
 
 @app.route('/getlightscheddetail/<the_index>', methods = ['GET', 'POST'])
 def getscheddetail(the_index):
     retval = lightctl.get_light_schedule_detail(the_index)
-    logit("/getlightscheddetail/{} {}".format(the_index, retval))
+    #logit("/getlightscheddetail/{} {}".format(the_index, retval))
     return jsonify(retval)
    
 @app.route('/setlightscheddetail', methods = ['POST'])
@@ -143,14 +144,14 @@ def setscheddetail():
     retval = 'Undefined'
     requestobj = False
     if request.method == 'POST':
-        logit("request {}".format(request))
-        for subs in request.form:
-            logit("request value {}: {}".format(subs, request.form[subs]))
+        #logit("request {}".format(request))
+        #for subs in request.form:
+            #logit("request value {}: {}".format(subs, request.form[subs]))
         requestobj = parseData(request.data)
         #requestobj = request.form
-        logit("requestobj {}".format(requestobj))
-        for key in requestobj:
-            logit("key: " + key + " val: " + requestobj[key]);
+        #logit("requestobj {}".format(requestobj))
+        #for key in requestobj:
+            #logit("key: " + key + " val: " + requestobj[key]);
     retval = lightctl.set_light_schedule_detail(the_id = requestobj['the_id'],
                                                 the_hhcode = requestobj['the_hhcode'],
                                                 the_lightcode = requestobj['the_lightcode'],
@@ -159,7 +160,7 @@ def setscheddetail():
                                                 the_on_time = requestobj['the_on_time'],
                                                 the_off_time = requestobj['the_off_time'],
                                                 is_new = requestobj['new_item'])
-    logit("/setlightscheddetail/ {}".format(retval))
+    #logit("/setlightscheddetail/ {}".format(retval))
     return Response(retval,mimetype='text/html')
 
 @app.route('/deletelightscheddetail', methods = ['POST'])
@@ -167,7 +168,7 @@ def deletescheddetail():
     retval = 'Undefined'
     requestobj = parseData(request.data)
     retval = lightctl.delete_light_schedule_detail(the_id = requestobj['the_id'])
-    logit("/deletelightscheddetail/ {}".format(retval))
+    #logit("/deletelightscheddetail/ {}".format(retval))
     return Response(retval,mimetype='text/html')
 
 @app.route('/listmixer')
@@ -220,12 +221,12 @@ def setmixer():
             output = Popen(["/usr/sbin/mixer",
                             mixdev,
                             '{0}:{0}'.format(mixval)], stdout=PIPE).communicate()[0]
-            logit(output)
+            #logit(output)
         else:
             sep = ""
             for key in request.dir():
-                logit(key)
-                logit(request[key])
+                #logit(key)
+                #logit(request[key])
                 output = "{}{}{}:{}".format(output, sep, key, request[key])
                 sep = "\n"
     return Response(output,mimetype='text/html')
@@ -260,7 +261,7 @@ def thumbnail_handler():
         requestobj = request.form
     if requestobj:
         try:
-            logit("requestobj is {}".format(requestobj))
+            #logit("requestobj is {}".format(requestobj))
             if 'COLLAGEQUERY' in requestobj:
                 imgid = db.match_image(requestobj['COLLAGEQUERY'])['imgid']
             if 'IMGID' in requestobj:
@@ -299,12 +300,22 @@ def get_music():
             if 'filter' in requestobj:
                 tunes = music.get_music_filtered(requestobj.get('filter'))
                 for outline in tunes:
-                    #outline = tunes[theline]
                     retval.append('{},{},{}'.format(outline['fileid'],outline['shortname'],outline['size']))
         except Exception as e:
             print("exception {}".format(e))
     return Response("\n".join(retval),mimetype='text/csv')
-    #return Response("<br/>\n".join(retval),mimetype='text/html')
+
+@app.route('/getplaylist', methods = ['GET'])
+def get_playlist():
+    retval = ['fileid,shortname']
+    try:
+        tunes = music.get_playlist()
+        logit("tunes: {}".format(tunes))
+        for outline in tunes:
+            retval.append('{},{}'.format(outline['fileid'],outline['shortname']))
+    except Exception as e:
+        logit("exception /getplaylist {}".format(e))
+    return Response("\n".join(retval),mimetype='text/csv')
 
 @app.route('/addplaylist', methods = ['POST'])
 def add_playlist():
@@ -314,11 +325,11 @@ def add_playlist():
     if requestobj:
         try:
             if 'fileid' in requestobj:
+                fileids = json.loads(requestobj.get('fileid'))
                 timestamp = (datetime.datetime.now()).strftime("%s")
-                tunename = music.add_playlist(requestobj.get('fileid'), timestamp)
+                tunename = music.add_playlist(fileids, timestamp)
         except Exception as e:
             logit("exception {}".format(e))
-    logit("add_playlist: {}".format(tunename))
     return Response(tunename,mimetype="text/html")
 
 @app.route('/rmplaylist', methods = ['POST'])
@@ -329,7 +340,8 @@ def rm_playlist():
     if requestobj:
         try:
             if 'fileid' in requestobj:
-                tunename = music.rm_playlist(requestobj.get('fileid'))
+                fileids = json.loads(requestobj.get('fileid'))
+                tunename = music.rm_playlist(fileids)
         except Exception as e:
             print("exception {}".format(e))
     logit("rm_playlist: {}".format(tunename))

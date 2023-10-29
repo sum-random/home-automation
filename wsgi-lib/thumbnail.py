@@ -34,7 +34,7 @@ def get_img_sized(imgid, size):
     connection = db.open_sql_connection()
     cursor = connection.cursor()
     sql = "SELECT fname FROM thumblist WHERE imgid={};".format(imgid)
-    logit("sql is {}".format(sql))
+    #logit("sql is {}".format(sql))
     if cursor.execute(sql):
         fname = cursor.fetchone()[0]
         cursor.close()

@@ -94,7 +94,7 @@ function populateMusicList() {
             thelistdisplay.selectAll("option")
               .attr('value', function(d) {return d.fileid;})
               .text(function(d) {return d.shortname;});
-            thelistdisplay.attr("size", data.length);
+            thelistdisplay.attr("size", Math.min(data.length,25));
         });
     } else {
         thelistdisplay.selectAll("option").remove();
@@ -102,22 +102,34 @@ function populateMusicList() {
     }
 }
 
+function refreshPlayList() {
+    theplaylistfield = d3.select("#MUSICDIV").select("#PLAYLIST");
+    d3.csv('/getplaylist', function(playlistdata) {
+        theoptions = theplaylistfield.selectAll('option').data(playlistdata, function(d){return d.shortname;});
+        theoptions.exit().remove();
+        theoptions.enter().append("option");
+        theplaylistfield.selectAll("option")
+            .attr('value', function(d) {return d.fileid;})
+            .text(function(d) {return d.shortname;});
+        console.log(Math.min(playlistdata.length,25));
+        theplaylistfield.attr("size", Math.min(playlistdata.length,25));
+    });
+}
+
 function addtunes() {
-    d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
+    idlist = d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
         .filter(function(d,i) { return this.selected;})
-        .selectAll(function(d, i) { 
-            d3.text('/addplaylist', function() {})
-                .post("fileid="+d.fileid);
-        });
+        .selectAll(function(d) {return d.fileid;});
+    d3.text('/addplaylist')
+        .post("fileid="+JSON.stringify(idlist._groups), function(d) {refreshPlayList();});
 }
 
 function rmtunes() {
-    d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
+    idlist = d3.select("#MUSICDIV").select("#PLAYLIST").selectAll("option")
         .filter(function(d,i) { return this.selected;})
-        .selectAll(function(d, i) { 
-            d3.text('/rmplaylist', function() {})
-                .post("fileid="+d.fileid);
-        });
+        .selectAll(function(d, i) { return d.fileid;});
+    d3.text('/rmplaylist')
+        .post("fileid="+JSON.stringify(idlist._groups), function() {refreshPlayList();});
 }
 
 function d3weather() {
