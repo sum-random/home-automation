@@ -132,6 +132,48 @@ function rmtunes() {
         .post("fileid="+JSON.stringify(idlist._groups), function() {refreshPlayList();});
 }
 
+function musiccontrol() {
+    d3.select("#MUSICDIV").selectAll('svg').remove();
+    btndata = [ { c: ')',  x: 120, y: 85, w: 67,  h: 17},
+                { c: '|(', x: 120, y: 107, w: 19, h: 17}];
+    canvas = d3.select("#MUSICDIV").append('svg')
+        .attr('width',388)
+        .attr('height',167);
+    buttonpad = canvas.append('g');
+        //.style('fill',d3.rgb(0,255,255))
+        //.attr('x', 117)
+        //.attr('y', 82)
+        //.attr('width', 124)
+        //.attr('height', 44)
+    buttonlist = buttonpad.selectAll('rect')
+        .data(btndata)
+            .enter()
+            .append('rect')
+                .style('fill',d3.rgb(191,191,191))
+                .attr('x', function(d){return d.x;})
+                .attr('y', function(d){return d.y;})
+                .attr('width', function(d){return d.w;})
+                .attr('height', function(d){return d.h;})
+                .append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', 'black')
+                    .text(function(d){return d.c;});
+    //playbtn = buttonpad.append('rect')
+        //.style('fill',d3.rgb(191,191,191))
+        //.attr('x', 120)
+        //.attr('y', 85)
+        //.attr('width', 67)
+        //.attr('height', 17);
+    //rwbtn = buttonpad.append('rect')
+        //.style('fill',d3.rgb(191,191,191))
+        //.attr('x', 120)
+        //.attr('y', 107)
+        //.attr('width', 19)
+        //.attr('height', 17);
+        
+    
+}
+
 function d3weather() {
       thethumb = d3.select(this);
       thediv = d3.select('#WEATHERIMG');
