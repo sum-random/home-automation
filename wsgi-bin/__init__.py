@@ -231,10 +231,10 @@ def setmixer():
                 sep = "\n"
     return Response(output,mimetype='text/html')
 
-@app.route('/dbtest')
+#@app.route('/dbtest')
 def dbtest():
     retval = ""
-    connection = db.get_sql_connection()
+    connection = db.open_sql_connection()
     tablecursor = connection.cursor()
     if tablecursor.execute("show tables") > 0:
         for nexttable in tablecursor.fetchall():
@@ -309,12 +309,11 @@ def get_music():
 def get_playlist():
     retval = ['fileid,shortname']
     try:
-        tunes = music.get_playlist()
-        logit("tunes: {}".format(tunes))
-        for outline in tunes:
+        for outline in music.get_playlist():
             retval.append('{},{}'.format(outline['fileid'],outline['shortname']))
     except Exception as e:
         logit("exception /getplaylist {}".format(e))
+    logit("get_playlist: {}".format(retval))
     return Response("\n".join(retval),mimetype='text/csv')
 
 @app.route('/addplaylist', methods = ['POST'])

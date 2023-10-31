@@ -111,7 +111,7 @@ function refreshPlayList() {
         theplaylistfield.selectAll("option")
             .attr('value', function(d) {return d.fileid;})
             .text(function(d) {return d.shortname;});
-        console.log(Math.min(playlistdata.length,25));
+        console.log(playlistdata);
         theplaylistfield.attr("size", Math.min(playlistdata.length,25));
     });
 }
@@ -134,44 +134,33 @@ function rmtunes() {
 
 function musiccontrol() {
     d3.select("#MUSICDIV").selectAll('svg').remove();
-    btndata = [ { c: ')',  x: 120, y: 85, w: 67,  h: 17},
-                { c: '|(', x: 120, y: 107, w: 19, h: 17}];
+    btndata = [ { x: 3,  y:  2, w: 67, h: 17, p: "34,5 34,17 40,11"}, //play
+                { x: 3,  y: 24, w: 19, h: 17, p: "7,26 7,37 9,37 9,32 14,37 14,32 19,37 19,26 14,30 14,26 9,30 9,26"}, //rw to start
+                { x: 27, y: 24, w: 19, h: 17, p: "37,26 32,31 37,37 37,32 42,37 42,26 37,30"}, //rewind
+                { x: 52, y: 24, w: 19, h: 17, p: "58,26 58,37 63,32 63,37 68,31 63,26 63,30 "}, //fast forward
+                { x: 77, y: 24, w: 19, h: 17, p: "81,26 81,37 86,32 86,37 91,32 91,37 93,37 93,26 91,26 91,30 86,26 86,30"}, //next track
+                { x: 77, y: 2,  w: 19, h: 17, p: ["83,8 83,16 85,16 85,8","88,8 88,16 90,16 90,8"]}, //pause
+                { x:100, y: 2,  w: 19, h: 17, p: "107,7 113,7 113,14 107,14"}, //stop
+                { x:100, y: 24, w: 19, h: 17, p: ["107,31 111,27 115,31 107,31","107,33 115,33 115,34 107,34 107,33"]}]; // eject
     canvas = d3.select("#MUSICDIV").append('svg')
         .attr('width',388)
-        .attr('height',167);
-    buttonpad = canvas.append('g');
-        //.style('fill',d3.rgb(0,255,255))
-        //.attr('x', 117)
-        //.attr('y', 82)
-        //.attr('width', 124)
-        //.attr('height', 44)
-    buttonlist = buttonpad.selectAll('rect')
-        .data(btndata)
-            .enter()
-            .append('rect')
-                .style('fill',d3.rgb(191,191,191))
-                .attr('x', function(d){return d.x;})
-                .attr('y', function(d){return d.y;})
-                .attr('width', function(d){return d.w;})
-                .attr('height', function(d){return d.h;})
-                .append('text')
-                    .attr('text-anchor', 'middle')
-                    .attr('fill', 'black')
-                    .text(function(d){return d.c;});
-    //playbtn = buttonpad.append('rect')
-        //.style('fill',d3.rgb(191,191,191))
-        //.attr('x', 120)
-        //.attr('y', 85)
-        //.attr('width', 67)
-        //.attr('height', 17);
-    //rwbtn = buttonpad.append('rect')
-        //.style('fill',d3.rgb(191,191,191))
-        //.attr('x', 120)
-        //.attr('y', 107)
-        //.attr('width', 19)
-        //.attr('height', 17);
-        
-    
+        .attr('height',167)
+        .append('g');
+    buttonpad = canvas.append('g')
+        .attr('transform', 'translate(117,83)');
+    btndata.forEach(function(d,i) {
+        btnbody = buttonpad.append('rect')
+            .attr('x',d.x)
+            .attr('y',d.y)
+            .attr('width',d.w)
+            .attr('height',d.h)
+            .style('fill',d3.rgb(191,191,191));
+        btnsymbol = buttonpad.append("polygon")
+            .attr("points", d.p)
+            .style("fill", "black")
+            .style("stroke", "none")
+            .style("strokeWidth", "0px");
+    });
 }
 
 function d3weather() {
@@ -316,9 +305,9 @@ function d3lights() {
     lcspacing = 15;
     lcwidth = (ldwidth - (lcspacing * lcols)) / lcols;
     lcheight = 70;
-    d3.csv('/listlight', function(error, data) {
-        if(error) throw error;
+    d3.csv('/listlight', function(data) {
         d3.select('#LIGHTS').selectAll('svg').remove();
+        console.log(data);
         lightsvg = d3.select('#LIGHTS')
             .append('svg')
                 .attr('width', ldwidth + (lcspacing * lcols) + margin.left + margin.right)
@@ -373,20 +362,20 @@ function d3lights() {
             });
         });
     });
-    function setlight() {
-        therect = d3.select(this);
-        thedata = this.classList.item(0).split(':');
-        theidx = thedata[0];
-        thestate = thedata[1];
-        lc = lightColors(thestate);
-        d3.selectAll('#' + this.id)
-          .style('fill', d3.rgb(128, 128, 128, 0.25));
-        d3.select(this)
-          .style('fill', d3.rgb(lc[0], lc[1], lc[2], 0.5));
-        d3.text('/setlight')
-          .post('DEV=' + theidx + '\nSTATE=' + thestate, function(d) {  console.log(d);});
-         
-    }
+}
+function setlight() {
+    therect = d3.select(this);
+    thedata = this.classList.item(0).split(':');
+    theidx = thedata[0];
+    thestate = thedata[1];
+    lc = lightColors(thestate);
+    d3.selectAll('#' + this.id)
+      .style('fill', d3.rgb(128, 128, 128, 0.25));
+    d3.select(this)
+      .style('fill', d3.rgb(lc[0], lc[1], lc[2], 0.5));
+    d3.text('/setlight')
+      .post('DEV=' + theidx + '\nSTATE=' + thestate, function(d) {  console.log(d);});
+     
 }
 
 function d3mixer() {
@@ -399,11 +388,8 @@ function d3mixer() {
     xpos = d3.scaleLinear().range([0, slwidth - thumbwidth]).domain([0,100]);
     mixstep = 1;
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
-    
 
-    d3.csv('/listmixer', function(error, data) {
-      if(error) throw error;
-      // 
+    d3.csv('/listmixer', function(data) {
       d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')
