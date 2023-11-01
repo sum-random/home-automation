@@ -7,7 +7,7 @@ function showOneLightSchedule() {
     thelight = d3.select("#PICKALIGHT").node().value;
     the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
     if(thelight > -1) {
-        d3.tsv('/getonelightsched/' + thelight, function(rawdata) {
+        d3.tsv('/getonelightsched/' + thelight).then(function(rawdata) {
             data = rawdata.sort(function(d){return d.descr;})
             the_options = the_display.selectAll("option").data(data, function(d){return d.id;});
             the_options.exit().remove();
@@ -31,7 +31,7 @@ function showOneLightSchedule() {
 function showScheduleItem() {
     the_item = d3.select("#SCHEDLIST").node().value;
     if(the_item.length > 0)
-        d3.json('/getlightscheddetail/' + the_item, function(data) {
+        d3.json('/getlightscheddetail/' + the_item).then(function(data) {
             d3.select('#MONTHMATCH').node().value = data['monthmatch'];
             d3.select('#DAYMATCH').node().value = data['daymatch'];
             d3.select('#TURNON').node().value = data['turnon'];
@@ -65,8 +65,7 @@ function showNewButton() {
 }
 
 function submitScheduleUpdate(newItem=false) {
-    d3.json('/setlightscheddetail')
-      .post('the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').node().value+'\nthe_day='+d3.select('#DAYMATCH').node().value+'\nthe_on_time='+d3.select('#TURNON').node().value+'\nthe_off_time='+d3.select('#TURNOFF').node().value+'\nnew_item='+(newItem?'true':'false')+'\n', function(data) {
+    d3.text('/setlightscheddetail',{method: 'post', body: 'the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').node().value+'\nthe_day='+d3.select('#DAYMATCH').node().value+'\nthe_on_time='+d3.select('#TURNON').node().value+'\nthe_off_time='+d3.select('#TURNOFF').node().value+'\nnew_item='+(newItem?'true':'false')+'\n'}).then(function(data) {
         showOneLightSchedule();
         showScheduleItem();
        });
@@ -74,9 +73,8 @@ function submitScheduleUpdate(newItem=false) {
 
 function deleteScheduleItem() {
     d3.json('/deletelightscheddetail')
-        .post('the_id='+d3.select('#SCHEDLIST').node().value, function(data) {
+        .post('the_id='+d3.select('#SCHEDLIST').node().value).then(function(data) {
             showOneLightSchedule();
-            //showScheduleItem();
        });
 
 }
@@ -86,7 +84,7 @@ function populateMusicList() {
     thetext = thetextfield.value;
     thelistdisplay = d3.select("#MUSICDIV").select("#TUNELIST");
     if(thetext.length > 3) {
-        d3.csv('/getmusic?filter=' + thetext, function(rawdata) {
+        d3.csv('/getmusic?filter=' + thetext).then(function(rawdata) {
             data = rawdata.sort(function(d){return d.shortname;})
             theoptions = thelistdisplay.selectAll("option").data(data, function(d){return d.shortname;});
             theoptions.exit().remove();
@@ -104,7 +102,7 @@ function populateMusicList() {
 
 function refreshPlayList() {
     theplaylistfield = d3.select("#MUSICDIV").select("#PLAYLIST");
-    d3.csv('/getplaylist', function(playlistdata) {
+    d3.csv('/getplaylist').then(function(playlistdata) {
         theoptions = theplaylistfield.selectAll('option').data(playlistdata, function(d){return d.shortname;});
         theoptions.exit().remove();
         theoptions.enter().append("option");
@@ -117,19 +115,19 @@ function refreshPlayList() {
 }
 
 function addtunes() {
-    idlist = d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
-        .filter(function(d,i) { return this.selected;})
-        .selectAll(function(d) {return d.fileid;});
-    d3.text('/addplaylist')
-        .post("fileid="+JSON.stringify(idlist._groups), function(d) {refreshPlayList();});
+    idlist=[];
+    optlist = d3.select("#MUSICDIV").select("#TUNELIST").selectAll("option")
+        .filter(function(d,i) { return this.selected;}).nodes();
+    optlist.forEach(function(d) {idlist.push(d.value);});
+    d3.text('/addplaylist', {method: 'post', body: "fileid="+JSON.stringify(idlist)}).then(function(d) {refreshPlayList();});
 }
 
 function rmtunes() {
-    idlist = d3.select("#MUSICDIV").select("#PLAYLIST").selectAll("option")
-        .filter(function(d,i) { return this.selected;})
-        .selectAll(function(d, i) { return d.fileid;});
-    d3.text('/rmplaylist')
-        .post("fileid="+JSON.stringify(idlist._groups), function() {refreshPlayList();});
+    idlist = [];
+    optlist = d3.select("#MUSICDIV").select("#PLAYLIST").selectAll("option")
+        .filter(function(d,i) { return this.selected;}).nodes();
+    optlist.forEach(function(d) {idlist.push(d.value);});
+    d3.text('/rmplaylist',{method: 'post', body: "fileid="+JSON.stringify(idlist)}).then(function() {refreshPlayList();});
 }
 
 function musiccontrol() {
@@ -149,13 +147,13 @@ function musiccontrol() {
     buttonpad = canvas.append('g')
         .attr('transform', 'translate(117,83)');
     btndata.forEach(function(d,i) {
-        btnbody = buttonpad.append('rect')
+        btnbody = canvas.append('rect')
             .attr('x',d.x)
             .attr('y',d.y)
             .attr('width',d.w)
             .attr('height',d.h)
             .style('fill',d3.rgb(191,191,191));
-        btnsymbol = buttonpad.append("polygon")
+        btnsymbol = canvas.append("polygon")
             .attr("points", d.p)
             .style("fill", "black")
             .style("stroke", "none")
@@ -206,9 +204,9 @@ function populateThumbs() {
     imgrect = slider.append('g')
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
         .attr('id','IMGSLIDER');
-    d3.json("/getimages")
-        .post("the_folder_id="+fldr, function(error, data) {
-            if(error) throw error;
+    d3.json("/getimages",{'method': 'post', 'body': "the_folder_id="+fldr})
+        .then(function(data) {
+            console.log(data);
             slider.attr('height', Math.floor(data.length/breakpt + 1)*(imgsz.size + imgsz.spacing) + 'px');
             data.forEach(function(d,i) {
               imgrect.append('svg:image')
@@ -305,7 +303,7 @@ function d3lights() {
     lcspacing = 15;
     lcwidth = (ldwidth - (lcspacing * lcols)) / lcols;
     lcheight = 70;
-    d3.csv('/listlight', function(data) {
+    d3.csv('/listlight').then(function(data) {
         d3.select('#LIGHTS').selectAll('svg').remove();
         console.log(data);
         lightsvg = d3.select('#LIGHTS')
@@ -373,8 +371,7 @@ function setlight() {
       .style('fill', d3.rgb(128, 128, 128, 0.25));
     d3.select(this)
       .style('fill', d3.rgb(lc[0], lc[1], lc[2], 0.5));
-    d3.text('/setlight')
-      .post('DEV=' + theidx + '\nSTATE=' + thestate, function(d) {  console.log(d);});
+    d3.text('/setlight',{method: 'post', body: 'DEV=' + theidx + '\nSTATE=' + thestate}).then(function(d) {  console.log(d);});
      
 }
 
@@ -389,7 +386,7 @@ function d3mixer() {
     mixstep = 1;
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
 
-    d3.csv('/listmixer', function(data) {
+    d3.csv('/listmixer').then(function(data) {
       d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')
@@ -399,8 +396,6 @@ function d3mixer() {
                      .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
       // process data
       data.forEach(function(d,i) {
-        d.left = +d.left;
-        d.right = +d.right;
         slider = mixsvg.append('g')
             .attr('transform', 'translate(0, ' + (slheight + slspacing) * i + ')');
         slider.append('rect')
@@ -410,6 +405,7 @@ function d3mixer() {
             .attr('ry', slheight / 3)
             .attr('width', slwidth)
             .attr('height', slheight)
+            .attr('id', 'slider' + d.device)
             .style('fill', '#C0C0C0');
         slider.append('text')
             .attr('x', slwidth / 2)
@@ -417,11 +413,12 @@ function d3mixer() {
             .attr('enabled', false)
             .attr('fill', 'black')
             .attr('text-anchor', 'middle')
+            .attr('id', 'label' + d.device)
             .text(d.device);
         slider.append('rect')
             .style('fill', d3.rgb(255,0,0,0.50))
             .attr('y', -1)
-            .attr('x', xpos((d.left+d.right)/2))
+            .attr('x', xpos((d.left*1+d.right*1)/2))
             .attr('rx', thumbwidth / 3)
             .attr('ry', thumbheight / 3)
             .attr('height', thumbheight)
@@ -439,32 +436,28 @@ function d3mixer() {
             .on('mouseup', endDrag)
             .on('mouseout', endDrag)
             .style('fill', d3.rgb(0,0,0,0));
-        function startDrag() {
+        function startDrag(event) {
             this.candrag = true;
-            this.vp = mixstep * parseInt(mixpos(d3.mouse(this)[0])/mixstep);
+            this.vp = mixstep * parseInt(mixpos(d3.pointer(event)[0])/mixstep);
             thethumb = d3.select('#thumb' + this.id);
-            thethumb.candrag = true;
             thethumb.attr('style', 'fill: rgba(255,0,0,1);');
-            thethumb.attr("x", d3.mouse(this)[0] - thumbwidth / 2);
         }
         function endDrag() {
             thethumb = d3.select('#thumb' + this.id);
             this.candrag = false;
-            thethumb.candrag = false;
             thethumb.attr('style', 'fill: rgba(255,0,0,0.50);');
         }
-        function dragIt() {
+        function dragIt(event) {
             thethumb = d3.select('#thumb' + this.id);
-            if(this.candrag || thethumb.candrag){
-                var mx = d3.mouse(this)[0];
+            if(this.candrag){
+                var mx = d3.pointer(event)[0];
                 var vp = parseInt(mixpos(mx)/mixstep)*mixstep;
                 vp = (vp>100?100:vp<0?0:vp);
                 var tp = xpos(vp);
                 thethumb.attr("x", tp);
                 if(this.vp != vp) {
                     this.vp = vp;
-                    d3.text('/setmixer')
-                      .post('DEV=' + this.id + '\nVALUE=' + vp, function(d) {  console.log(d);});
+                    d3.text('/setmixer', {method: 'post', body: 'DEV=' + this.id + '\nVALUE=' + vp});
                 }
             }
         }
@@ -528,7 +521,7 @@ function hideWImg(evt) {
 }
 
 function refreshHostList() {
-  d3.text("/getdevices", function(error,data) {
+  d3.text("/getdevices").then(function(data) {
     d3.select("#DEVICES")
       .html(data);
     d3.select("#DEVICES")
@@ -548,7 +541,7 @@ function showHostDetail(the_host) {
   itemheight = 20;
   cpudiv = d3.select("#HOSTINFO");
   cpudiv.selectAll('svg').remove();
-  d3.json('/deviceinfo/' + the_host, function(error, data) {
+  d3.json('/deviceinfo/' + the_host).then(function(data) {
     if(! data) return;
     cpudisplay = cpudiv.style('display','block').style('visibility','visible')
       .append('svg')
