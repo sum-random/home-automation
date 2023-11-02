@@ -8,6 +8,7 @@ import re
 # local libraries here
 import db
 from logit import logit
+from config import config
 
 def get_pix_html():
     retval = []
@@ -25,7 +26,6 @@ def get_pix_html():
                 the_dir = os.path.dirname(imgline[0])
                 the_id = imgline[1]
                 if not the_dir in folderlist:
-                    #folderlist[the_dir] = os.path.basename(the_dir)
                     folderlist[the_dir] = {'imgid': the_id, 'fname': os.path.basename(the_dir)}
         cursor.close()
         connection.close()
@@ -33,9 +33,7 @@ def get_pix_html():
         folderlist['exception']="{}".format(ex)
     defaultfolder = re.compile('nathan14')
     for folder_name in sorted(folderlist):
-        #logit("folder_name {}".format(folder_name))
         the_folder = folderlist[folder_name]
-        #logit("pix.py line 38 the_folder = {}".format(the_folder));
         the_id = the_folder['imgid']
         the_name = the_folder['fname']
         slashes = folder_name.count('/') - 3

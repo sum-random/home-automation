@@ -7,29 +7,24 @@ from subprocess import Popen, PIPE
 import datetime
 import time
 import multiprocessing
-#import syslog
 
-
-wwwfldr = '/usr/local/www/apache24/'
-datafldr = wwwfldr + 'cgi-data/'
+# local packages
+from config import config
 
 def logit(loglines):
     thepid = multiprocessing.current_process().pid
     thename = multiprocessing.current_process().name
-    thelogfile = open(datafldr + "flask.log", 'a')
-    #syslog.openlog()
+    thelogfile = open(config()['path']['config'] + "flask.log", 'a')
     if isinstance(loglines, str):
         loglines = [loglines]
     for nextlog in loglines:
         for nextline in str(nextlog).split("\n"):
             print(nextline,file=sys.stderr)
-            #syslog.syslog(nextline)
             timestamp = datetime.datetime.now()
-            thelogfile.write("{} {} [{}]: {}\n".format(timestamp.isoformat(), thename, thepid, nextline))
+            thelogfile.write("{} {} [{}]: {}\n".format(timestamp.isoformat(), thename, thepid, nextline.encode('unicode-escape').decode('ascii')))
             thelogfile.flush()
             time.sleep(0.001)
     thelogfile.close()
-    #syslog.closelog()
 
 
 

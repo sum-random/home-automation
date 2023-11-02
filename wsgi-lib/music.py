@@ -10,14 +10,17 @@ import json
 import syslog
 import time
 import pymysql
+import hashlib
 from urllib.parse import unquote_plus
+from stat import *
 
 # local libraries
 import db
 from logit import logit
+from config import config
 
 # Define some consts
-MPG123BIN="/usr/local/bin/mpg123"
+MPG123BIN=config()['path']['mpg123']
 
 def get_music_html():
     retval = []
@@ -149,20 +152,44 @@ def rm_playlist(fileids):
 
     return '\n'.join(retval)
 
+def store_music(path, filename):
+    filepath = os.path.join(dirpath, nextfile)
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    file_stat = os.stat(filepath)
+    infldr = os.path.basename(path)
+    shortname = "{} - {}".format(infldr, filename)
+    h = hashlib.md5()
+    data = True
+    with open(filepath,'rb') as f:
+        while data:
+            data = f.read(1048576)
+            h.update(data)
+    #logit("{} {} {} {} {}".format(filepath, shortname, file_stat[ST_INO], file_stat[ST_SIZE], h.hexdigest()))
+    fileid = db.save_music_file(filepath, shortname, file_stat[ST_INO], file_stat[ST_SIZE], h.hexdigest())
+    cursor.close()
+    connection.close()
+    return fileid
 
 if __name__ == '__main__':
     connection = db.open_sql_connection()
-
-    print(get_music_html())
-
-    print(get_music_filtered('skinny'))
-
-    for tune in get_music_filtered('slayer raining'):
-        print("  adding: {}".format(add_playlist(tune['fileid'])))
-
-    for tune in get_playlist(False):
-        print(" showing: {}".format(tune))
-
-    for tune in get_playlist(True):
-        print("removing: {}".format(rm_playlist(tune['fileid'])))
+    cursor = connection.cursor()
+    if cursor.execute("SELECT filename, fileid, shortname, inode, checksum, size FROM musicfiles"):
+        for nextrow in cursor.fetchall():
+           filename = unquote_plus(nextrow[0])
+           if os.path.isfile(filename) or os.path.isfile(nextrow[0]):
+               pass
+           elif os.path.isfile('/storage/'+filename):
+               cursor.execute("UPDATE musicfiles SET filename='{}', shortname='{}' WHERE fileid={}".format(connection.escape_string('/storage/'+filename), connection.escape_string(unquote_plus(nextrow[2])), nextrow[1]))
+           else:
+               db.del_music_row(nextrow[1])
+    for (dirpath, dirnames, filenames) in os.walk(config()['path']['music_base']):
+        for nextfile in filenames:
+            if re.search(u'mp3$|wav$',nextfile):
+                filepath = os.path.join(dirpath, nextfile)
+                fileid = db.get_musicid(filepath)
+                if not fileid:
+                    logit("store file {} {} {}".format(dirpath,dirnames,nextfile))
+                    logit("new fileid {}".format(store_music(dirpath, nextfile)))
+    cursor.close()
     connection.close()

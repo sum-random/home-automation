@@ -11,41 +11,31 @@ import json
 
 # local libraries
 from logit import logit
+from config import config
 
 write_lock = multiprocessing.Lock()
 
-pymysqlpool.logger.setLevel('WARNING')
-f = open('/usr/local/www/apache24/cgi-data/db.json')
-config = json.load(f)
-f.close()
+CONFIG = config()['database']
 
 ### Create the connection pool
-pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **config)
+pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **CONFIG)
 
 def open_sql_connection():
-  #logit("open new connection")
   return pool1.get_connection()
 
 
 def update_sql(the_sql):
     thewriteconnection = False
     try:
-        write_lock.acquire()
-        #logit("write lock acquired")
+        #write_lock.acquire()
         thewriteconnection = open_sql_connection()
-        #logit("connection acquired")
     
         cursor = thewriteconnection.cursor()
         cursor.execute(the_sql)
-        #if cursor.execute(the_sql):
-            #logit("successfully executed: {:.100}".format(the_sql))
         cursor.close()
         thewriteconnection.commit()
-        #logit("transaction committed")
         thewriteconnection.close()
-        #logit("connection released")
-        write_lock.release()
-        #logit("write lock released")
+        #write_lock.release()
     except Exception as e:
         logit("update query {} failed {}".format(the_sql, e))
         if thewriteconnection:
@@ -72,7 +62,6 @@ def list_img_folders():
     thecursor = connection.cursor()
     if thecursor.execute(sql) > 0:
         for row in thecursor.fetchall():
-            #logit("{}".format(row))
             thedir = path.basename(path.dirname(row[0]))
             if thedir not in retval:
                 retval.append(thedir)
@@ -83,7 +72,7 @@ def list_img_folders():
 def get_imgid(img_path):
     connection = open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT imgid FROM thumblist WHERE fname='{}';".format(img_path)):
+    if cursor.execute("SELECT imgid FROM thumblist WHERE fname='{}';".format(connection.escape_string(img_path))):
         imgid = cursor.fetchone()[0]
         # logit("found imgid: {}".format(imgid))
     else:
@@ -93,19 +82,40 @@ def get_imgid(img_path):
     connection.close()
     return imgid
 
+def get_musicid(file_path):
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute("SELECT fileid FROM musicfiles WHERE filename='{}';".format(connection.escape_string(file_path))):
+        fileid = cursor.fetchone()[0]
+    else:
+        logit("not in db: {}".format(file_path))
+        fileid = False
+    cursor.close()
+    connection.close()
+    return fileid
+
+def save_music_file(file_name, short_name, inode, size, hash):
+    fileid = False
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute("INSERT INTO musicfiles(filename, shortname, inode, size, checksum) VALUES('{}', '{}', {}, {}, '{}')".format(connection.escape_string(file_name), connection.escape_string(short_name), inode, size, hash)):
+        if cursor.execute("SELECT fileid FROM musicfiles WHERE filename='{}'".format(connection.escape_string(file_name))):
+            fileid = cursor.fetchone()[0]
+    cursor.close()   
+    connection.close()
+    return fileid
+
+def del_music_row(fileid):
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    cursor.execute("DELETE FROM musicfiles WHERE fileid={}".format(fileid))
+    cursor.close()   
+    connection.close()
+
+        
+
 if __name__ == "__main__":
   connection = open_sql_connection()
-  #tablecursor = connection.cursor()
-  #if tablecursor.execute("show tables") > 0:
-  #  for nexttable in tablecursor.fetchall():
-  #    nexttablename = nexttable['Tables_in_jupiter']
-  #    print("querying {}".format(nexttablename))
-  #    detailcursor = connection.cursor()
-  #    if detailcursor.execute("select * from {} limit 10".format(nexttablename)) > 0:
-  #      for nextrow in detailcursor.fetchall():
-  #        print(nextrow)
-  #    detailcursor.close()
-  #tablecursor.close()
   connection.close()
   print(match_image('219:244:251:218:243:252:221:246:252:220:245:252'))
   print(list_img_folders())

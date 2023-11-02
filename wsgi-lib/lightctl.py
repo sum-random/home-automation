@@ -11,20 +11,19 @@ from multiprocessing import Pool
 # local libraries here
 import db
 from logit import logit
+from config import config
 
 # Define some consts
-LOCKFILE = "/tmp/br.lock"
+CONFIG=config()
+LOCKFILE = CONFIG['path']['lockfile']
 HOUSECODE = '-c I'
-BRCMD = '/usr/local/bin/br'
 
 class lockobject():
     _lockfile = False
     def getlock(self):
         while os.access(LOCKFILE, os.F_OK):
-            #logit("I sleep for the lock")
             time.sleep(2)
         self._touch(LOCKFILE)
-        #logit("I have the lock")
         return True
 
     def droplock(self):
@@ -32,15 +31,12 @@ class lockobject():
             self._lockfile.close()
         if os.access(LOCKFILE, os.F_OK):
             os.unlink(LOCKFILE)
-            #logit("I release the lock")
         else:
-            #logit("Strange, {} not present".format(LOCKFILE))
             return False
         return True
     
     def _touch(self, fname, times=None):
         self._lockfile = open(fname, 'a')
-        #os.utime(fname, times)
 
 def _shortname(longname):
     return longname.split('.')[0]
@@ -59,9 +55,7 @@ def get_light_list():
 
 
 def dev_path(the_light):
-    APACHE="/usr/local/www/apache24"
-    CGIDATA="{}/cgi-data/".format(APACHE)
-    return CGIDATA + 'DEV' + str(the_light)
+    return CONFIG['path']['config'] + 'DEV' + str(the_light)
 
 def get_light_state(the_light):
     status = 'Auto'
@@ -70,7 +64,6 @@ def get_light_state(the_light):
         f = open(devpath, 'rt')
         status = f.readline()
         f.close()
-    #logit("light {} status {}".format(the_light, status))
     return status.strip()
 
 
@@ -78,11 +71,8 @@ def apply_light_state(the_light, the_state):
     mylock = lockobject()
     mylock.getlock()
     cmd = "-{}".format(the_state[1:2])
-    brcmd = [BRCMD, '-x', '/dev/cuau1', '-c','I', '-r', '5', cmd, str(the_light)]
-    #logit("brcmd {}".format(brcmd))
+    brcmd = [CONFIG['path']['brcmd'], '-x', CONFIG['path']['brdevice'], '-c','I', '-r', '5', cmd, str(the_light)]
     brout = Popen(brcmd, stdout=PIPE).communicate()
-    #if brout[0]:
-        #logit(brout[0])
     mylock.droplock()
     return ' '.join(brcmd)
 
@@ -116,14 +106,12 @@ def get_desired_light_states(the_light):
     retval = ['id\tdescr']
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    #logit("read light schedule from database")
     if the_light == -1:
         where = '' #  all light codes
     else:
         where = " WHERE lightcode={}".format(the_light)
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
-            #logit("light state row: {}".format(nextrow))
             retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
     cursor.close()
     connection.close()
@@ -133,7 +121,6 @@ def get_light_state_ids(the_light):
     retval = []
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    #logit("read light schedule from database")
     if the_light == -1:
         where = '' #  all light codes
     else:
@@ -149,19 +136,14 @@ def get_light_schedule_detail(the_id):
     retval = {}
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    #logit("get_light_schedule_detail({})".format(the_id))
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(the_id)):
         for nextrow in cursor.fetchall():
             retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
     cursor.close()
     connection.close()
-    #logit("get_light_schedule_detail {}: {}".format(the_id, retval))
     return retval
 
 def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, is_new):
-    #logit('set_light_schedule_detail({}, {}, {}, {}, {}, {}, {}, {})'
-          #.format(the_id, the_hhcode, the_lightcode, the_month,
-                  #the_day, the_on_time, the_off_time, is_new))
     connection = db.open_sql_connection()
     the_cursor = connection.cursor()
     if is_new == 'true':
@@ -172,7 +154,6 @@ def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_
         the_sql = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
                      WHERE id={}
                   """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, the_id)
-    #logit("sql: " + the_sql)
     the_response = "no error"
     try:
         the_cursor.execute(the_sql)
@@ -185,7 +166,6 @@ def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_
     return the_response
 
 def delete_light_schedule_detail(the_id):
-    #logit('delete_light_schedule_detail({})'.format(the_id))
     the_response = "no error"
     connection = db.open_sql_connection()
     the_cursor = connection.cursor()
@@ -204,7 +184,6 @@ def date_match(light_schedule):
     month = False
     day = False
     hour = False
-    #logit("date_match {}".format(light_schedule))
     monthmatch = light_schedule['monthmatch']
     try:
         if monthmatch == '*':
@@ -246,11 +225,8 @@ def date_match(light_schedule):
         hour = False
     override = get_light_state(the_light) 
     if re.match('Auto',override):
-        #if(month and day and hour):
-            #logit("date_match {}".format(light_schedule))
         return month and day and hour
     else:
-        #logit("Override: {} {}".format(light_schedule['lightcode'],override))
         return re.match('On',override)
 
 def lightsched(cgi_options):
@@ -316,10 +292,8 @@ def process_light_schedule(the_light):
         for nextrow in get_light_state_ids(the_light):
             if date_match(get_light_schedule_detail(nextrow)):
                 new_state = "On"
-        #logit("Light {} update state {}".format(light_list[the_light], new_state))
         apply_light_state(the_light, new_state)
     else:
-        #logit("Light {} override {}".format(light_list[the_light], current_state))
         apply_light_state(the_light, current_state)
 
 def check_router():
@@ -340,6 +314,3 @@ if __name__ == '__main__':
         process_light_schedule(the_light)
         time.sleep(5)
     check_router()
-    #pool = Pool()
-    #pool.map(process_light_schedule, light_list)
-    #pool.close()

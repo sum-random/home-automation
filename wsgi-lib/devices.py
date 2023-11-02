@@ -13,12 +13,14 @@ from datetime import datetime
 
 import db
 from logit import logit
+from config import config
+CONFIG=config()
 
 # Define some consts
-APACHE="/usr/local/www/apache24"
-CGIDATA="{}/cgi-data".format(APACHE)
-USERSSH="{}/.ssh".format(CGIDATA)
-SSHUSER="ctucker"
+APACHE=CONFIG['path']['www']
+CGIDATA=CONFIG['path']['config']
+USERSSH=CONFIG['path']['ssh']
+SSHUSER=CONFIG['ssh']['user']
 CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\t*:/:/"',
                 'batstat': 'cat /sys/class/power_supply/battery/uevent | grep STATUS | cut -d = -f 2',
@@ -27,7 +29,7 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'cpuinfo': '[ -f /proc/cpuinfo ] && cat /proc/cpuinfo | sed "s/\s*:/:/" || (sysctl -a  | grep -E "^hw.model|^hw.ncpu|^hw.physmem|^kern.version"; sysctl -a  | grep temperature | sed s/dev.cpu.[0-9]*/cpu/ | sort | uniq -c | tr -d : | awk \'{print $2" "$3": "$1}\')',
                 'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
                 'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
-LOCKFILE = "/tmp/br.lock"
+LOCKFILE = CONFIG['path']['lockfile']
 CURTIME = '{}'.format(int(datetime.timestamp(datetime.now())))
 
 
@@ -46,7 +48,7 @@ def readdevice(ipaddr):
     short = _shortname(long)
     spat = re.compile(short)
     type = re.compile(' *# type ')
-    f = open('/usr/local/etc/dhcpd.conf')
+    f = open(CONFIG['path']['dhcpd_config'])
     while True:
         line = f.readline()
         if not line: break
@@ -69,19 +71,17 @@ def readdevice(ipaddr):
     the_sql = "SELECT JSON_EXTRACT(devjson,'$.sshport') FROM devices where hostname='{}';".format(short)
     if cursor.execute(the_sql) > 0:
         for nextrow in cursor.fetchall():
-            #logit("SSH port: {}".format(nextrow))
             if nextrow[0] is not None:
                 the_srv_type['sshport'] = int(nextrow[0])
     cursor.close()
     connection.close()
 
-    #logit("the_srv_type = {}".format(the_srv_type))
     return(the_srv_type)
 
 
 def _device_ip_list():
     hosts = []
-    f = open('/usr/local/etc/namedb/master/claytontucker.org', 'r')
+    f = open(CONFIG['path']['named_config'], 'r')
     pat1 = re.compile('^[A-Za-z]')
     pat2 = re.compile('10.4.[67][09].[0-9]*')
     pat3 = re.compile('10.10.10.[0-9]*')
@@ -104,7 +104,7 @@ def check_ping(device):
     output = ','.join(Popen(["/sbin/ping",
                              "-c", "5",
                              "-t", "1",
-                             dev_name], stdout=PIPE)
+                             dev_name], stdout=PIPE,stderr=PIPE)
                           .communicate()[0].decode('utf-8').split('\n'))
     recd_pkts = ping_pat.match(output)
     if recd_pkts:
@@ -120,7 +120,6 @@ def check_ping(device):
                 s.connect((dev_name, port))
             except OSError as error:
                 pass
-                #logit('{} not port {} error {}'.format(dev_name,port,error))
             else:
                 s.close()
                 device['sshport'] = port
@@ -132,14 +131,11 @@ def check_ssh(device):
     dev_name = device['hostname']
     if 'recd_pkts' in device and device['recd_pkts'] != '0' and 'sshport' in device:
         for key in CMDS[device['sshport']]:
-            output = Popen(["/usr/bin/ssh",
+            output = Popen([CONFIG['path']['ssh_cmd'],
                             "-f",
                             "-o", "StrictHostKeyChecking=no",
                             "-o", "PasswordAuthentication=no",
-                            #"-o", "ConnectTimeout=10",
-                            #"-o", "ServerAliveInterval=15",
-                            #"-o", "TCPKeepAlive=yes",
-                            "-i", "{}/.ssh/id_rsa".format(CGIDATA),
+                            "-i", CONFIG['path']['ssh_key'],
                             "-p", "{}".format(device['sshport']),
                             "{}@{}".format(SSHUSER, device['hostname']),
                             '{}'.format(CMDS[device['sshport']][key])], stdout=PIPE, stderr=PIPE)
@@ -153,12 +149,9 @@ def check_ssh(device):
                             cpu = devitem.split(':')
                             if len(cpu) >= 2:
                                 jskeys = cpu[0].split('.')
-                                #logit("{}".format(jskeys))
                                 device[key][cpu[0].strip()] = cpu[1].strip()
-                                #logit("device[{}][{}] = {}".format(key,cpu[0],cpu[1]))
                 else:
                     device[key] = outtxt[:-1]
-    #print(device)
     return device
 
 
@@ -261,13 +254,11 @@ def get_device_info(the_host):
     return retval
     
 if __name__ == '__main__':
-    #print("open_sql_connection")
     connection = db.open_sql_connection()
 
     for nextdev in scandevices():
         tablecursor = connection.cursor()
         the_sql = "INSERT INTO devices(hostname, devjson) VALUES('{0}', '{1}') ON DUPLICATE KEY UPDATE devjson='{1}';".format(nextdev['hostname'], json.dumps(nextdev))
-        #print(the_sql)
         tablecursor.execute(the_sql)
         connection.commit()
     connection.close()
