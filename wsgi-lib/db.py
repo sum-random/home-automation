@@ -18,7 +18,7 @@ write_lock = multiprocessing.Lock()
 CONFIG = config()['database']
 
 ### Create the connection pool
-pool1 = pymysqlpool.ConnectionPool(size=16, name='pool1', **CONFIG)
+pool1 = pymysqlpool.ConnectionPool(size=32, name='pool1', **CONFIG)
 
 def open_sql_connection():
   return pool1.get_connection()

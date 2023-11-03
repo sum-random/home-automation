@@ -387,6 +387,7 @@ function d3mixer() {
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
 
     d3.csv('/listmixer').then(function(data) {
+      console.log(data);
       d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')
@@ -396,6 +397,8 @@ function d3mixer() {
                      .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
       // process data
       data.forEach(function(d,i) {
+        d.left = +d.left;
+        d.right = +d.right;
         slider = mixsvg.append('g')
             .attr('transform', 'translate(0, ' + (slheight + slspacing) * i + ')');
         slider.append('rect')
@@ -418,7 +421,7 @@ function d3mixer() {
         slider.append('rect')
             .style('fill', d3.rgb(255,0,0,0.50))
             .attr('y', -1)
-            .attr('x', xpos((d.left*1+d.right*1)/2))
+            .attr('x', xpos((d.left+d.right)/2))
             .attr('rx', thumbwidth / 3)
             .attr('ry', thumbheight / 3)
             .attr('height', thumbheight)
