@@ -123,6 +123,7 @@ def check_ping(device):
             else:
                 s.close()
                 device['sshport'] = port
+    logit('check_ping {}'.format(device))
     return device
 
 
@@ -142,16 +143,20 @@ def check_ssh(device):
             output.wait()
             outtxt = output.communicate()[0].decode('utf-8')
             if outtxt:
-                if '\n' in outtxt[:-1]:
+                if re.search('COMMAND SYNTAX ERROR', outtxt):
+                    pass
+                elif '\n' in outtxt[:-1]:
                     device[key] = {}
                     for devitem in outtxt.split('\n'):
                         if ':' in devitem:
-                            cpu = devitem.split(':')
-                            if len(cpu) >= 2:
-                                jskeys = cpu[0].split('.')
-                                device[key][cpu[0].strip()] = cpu[1].strip()
+                            keyval = devitem.split(':')
+                            if len(keyval) >= 2:
+                                jskeys = keyval[0].split('.')
+                                device[key][keyval[0].strip()] = keyval[1].strip()
                 else:
                     device[key] = outtxt[:-1]
+    if device['recd_pkts'] != '0':
+        logit('check_ssh {}'.format(device))
     return device
 
 
@@ -205,7 +210,7 @@ def get_device_html():
                                       thehost['load'] if 'load' in thehost else '')
         else:
             hoststat = "Up"
-        if 'batcap' in thehost:
+        if 'batcap' in thehost and not isinstance(thehost['batcap'], dict):
             batcap = int(thehost['batcap'])
             batred = 255 if batcap < 50 else (100 - batcap) * 5
             batgrn = 255 if batcap > 50 else batcap * 5
