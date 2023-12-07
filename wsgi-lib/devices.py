@@ -123,7 +123,6 @@ def check_ping(device):
             else:
                 s.close()
                 device['sshport'] = port
-    logit('check_ping {}'.format(device))
     return device
 
 
@@ -155,8 +154,6 @@ def check_ssh(device):
                                 device[key][keyval[0].strip()] = keyval[1].strip()
                 else:
                     device[key] = outtxt[:-1]
-    if device['recd_pkts'] != '0':
-        logit('check_ssh {}'.format(device))
     return device
 
 
@@ -184,7 +181,6 @@ def renderdevices():
     the_sql = "SELECT devjson FROM devices where json_value(devjson,'$.type') is not null;"
     if tablecursor.execute(the_sql) > 0:
         for nexttable in tablecursor.fetchall():
-            # logit("nexttable is {}".format(nexttable))
             the_host_json = json.loads(nexttable[0])
             if 'recd_pkts' in the_host_json and the_host_json['recd_pkts'] != '0':
                 retval.append(the_host_json)
