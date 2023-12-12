@@ -16,7 +16,7 @@ def get_bookmarks():
     retval = []
     dlmatch = re.compile('<dl>', flags=re.I)
     has_matched =  False
-    the_file = open(config()['path']['home']+'/public_html/bookmarks.html', 'rb');
+    the_file = open(config()['path']['bookmarks'], 'rb');
     for nextline in the_file:
         textline = nextline.decode('utf-8', 'ignore')
         if dlmatch.search(textline):
