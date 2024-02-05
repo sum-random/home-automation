@@ -89,6 +89,13 @@
   setInterval(d3lights,300000);
   refreshHostList();
   setInterval(refreshHostList,300000);
+  window.onfocus=function(event) {
+    d3lights();
+  }
+  document.onvisibilitychange=function(event) {
+    if(document.visibilityState=='visible')
+      d3lights();
+  }
 </SCRIPT>
 
 </body>
