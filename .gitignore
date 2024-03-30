@@ -28,3 +28,7 @@ data/jscript/tests/*
 data/jscript/themes/*
 data/jscript/ui/*
 data/static/*
+cgi-data
+error
+icons
+public
