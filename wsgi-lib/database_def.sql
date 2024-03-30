@@ -1,8 +1,8 @@
--- MariaDB dump 10.19  Distrib 10.4.28-MariaDB, for FreeBSD12.4 (amd64)
+-- MariaDB dump 10.19  Distrib 10.11.6-MariaDB, for FreeBSD13.2 (amd64)
 --
 -- Host: localhost    Database: jupiter
 -- ------------------------------------------------------
--- Server version	10.4.28-MariaDB
+-- Server version	10.11.6-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -49,7 +49,7 @@ CREATE TABLE `devices` (
   `devjson` longtext DEFAULT NULL CHECK (json_valid(`devjson`)),
   PRIMARY KEY (`id`),
   UNIQUE KEY `hostname` (`hostname`)
-) ENGINE=InnoDB AUTO_INCREMENT=33743793 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36970818 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,6 +70,22 @@ CREATE TABLE `imgcache` (
   KEY `imgidlookup` (`imgid`),
   CONSTRAINT `imgcache_ibfk_1` FOREIGN KEY (`imgid`) REFERENCES `thumblist` (`imgid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `lightnames`
+--
+
+DROP TABLE IF EXISTS `lightnames`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `lightnames` (
+  `lightid` int(16) NOT NULL,
+  `lightname` varchar(256) NOT NULL,
+  `housecode` varchar(1) NOT NULL DEFAULT 'I',
+  `state` varchar(4) DEFAULT 'Auto',
+  PRIMARY KEY (`lightid`,`housecode`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,7 +129,7 @@ CREATE TABLE `musicfiles` (
   KEY `musicfiles_inode` (`inode`),
   KEY `musicfiles_size` (`size`),
   KEY `musicfiles_checksum` (`checksum`)
-) ENGINE=InnoDB AUTO_INCREMENT=77537 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=80466 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -154,7 +170,7 @@ CREATE TABLE `thumblist` (
   `imgid` int(16) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`imgid`),
   UNIQUE KEY `thumblist_fname` (`fname`)
-) ENGINE=InnoDB AUTO_INCREMENT=147745 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=157636 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -166,4 +182,4 @@ CREATE TABLE `thumblist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-11-01 13:55:43
+-- Dump completed on 2024-03-30 14:59:51

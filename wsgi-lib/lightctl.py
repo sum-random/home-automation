@@ -43,14 +43,14 @@ def _shortname(longname):
 
     
 def get_light_list():
-    lights = { 1: 'Bedroom',
-               2: 'Living room L',
-               3: 'Living room R',
-               4: 'Sofa',
-               5: 'Freezer',
-               6: 'Salt rock',
-               9: 'Sun room',
-               14: 'Nathans computer' }
+    lights = {}
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute("SELECT lightid, lightname FROM lightnames"):
+        for nextrow in cursor.fetchall():
+            lights[nextrow[0]] = nextrow[1]
+    cursor.close()
+    connection.close()
     return lights
 
 
