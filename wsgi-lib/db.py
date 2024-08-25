@@ -4,7 +4,6 @@
 import pymysql
 import multiprocessing
 from os import path
-import pymysqlpool
 import traceback
 import json
 
@@ -13,15 +12,12 @@ import json
 from logit import logit
 from config import config
 
-write_lock = multiprocessing.Lock()
+#write_lock = multiprocessing.Lock()
 
 CONFIG = config()['database']
 
-### Create the connection pool
-pool1 = pymysqlpool.ConnectionPool(size=32, name='pool1', **CONFIG)
-
 def open_sql_connection():
-  return pool1.get_connection()
+  return pymysql.connections.Connection(**CONFIG)
 
 
 def update_sql(the_sql):
