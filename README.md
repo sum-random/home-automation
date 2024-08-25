@@ -1,10 +1,8 @@
 This code is my home automation project and self learning platform.  It turns my lights on and off each evening, manages my picture collection, keeps my bookmark links handy, and will play audio files in the future.  
 
 Installation Instructions
-Starting from a newly installed FreeBSD 12 instance, install the following packages:
-apache24 ap24-py39-mod_wsgi bind916 bottlerocket mariadb or mysql mpg123 python39 py39-pip
-Install PIP packages:
-Flask Pillow pymysql-pool
+Starting from a newly installed FreeBSD 13 instance, install the following packages:
+apache24 ap24-py311-mod_wsgi bind916 bottlerocket mariadb or mysql mpg123 python311 py311-pip py311-flask py311-mysql py311-pillow
 Apache configuration:
 Deploying code:
 Crontab setup:
@@ -20,7 +18,7 @@ Detail how others can contribute to your project. Include information about issu
 
 MIT License
 
-Copyright (c) 2023 Clayton Tucker
+Copyright (c) 2024 Clayton Tucker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
