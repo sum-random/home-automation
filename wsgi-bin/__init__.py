@@ -29,9 +29,10 @@ def parseData(requestdata):
     retval = {}
     for line in requestdata.decode('utf8').split('\n'):
         if line:
-            (key, val) = line.split('=')
-            logit('{}: {}'.format(key,val))
-            retval[key] = val
+            for onepair in line.split('&'):
+                if onepair:
+                    (key, val) = onepair.split('=')
+                    retval[key] = val
     return retval
 
 
@@ -73,7 +74,6 @@ def listlight():
     lights = lightctl.get_light_list()
     for key in lights:
         retval.append('{},{},{}'.format(key, lights[key], lightctl.get_light_state(key)))
-    #logit(retval)
     return Response("\n".join(retval),mimetype='text/csv')
 
 
@@ -93,7 +93,6 @@ def getlight():
             retval = "Error missing DEV variable"
     else:
         retval = "Error no request found"
-    #logit(retval)
     return Response(retval,mimetype='text/html')
 
 @app.route('/setlight', methods = ['POST'])
@@ -110,7 +109,6 @@ def setlight():
             retval = "Error missing DEV and/or STATE"
     else:
         retval = "Error no request found"
-    #logit(retval)
     return Response(retval,mimetype='text/html')
 
 @app.route('/lightsched', methods = ['POST','GET'])
@@ -118,19 +116,13 @@ def schedlight():
     retval = 'Undefined'
     requestobj = False
     if request.method == 'POST':
-        #logit("request {}".format(request))
-        #for subs in request.form:
-            #logit("request value {}: {}".format(subs, request.form[subs]))
         requestobj = request.form
-        #logit("requestobj {}".format(requestobj))
     retval = lightctl.lightsched(requestobj)
-    #logit("/lightsched {}".format(retval))
     return Response(retval,mimetype='text/html')
 
 @app.route('/getonelightsched/<the_light>', methods = ['GET','POST'])
 def getlightsched(the_light):
     retval = lightctl.get_desired_light_states(the_light)
-    #logit("/getonelightsched {}".format(retval))
     return Response("\n".join(retval),mimetype='text/tsv')
 
 @app.route('/getlightscheddetail/<the_index>', methods = ['GET', 'POST'])
@@ -178,11 +170,12 @@ def listmixer():
     q = re.compile(" *is currently set to *")
     r = re.compile("Recording source:.*")
     s = re.compile(":")
-    output = Popen(["/usr/sbin/mixer"], stdout=PIPE).communicate()[0]
-    for nextdev in output.decode('utf8').split("\n"):
-        devname = s.sub(',', r.sub('', q.sub(',', p.sub('', nextdev))))
-        if devname:
-            retval.append(devname)
+    if os.path.exists('/dev/mixer'):
+        output = Popen(["/usr/sbin/mixer"], stdout=PIPE).communicate()[0]
+        for nextdev in output.decode('utf8').split("\n"):
+            devname = s.sub(',', r.sub('', q.sub(',', p.sub('', nextdev))))
+            if devname:
+                retval.append(devname)
     return Response("\n".join(retval),mimetype='text/csv')
 
 
@@ -313,7 +306,6 @@ def get_playlist():
             retval.append('{},{}'.format(outline['fileid'],outline['shortname']))
     except Exception as e:
         logit("exception /getplaylist {}".format(e))
-    logit("get_playlist: {}".format(retval))
     return Response("\n".join(retval),mimetype='text/csv')
 
 @app.route('/addplaylist', methods = ['POST'])
@@ -355,6 +347,40 @@ def pop_playlist():
         print("exception {}".format(e))
     logit("rm_playlist: {}".format(tunename))
     return Response(tunename,mimetype="text/html")
+
+@app.route('/getweather', methods=['GET','POST'])
+def get_weather_data():
+    requestobj = {}
+    if request.method == 'GET':
+        for idx in request.args:
+            requestobj[idx] = request.args[idx]
+    if request.method == 'POST':
+        requestobj = parseData(request.data)
+    if requestobj:
+        if 'start' not in requestobj:
+            requestobj['start']=False
+        if 'end' not in requestobj:
+            requestobj['end']=False
+        if 'host' not in requestobj:
+            requestobj['host']=None
+    return Response("\n".join(weather.get_weather_readings(start=requestobj['start'], end=requestobj['end'], host=requestobj['host'])),mimetype="text/csv")
+    #return Response("\n".join(weather.get_weather_readings()),mimetype="text/csv")
+
+@app.route('/saveweather', methods=['POST'])
+def save_weather_data():
+    if request.method == 'POST':
+        requestobj = parseData(request.data)
+    if requestobj:
+        return jsonify(weather.save_weather_reading(timestamp=requestobj['timestamp'],host=requestobj['host'],reading=requestobj['reading']))
+    else:
+        raise Exception("request.data: {}".format(request.data))
+    raise Exception("WTF man");
+
+@app.route('/getagw', methods=['GET'])
+def getheatcolor():
+    retval = weather.get_current_vs_historical()
+    return jsonify({'status': retval})
+
 
 @app.teardown_appcontext
 def close_db(error):

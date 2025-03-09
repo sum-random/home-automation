@@ -1,6 +1,101 @@
 function setupWeather() {
   d3.selectAll('.weatherthumb')
     .on('mouseover', showWImg);
+
+  thediv = d3.select('#WEATHERIMG');
+  thediv.select('svg').remove();
+  thediv.append('svg').append('svg:image')
+    .attr('width', '90%')
+    .attr('class', 'weatherShow')
+
+  cpuTemperatureGraph();
+  setInterval(cpuTemperatureGraph,300000);
+}
+
+// show cpu temperature graphs for last 48 hours
+function cpuTemperatureGraph() {
+  var graphx = 1280;
+  var graphy = 640;
+  var margins = 50;
+  var temps = d3.select('#TEMPERATURES');
+  temps.selectAll('svg').remove();
+  var base = temps.append('svg')
+      .attr('width', graphx)
+      .attr('height',graphy);
+  var svg = base.append('g')
+      .attr('width', graphx-margins*2)
+      .attr('height', graphy-margins*2)
+      .attr('transform',
+            'translate('+margins+','+margins+')');
+
+  // read data
+  start_time = Math.floor(Date.now()/1000 - 86400 * 3);
+  //start_time = Math.floor(Date.now()/1000 - 14400);
+  d3.csv('/getweather?start='+start_time, {method: "get"})
+  //d3.csv('/getweather', {method: "post", body: 'start='+start_time+'\nhost=saturn' })
+    .then(function(data) {
+
+      var vscale = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.reading))
+        .range([graphy-margins*2,0]);
+      var hscale = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.timestamp))
+        .range([0,graphx-margins*2]);
+      var tscale = d3.scaleTime()
+        .domain(d3.extent(data, function(d) { return new Date(d.timestamp*1000);}))
+        .range([0,graphx-margins*2]);
+      var linefunc = d3.line()
+        //break the line where there are data gaps
+        .defined(function(d,i,a) {return (i==0 || i==a.length-1 || d.timestamp-a[i-1].timestamp==a[i+1].timestamp-d.timestamp);})
+        .x(function(d){return hscale(d.timestamp);})
+        .y(function(d){return vscale(d.mavg);});
+      var hostfunc = d3.group(data, d => d.host);
+      var color = d3.scaleOrdinal()
+        .domain(hostfunc.keys())
+        .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
+      svg.selectAll('path')
+        .data(hostfunc)
+        .enter().append('path')
+          .attr('stroke', function(d) {console.log(d[0] + ' ' + color(d[0]));return d3.color(color(d[0]));})
+          .attr('fill', 'none')
+          .attr('stroke-width', 3)
+          .attr('id', function(d) {return d[0];})
+          .attr('d', function(d) {return linefunc(d[1]);});
+      base.append('g')
+        .attr('width', margins)
+        .attr('height', graphy)
+        .attr('transform', 'translate('+margins+','+margins+')')
+        .call(d3.axisLeft(vscale));
+      base.append('g')
+        .attr('width', graphx)
+        .attr('height', margins)
+        .attr('transform', 'translate('+margins+','+(graphy-margins)+')')
+        .call(d3.axisBottom(tscale));
+      cntr=0;
+      legend = base.append('g')
+        .attr('width',margins)
+        .attr('height',graphy-margin*2)
+        .attr('text-anchor','top')
+        .attr('transform','translate('+(graphx-margins)+','+margins+')');
+      lbg = legend.append('rect')
+        .attr('height',graphy-margins*2)
+        .attr('width','100%');
+      legend.selectAll('text')
+        .data(hostfunc)
+        .attr('fill','none')
+        .enter().append('text')
+          .text(function(d,i,a) {return d[0];})
+          .attr('value',function(d) {return d.host;})
+          .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
+          .attr('x',5)
+          .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].reading);})
+          .on('mouseover',function(d){d.raise();})
+          .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
+          .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
+          .attr('stroke-width','0.5');
+      d3.json('/getagw')
+        .then(function(data){legend.attr('height',156);lbg.attr('fill','rgba('+data.status[0]+','+data.status[1]+',32)');});
+  });
 }
 
 function showOneLightSchedule() {
@@ -109,7 +204,6 @@ function refreshPlayList() {
         theplaylistfield.selectAll("option")
             .attr('value', function(d) {return d.fileid;})
             .text(function(d) {return d.shortname;});
-        console.log(playlistdata);
         theplaylistfield.attr("size", Math.min(playlistdata.length,25));
     });
 }
@@ -172,7 +266,7 @@ function d3weather() {
 }
 
 function switchDiv(nextDiv) {
-    [ '#PIX', '#FULLSZ', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV', '#LIGHTSCHED' ].forEach(function(d) {
+    [ '#PIX', '#FULLSZ', '#MIXER', '#LIGHTS', '#PLACES', '#WEATHER', '#DEVICES', '#BOOKMARKS', '#MASTODON', '#MUSICDIV', '#LIGHTSCHED','#TEMPERATURES' ].forEach(function(d) {
         d3.select(d)
           .style('display', 'none')
           .style('visibility', 'hidden');
@@ -305,7 +399,6 @@ function d3lights() {
     lcheight = 70;
     d3.csv('/listlight').then(function(data) {
         d3.select('#LIGHTS').selectAll('svg').remove();
-        console.log(data);
         lightsvg = d3.select('#LIGHTS')
             .append('svg')
                 .attr('width', ldwidth + (lcspacing * lcols) + margin.left + margin.right)
@@ -387,7 +480,7 @@ function d3mixer() {
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
 
     d3.csv('/listmixer').then(function(data) {
-      console.log(data);
+      //console.log(data);
       d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')

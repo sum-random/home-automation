@@ -1,11 +1,13 @@
 <html>
 <head>
 <TITLE>Launch Pad</TITLE>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+  <!--script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script-->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-selection@3.0.0/dist/d3-selection.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-dispatch@3.0.1/dist/d3-dispatch.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-drag@3.0.0/dist/d3-drag.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3.0.1/dist/d3-fetch.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-color@3.1.0/dist/d3-color.min.js"></script>
   <!--script src = "https://d3js.org/d3.v4.min.js"></script-->
   <!--script src="https://d3js.org/d3-dispatch.v1.min.js"></script-->
   <!--script src="https://d3js.org/d3-selection.v1.min.js"></script-->
@@ -40,6 +42,8 @@
 <IMG CLASS='bstyle' ID='MIXICO' SRC='/img/Mixer.gif' onMouseOver='changeSize("#MIXICO",64,48);' onMouseOut='changeSize("#MIXICO",48,32);'></A>
 <A onMouseOver="switchDiv('#DEVICES');">
 <IMG CLASS='bstyle' ID='DEVICO' SRC='/img/google_vs_apple_thm.jpg' onMouseOver='changeSize("#DEVICO",64,48);' onMouseOut='changeSize("#DEVICO",48,32);'></A>
+<A onMouseOver="switchDiv('#TEMPERATURES');">
+<IMG CLASS='bstyle' ID='TMPICO' SRC='/img/thermometer.png' onMouseOver='changeSize("#TMPICO",64,48);' onMouseOut='changeSize("#TMPICO",48,32);'></A>
 </DIV>
 
 <DIV CLASS='bookmarks' ID='BOOKMARKS'>
@@ -73,6 +77,7 @@
 {{ music|safe }}
 </DIV>
 
+<DIV CLASS='tempDiv' ID='TEMPERATURES'></DIV>
 <DIV CLASS='weatherDiv' ID='WEATHER' >
 <CENTER>
 {{ weather|safe }}

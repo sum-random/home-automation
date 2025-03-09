@@ -84,6 +84,14 @@ padding:10px;
 padding-top:35px;
 display:none;
 }
+.tempDiv
+{
+width:95%;
+vertical-align:top;
+padding:10px;
+padding-top:5px;
+display:none;
+}
 .no-border {
 border:none;
 vertical-align:top;
