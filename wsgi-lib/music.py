@@ -56,7 +56,7 @@ def get_music_filtered(filter):
     return sorted(retval,key=lambda k: k['shortname'])
 
 def get_playlist(randomize=False):
-    logit("get_playlist")
+    #logit("get_playlist")
     retval = []
     try:
         connection = db.open_sql_connection()
@@ -75,7 +75,7 @@ def get_playlist(randomize=False):
         cursor.close()
     except Exception as e:
         logit("exception get_playlist: {}".format(e))
-    logit("get_playlist: {}".format(retval))
+    #logit("get_playlist: {}".format(retval))
     return retval
 
 def pop_playlist():
@@ -136,13 +136,13 @@ def rm_playlist(fileids):
                    "FROM musicfiles mf "
                    "INNER JOIN playlist pl ON pl.fileid=mf.fileid "
                    "WHERE mf.fileid={}".format(fileid))
-            logit("rm_playlist {}".format(query))
+            #logit("rm_playlist {}".format(query))
             if cursor.execute(query):
                 for musicline in cursor.fetchall():
                     retval.append(musicline[1])
                     remover = connection.cursor()
                     query = "DELETE FROM playlist WHERE fileid={}".format(musicline[0])
-                    logit(query)
+                    #logit(query)
                     remover.execute(query)
                     remover.close()
             cursor.close()
