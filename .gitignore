@@ -32,3 +32,5 @@ cgi-data
 error
 icons
 public
+*/pycache/*
+*.pyc
