@@ -192,9 +192,12 @@ def renderdevices():
 def get_device_html():
   # CPU type indexes
   lnx = 'model name'
+  mip = 'cpu model'
   bsd = 'hw.model'
   arm = 'Processor'
   armalt = 'CPU architecture'
+  cpus = [lnx, mip, bsd, arm]
+
   try:
     """ Render devices in a table for browser """
     # get the JSON data for rendering
@@ -218,14 +221,12 @@ def get_device_html():
         if 'cpuinfo' in thehost:
             cpuinfo = thehost['cpuinfo']
             the_cpu = False
-            if lnx in cpuinfo:
-                the_cpu = cpuinfo[lnx]
-            if bsd in cpuinfo:
-                the_cpu = cpuinfo[bsd]
             if armalt in cpuinfo:
                 the_cpu = '{}: ARM v{}'.format(armalt, cpuinfo[armalt])
-            if arm in cpuinfo:
-                the_cpu = cpuinfo[arm]
+            else:
+                for next_cpu  in cpus:
+                    if next_cpu in cpuinfo:
+                        the_cpu = cpuinfo[next_cpu]
             if the_cpu:
                 alttext = '<td>{}</td>'.format(the_cpu)
         retval.append("<tr><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(thehost['hostname'],
