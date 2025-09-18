@@ -36,7 +36,7 @@ function cpuTemperatureGraph() {
     .then(function(data) {
 
       var vscale = d3.scaleLinear()
-        .domain(d3.extent(data, d => d.reading))
+        .domain(d3.extent(data, d => d.mavg))
         .range([graphy-margins*2,0]);
       var hscale = d3.scaleLinear()
         .domain(d3.extent(data, d => d.timestamp))
@@ -88,7 +88,7 @@ function cpuTemperatureGraph() {
           .attr('value',function(d) {return d.host;})
           .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
           .attr('x',5)
-          .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].reading);})
+          .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].mavg);})
           .on('mouseover',function(d){d.raise();})
           .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
           .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
