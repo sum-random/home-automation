@@ -14,8 +14,10 @@ function setupWeather() {
 
 // show cpu temperature graphs for last 48 hours
 function cpuTemperatureGraph() {
-  var graphx = 1280;
-  var graphy = 640;
+  var graphx = window.innerWidth - 100;
+  var graphy = window.innerHeight - 100;
+  if(graphx<640) graphx=640;
+  if(graphy<480) graphy=480;
   var margins = 50;
   var temps = d3.select('#TEMPERATURES');
   temps.selectAll('svg').remove();
