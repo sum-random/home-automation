@@ -61,6 +61,7 @@ function cpuTemperatureGraph() {
           .attr('stroke', function(d) {console.log(d[0] + ' ' + color(d[0]));return d3.color(color(d[0]));})
           .attr('fill', 'none')
           .attr('stroke-width', 3)
+          .on('mouseover',function(d){d3.select(this).raise();})
           .attr('id', function(d) {return d[0];})
           .attr('d', function(d) {return linefunc(d[1]);});
       base.append('g')
@@ -91,7 +92,7 @@ function cpuTemperatureGraph() {
           .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
           .attr('x',5)
           .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].mavg);})
-          .on('mouseover',function(d){d.raise();})
+          .on('mouseover',function(d){d3.select(this).raise();})
           .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
           .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
           .attr('stroke-width','0.5');
