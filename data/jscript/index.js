@@ -31,10 +31,8 @@ function cpuTemperatureGraph() {
             'translate('+margins+','+margins+')');
 
   // read data
-  start_time = Math.floor(Date.now()/1000 - 86400 * 3);
-  //start_time = Math.floor(Date.now()/1000 - 14400);
+  start_time = Math.floor(Date.now()/1000 - graphx * 300);
   d3.csv('/getweather?start='+start_time, {method: "get"})
-  //d3.csv('/getweather', {method: "post", body: 'start='+start_time+'\nhost=saturn' })
     .then(function(data) {
 
       var vscale = d3.scaleLinear()
