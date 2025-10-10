@@ -21,12 +21,7 @@ jquery.*
 *LICENSE.txt
 AUTHORS.txt
 version.txt
-data/jscript/demos/*
-data/jscript/docs/*
-data/jscript/external/*
-data/jscript/tests/*
-data/jscript/themes/*
-data/jscript/ui/*
+data/jscript/*/*
 data/static/*
 cgi-data
 error
