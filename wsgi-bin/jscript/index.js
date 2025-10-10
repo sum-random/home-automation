@@ -6,35 +6,80 @@ function setupWeather() {
   thediv.select('svg').remove();
   thediv.append('svg').append('svg:image')
     .attr('width', '90%')
-    .attr('class', 'weatherShow')
+    .attr('class', 'weatherShow');
 
-  cpuTemperatureGraph();
-  setInterval(cpuTemperatureGraph,300000);
-}
-
-// show cpu temperature graphs for last 48 hours
-function cpuTemperatureGraph() {
-  var graphx = window.innerWidth - 100;
-  var graphy = window.innerHeight - 100;
-  if(graphx<640) graphx=640;
-  if(graphy<480) graphy=480;
-  var margins = 50;
   var temps = d3.select('#TEMPERATURES');
   temps.selectAll('svg').remove();
-  var base = temps.append('svg')
+  var svg=temps.append('svg');
+  svg.append('g');//graph
+  svg.append('g');//vscale
+  svg.append('g');//hscale
+  svg.append('g').append('rect');//legend
+  cpuTemperatureGraph();
+  setInterval(cpuTemperatureGraph,300000);
+  d3.select(window).on('resize', resizeGraph);
+}
+
+function resizeGraph(arg) {
+  var margins = 50;
+  var graphx = window.innerWidth - margins*2;
+  var graphy = window.innerHeight - margins*2;
+  if(graphx<640) graphx=640;
+  if(graphy<480) graphy=480;
+
+  var temps = d3.select('#TEMPERATURES');
+  var base = temps.select('svg')
       .attr('width', graphx)
       .attr('height',graphy);
-  var svg = base.append('g')
-      .attr('width', graphx-margins*2)
-      .attr('height', graphy-margins*2)
-      .attr('transform',
-            'translate('+margins+','+margins+')');
+  var svg = base.selectAll('g');
+  svg.each(function(d,i) {
+    gbox=d3.select(this);
+    switch(i) {
+      case 0:
+        gbox.attr('width', graphx-margins*2)
+            .attr('height', graphy)
+            .attr('transform',
+                  'translate('+margins+',0)');      
+        break;
+      case 1:
+        gbox.attr('width', margins)
+            .attr('height', graphy)
+            .attr('transform', 'translate('+margins+',0)');
+        break;
+      case 2:
+        gbox.attr('width', graphx)
+            .attr('height', margins)
+            .attr('transform', 'translate('+margins+','+(graphy-margins)+')');
+        break;
+      case 3:
+        gbox.attr('width',margins)
+            .attr('height',graphy-margins*2)
+            .attr('text-anchor','top')
+            .attr('transform','translate('+(graphx-margins)+',0)');
+        break;
+    }
+    console.log(gbox.attr('transform'));
+  });
+}
+// show cpu temperature graphs for last 48 hours
+function cpuTemperatureGraph() {
+  var margins = 50;
+  var graphx = window.innerWidth - margins*2;
+  var graphy = window.innerHeight - margins;
+  if(graphx<640) graphx=640;
+  if(graphy<480) graphy=480;
+
+  var temps = d3.select('#TEMPERATURES');
+  var base = temps.select('svg')
+      .attr('width', graphx)
+      .attr('height',graphy);
+  var svg = base.selectAll('g');
+  resizeGraph();
 
   // read data
   start_time = Math.floor(Date.now()/1000 - graphx * 300);
   d3.csv('/getweather?start='+start_time, {method: "get"})
     .then(function(data) {
-
       var vscale = d3.scaleLinear()
         .domain(d3.extent(data, d => d.mavg))
         .range([graphy-margins*2,0]);
@@ -53,49 +98,57 @@ function cpuTemperatureGraph() {
       var color = d3.scaleOrdinal()
         .domain(hostfunc.keys())
         .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
-      svg.selectAll('path')
-        .data(hostfunc)
-        .enter().append('path')
-          .attr('stroke', function(d) {console.log(d[0] + ' ' + color(d[0]));return d3.color(color(d[0]));})
-          .attr('fill', 'none')
-          .attr('stroke-width', 3)
-          .on('mouseover',function(d){d3.select(this).raise();})
-          .attr('id', function(d) {return d[0];})
-          .attr('d', function(d) {return linefunc(d[1]);});
-      base.append('g')
-        .attr('width', margins)
-        .attr('height', graphy)
-        .attr('transform', 'translate('+margins+','+margins+')')
-        .call(d3.axisLeft(vscale));
-      base.append('g')
-        .attr('width', graphx)
-        .attr('height', margins)
-        .attr('transform', 'translate('+margins+','+(graphy-margins)+')')
-        .call(d3.axisBottom(tscale));
-      cntr=0;
-      legend = base.append('g')
-        .attr('width',margins)
-        .attr('height',graphy-margin*2)
-        .attr('text-anchor','top')
-        .attr('transform','translate('+(graphx-margins)+','+margins+')');
-      lbg = legend.append('rect')
-        .attr('height',graphy-margins*2)
-        .attr('width','100%');
-      legend.selectAll('text')
-        .data(hostfunc)
-        .attr('fill','none')
-        .enter().append('text')
-          .text(function(d,i,a) {return d[0];})
-          .attr('value',function(d) {return d.host;})
-          .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
-          .attr('x',5)
-          .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].mavg);})
-          .on('mouseover',function(d){d3.select(this).raise();})
-          .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
-          .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
-          .attr('stroke-width','0.5');
-      d3.json('/getagw')
-        .then(function(data){legend.attr('height',156);lbg.attr('fill','rgba('+data.status[0]+','+data.status[1]+',32)');});
+      svg.data(hostfunc);
+      svg.each(function(d,i) {
+        switch(i) {
+          case 0:
+            gb = d3.select(this);
+            gb.selectAll('path')
+              .data(hostfunc)
+              .enter().append('path')
+                .attr('stroke', function(d) {console.log(d[0] + ' ' + color(d[0]));return d3.color(color(d[0]));})
+                .attr('fill', 'none')
+                .attr('stroke-width', 3)
+                .on('mouseover',function(d){d3.select(this).raise();})
+                .attr('id', function(d) {return d[0];})
+                .attr('d', function(d) {return linefunc(d[1]);});
+            gb.selectAll('path').exit().remove();
+            break;
+          case 1:
+            d3.select(this)
+              //.data(hostfunc)
+              .call(d3.axisLeft(vscale));
+            break;
+          case 2:
+            d3.select(this)
+              //.data(hostfunc)
+              .call(d3.axisBottom(tscale));
+            break;
+          case 3:
+            legend = d3.select(this);
+            lbg = legend.select('rect')
+              .attr('height',graphy-margins*2)
+              .attr('width',margins);
+            legend.selectAll('text')
+              .data(hostfunc)
+              .attr('fill','none')
+              .enter().append('text')
+                .text(function(d,i,a) {return d[0];})
+                .attr('value',function(d) {return d.host;})
+                .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
+                .attr('x',5)
+                .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].mavg);})
+                .on('mouseover',function(d){d3.select(this).raise();})
+                .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
+                .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
+                .attr('stroke-width','0.5');
+            legend.selectAll('text').exit().remove();
+            d3.json('/getagw')
+              .then(function(data){lbg.attr('fill','rgba('+data.status[0]+','+data.status[1]+',32)');});
+            break;
+          default:
+        }
+      });
   });
 }
 
@@ -314,7 +367,7 @@ function populateThumbs() {
                     d3.select(this)
                       .attr("border", "0px,black");
                 })
-                .on('mouseenter', function(d2,i) {
+                .on('mouseenter', function(d,i) {
                     d3.select(this)
                         .attr("border", "1px,green");
                     expandImage("/thumbnail?IMGID="+d.imgid);
