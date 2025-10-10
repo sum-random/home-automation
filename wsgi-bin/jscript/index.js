@@ -11,10 +11,10 @@ function setupWeather() {
   var temps = d3.select('#TEMPERATURES');
   temps.selectAll('svg').remove();
   var svg=temps.append('svg');
-  svg.append('g');//graph
-  svg.append('g');//vscale
-  svg.append('g');//hscale
-  svg.append('g').append('rect');//legend
+  svg.append('g').attr('id','graph');//graph
+  svg.append('g').attr('id','vscale');//vscale
+  svg.append('g').attr('id','hscale');//hscale
+  svg.append('g').attr('id','legend').append('rect');//legend
   cpuTemperatureGraph();
   setInterval(cpuTemperatureGraph,300000);
   d3.select(window).on('resize', resizeGraph);
@@ -34,24 +34,24 @@ function resizeGraph(arg) {
   var svg = base.selectAll('g');
   svg.each(function(d,i) {
     gbox=d3.select(this);
-    switch(i) {
-      case 0:
+    switch(gbox.attr('id')) {
+      case 'graph':
         gbox.attr('width', graphx-margins*2)
             .attr('height', graphy)
             .attr('transform',
                   'translate('+margins+',0)');      
         break;
-      case 1:
+      case 'vscale':
         gbox.attr('width', margins)
             .attr('height', graphy)
             .attr('transform', 'translate('+margins+',0)');
         break;
-      case 2:
+      case 'hscale':
         gbox.attr('width', graphx)
             .attr('height', margins)
             .attr('transform', 'translate('+margins+','+(graphy-margins)+')');
         break;
-      case 3:
+      case 'legend':
         gbox.attr('width',margins)
             .attr('height',graphy-margins*2)
             .attr('text-anchor','top')
@@ -59,26 +59,31 @@ function resizeGraph(arg) {
         break;
     }
   });
+  if (typeof arg !== 'undefined')
+    cpuTemperatureGraph(false);
 }
+
 // show cpu temperature graphs for last 48 hours
-function cpuTemperatureGraph() {
+function cpuTemperatureGraph(doResize=true) {
   var margins = 50;
+  var queryx = window.outerWidth;
   var graphx = window.innerWidth - margins*2;
   var graphy = window.innerHeight - margins;
   if(graphx<640) graphx=640;
   if(graphy<480) graphy=480;
 
   var temps = d3.select('#TEMPERATURES');
-  var base = temps.select('svg')
-      .attr('width', graphx)
-      .attr('height',graphy);
+  var base = temps.select('svg');
   var svg = base.selectAll('g');
-  resizeGraph();
+  if(doResize)
+    resizeGraph();
 
   // read data
+  first_time = Math.floor(Date.now()/1000 - queryx * 300);
   start_time = Math.floor(Date.now()/1000 - graphx * 300);
-  d3.csv('/getweather?start='+start_time, {method: "get"})
-    .then(function(data) {
+  d3.csv('/getweather?start='+first_time, {method: "get"})
+    .then(function(dataRaw) {
+      var data=dataRaw.filter((d) => d.timestamp>=start_time);
       var vscale = d3.scaleLinear()
         .domain(d3.extent(data, d => d.mavg))
         .range([graphy-margins*2,0]);
@@ -97,12 +102,14 @@ function cpuTemperatureGraph() {
       var color = d3.scaleOrdinal()
         .domain(hostfunc.keys())
         .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
-      svg.data(hostfunc);
+      //svg.data(hostfunc);
       svg.each(function(d,i) {
-        switch(i) {
-          case 0:
-            gb = d3.select(this);
-            gb.selectAll('path')
+        gcon=d3.select(this);
+        switch(gcon.attr('id')) {
+          case 'graph':
+            if(!doResize) //window size changed, blow away lines to refresh data
+              gcon.selectAll('path').remove();
+            gcon.selectAll('path')
               .data(hostfunc)
               .enter().append('path')
                 .attr('stroke', function(d) {return d3.color(color(d[0]));})
@@ -111,24 +118,21 @@ function cpuTemperatureGraph() {
                 .on('mouseover',function(d){d3.select(this).raise();})
                 .attr('id', function(d) {return d[0];})
                 .attr('d', function(d) {return linefunc(d[1]);});
-            gb.selectAll('path').exit().remove();
+            gcon.selectAll('path').exit().remove();
             break;
-          case 1:
-            d3.select(this)
-              //.data(hostfunc)
-              .call(d3.axisLeft(vscale));
+          case 'vscale':
+            gcon.call(d3.axisLeft(vscale));
             break;
-          case 2:
-            d3.select(this)
-              //.data(hostfunc)
-              .call(d3.axisBottom(tscale));
+          case 'hscale':
+            gcon.call(d3.axisBottom(tscale));
             break;
-          case 3:
-            legend = d3.select(this);
-            lbg = legend.select('rect')
+          case 'legend':
+            lbg = gcon.select('rect')
               .attr('height',graphy-margins*2)
               .attr('width',margins);
-            legend.selectAll('text')
+            if(!doResize) //window size changed, blow away labels to refresh data
+              gcon.selectAll('text').remove();
+            gcon.selectAll('text')
               .data(hostfunc)
               .attr('fill','none')
               .enter().append('text')
@@ -141,9 +145,10 @@ function cpuTemperatureGraph() {
                 .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
                 .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
                 .attr('stroke-width','0.5');
-            legend.selectAll('text').exit().remove();
-            d3.json('/getagw')
-              .then(function(data){lbg.attr('fill','rgba('+data.status[0]+','+data.status[1]+',32)');});
+            gcon.selectAll('text').exit().remove();
+            if(doResize)
+              d3.json('/getagw')
+                .then(function(data){lbg.attr('fill','rgba('+data.status[0]+','+data.status[1]+',32)');});
             break;
           default:
         }
