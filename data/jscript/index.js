@@ -58,7 +58,6 @@ function resizeGraph(arg) {
             .attr('transform','translate('+(graphx-margins)+',0)');
         break;
     }
-    console.log(gbox.attr('transform'));
   });
 }
 // show cpu temperature graphs for last 48 hours
@@ -106,7 +105,7 @@ function cpuTemperatureGraph() {
             gb.selectAll('path')
               .data(hostfunc)
               .enter().append('path')
-                .attr('stroke', function(d) {console.log(d[0] + ' ' + color(d[0]));return d3.color(color(d[0]));})
+                .attr('stroke', function(d) {return d3.color(color(d[0]));})
                 .attr('fill', 'none')
                 .attr('stroke-width', 3)
                 .on('mouseover',function(d){d3.select(this).raise();})
@@ -354,7 +353,6 @@ function populateThumbs() {
         .attr('id','IMGSLIDER');
     d3.json("/getimages",{'method': 'post', 'body': "the_folder_id="+fldr})
         .then(function(data) {
-            console.log(data);
             slider.attr('height', Math.floor(data.length/breakpt + 1)*(imgsz.size + imgsz.spacing) + 'px');
             data.forEach(function(d,i) {
               imgrect.append('svg:image')
@@ -378,7 +376,6 @@ function populateThumbs() {
 
 function expandImage(uri) {
     evt = window.event;
-    console.log(uri);
     ht = window.innerHeight - 40;
     d3.select("#FULLSZ")
       .style('visibility', 'visible')
@@ -400,7 +397,6 @@ function expandImage(uri) {
         .attr('id','BIGIMG')
         .on('load', function(){
             var element = document.getElementById("BIGIMG");
-            //console.log(pw);
             d3.select('#FULLSZ')
                 .attr('height',element.getBoundingClientRect().height + "px");
             d3.select('#BIGIMGSVG')
@@ -433,7 +429,6 @@ function scrollThumbs() {
         panel
             .attr('transform', 'translate(' + moveTo + ',10)');
     }
-    //console.log('pw:' + pw + ' pageX:' + evt.pageX + ' innerWidth:' + window.innerWidth + ' scale:' + scale(evt.pageX) + ' span:' + span);
 }
 
 function lightColors(idx) {
