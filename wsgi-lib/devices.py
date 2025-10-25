@@ -30,7 +30,7 @@ CMDS = { 2222: {'load': 'cat /proc/loadavg',
                 'batstat': '[ -d  /sys/class/power_supply ] && cat /sys/class/power_supply/BAT0/uevent  | grep POWER_SUPPLY_STATUS | cut -d = -f 2',
                 'batcap': '[ -d  /sys/class/power_supply ]  && cat /sys/class/power_supply/BAT0/capacity' } }
 LOCKFILE = CONFIG['path']['lockfile']
-CURTIME = '{}'.format(int(datetime.timestamp(datetime.now())))
+CURTIME = int(datetime.timestamp(datetime.now()))
 
 
 def _shortname(longname):
@@ -38,12 +38,12 @@ def _shortname(longname):
     return longname.split('.')[0]
 
 def readdevice(ipaddr):
+    fields = ['type', 'maker', 'model', 'version', 'misc1' , 'misc2']
     the_srv_type = {}
     try:
     	hostname = socket.gethostbyaddr(ipaddr)
     except:
         hostname = [ipaddr]
-    dom = re.compile('.claytontucker.org')
     long = hostname[0]
     short = _shortname(long)
     spat = re.compile(short)
@@ -56,7 +56,6 @@ def readdevice(ipaddr):
             typeraw = f.readline()
             typeline = type.sub('', typeraw)[:-1]
             typeinfo = typeline.split(' ')
-            fields = ['type', 'maker', 'model', 'version', 'misc1' , 'misc2']
             for x in range(len(typeinfo)):
               the_srv_type[fields[x]] = typeinfo[x]
             break
@@ -68,11 +67,12 @@ def readdevice(ipaddr):
     # get SSH port number, if previously saved
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    the_sql = "SELECT JSON_EXTRACT(devjson,'$.sshport') FROM devices where hostname='{}';".format(short)
+    the_sql = "SELECT devjson FROM devices where hostname='{}';".format(short)
     if cursor.execute(the_sql) > 0:
-        for nextrow in cursor.fetchall():
-            if nextrow[0] is not None:
-                the_srv_type['sshport'] = int(nextrow[0])
+        for nextrowraw in cursor.fetchall():
+            if nextrowraw[0] is not None:
+                nextrow = json.loads(nextrowraw[0])
+                the_srv_type.update(nextrow)
     cursor.close()
     connection.close()
 
@@ -83,7 +83,7 @@ def _device_ip_list():
     hosts = []
     f = open(CONFIG['path']['named_config'], 'r')
     pat1 = re.compile('^[A-Za-z]')
-    pat2 = re.compile('10.4.[67][09].[0-9]*')
+    pat2 = re.compile('10.[45].[67][09].[0-9]*')
     pat3 = re.compile('10.10.10.[0-9]*')
     while True:
         line = f.readline()
@@ -183,7 +183,8 @@ def renderdevices():
         for nexttable in tablecursor.fetchall():
             the_host_json = json.loads(nexttable[0])
             if 'recd_pkts' in the_host_json and the_host_json['recd_pkts'] != '0':
-                retval.append(the_host_json)
+                if 'last_checked' in the_host_json and int(the_host_json['last_checked']) >= CURTIME-900:
+                    retval.append(the_host_json)
     tablecursor.close()
     connection.close()
     return retval
@@ -223,10 +224,9 @@ def get_device_html():
             the_cpu = False
             if armalt in cpuinfo:
                 the_cpu = '{}: ARM v{}'.format(armalt, cpuinfo[armalt])
-            else:
-                for next_cpu  in cpus:
-                    if next_cpu in cpuinfo:
-                        the_cpu = cpuinfo[next_cpu]
+            for next_cpu  in cpus:
+                if next_cpu in cpuinfo:
+                    the_cpu = cpuinfo[next_cpu]
             if the_cpu:
                 alttext = '<td>{}</td>'.format(the_cpu)
         retval.append("<tr><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(thehost['hostname'],
