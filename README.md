@@ -2,8 +2,22 @@ This code is my home automation project and self learning platform.  It turns my
 
 Installation Instructions
 Starting from a newly installed FreeBSD 13 instance, install the following packages:
-apache24 ap24-py311-mod_wsgi bind916 bottlerocket mariadb or mysql mpg123 python311 py311-pip py311-flask py311-mysql py311-pillow
+apache24 bind916 bottlerocket mariadb mpg123 python311 ap24-py311-mod_wsgi py311-Babel py311-Jinja2 py311-asgiref py311-blinker py311-brotli py311-cairo py311-certifi py311-charset-normalizer py311-click py311-dbus py311-evdev py311-flask py311-idna py311-itsdangerous py311-libevdev py311-markupsafe py311-mutagen py311-olefile py311-packaging py311-pillow py311-pip py311-pycryptodomex py311-pygobject py311-pymysql py311-pysocks py311-python-dotenv py311-pyudev py311-requests py311-setuptools py311-six py311-tkinter py311-urllib3 py311-websockets py311-werkzeug
 Apache configuration:
+LoadModule wsgi_module libexec/apache24/mod_wsgi.so
+WSGIScriptAlias / /usr/local/www/apache24/wsgi-bin/__init__.py
+WSGIPythonPath "/usr/local/www/apache24/wsgi-bin:/usr/local/www/apache24/wsgi-lib"
+<Directory "/usr/local/www/apache24/wsgi-bin">
+    AllowOverride Limit AuthConfig
+    # insert your auth schema here
+    Options ExecCGI
+    SetHandler wsgi-script
+    WSGICallableObject app
+    <LimitExcept GET>
+        Require valid-user
+    </LimitExcept>
+</Directory>
+
 Deploying code:
 Crontab setup:
 
