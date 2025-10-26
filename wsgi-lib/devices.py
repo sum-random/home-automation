@@ -150,8 +150,7 @@ def check_ssh(device):
                         if ':' in devitem:
                             keyval = devitem.split(':')
                             if len(keyval) >= 2:
-                                jskeys = keyval[0].split('.')
-                                device[key][keyval[0].strip()] = keyval[1].strip()
+                                device[key][keyval[0].strip().replace('.','_')] = keyval[1].strip()
                 else:
                     device[key] = outtxt[:-1]
     return device
@@ -194,10 +193,11 @@ def get_device_html():
   # CPU type indexes
   lnx = 'model name'
   mip = 'cpu model'
-  bsd = 'hw.model'
+  bsd = 'hw_model'
   arm = 'Processor'
+  rpi = 'Model'
   armalt = 'CPU architecture'
-  cpus = [lnx, mip, bsd, arm]
+  cpus = [lnx, mip, bsd, arm, rpi]
 
   try:
     """ Render devices in a table for browser """
