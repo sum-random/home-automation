@@ -51,6 +51,30 @@ def match_image(values):
   connection.close()
   return retval
 
+def get_first_time(host):
+    thetime=False
+    sql = "SELECT MIN(timestamp) AS timestamp FROM temperatures{}".format(" where host IN ('{}');".format(host) if host else "")
+    connection = open_sql_connection()
+    thecursor = connection.cursor()
+    if thecursor.execute(sql) > 0:
+        for row in thecursor.fetchall():
+            thetime = row[0]
+    thecursor.close()
+    connection.close()
+    return thetime
+
+def get_last_time(host):
+    thetime=False
+    sql = "SELECT MAX(timestamp) AS timestamp FROM temperatures{}".format(" where host IN ('{}');".format(host) if host else "")
+    connection = open_sql_connection()
+    thecursor = connection.cursor()
+    if thecursor.execute(sql) > 0:
+        for row in thecursor.fetchall():
+            thetime = row[0]
+    thecursor.close()
+    connection.close()
+    return thetime
+
 def list_img_folders():
     retval = []
     sql = "SELECT fname FROM thumblist;"
