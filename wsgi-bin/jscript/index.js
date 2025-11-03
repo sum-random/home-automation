@@ -81,7 +81,7 @@ function cpuTemperatureGraph(doResize=true) {
   // read data
   first_time = Math.floor(Date.now()/1000 - queryx * 300);
   start_time = Math.floor(Date.now()/1000 - graphx * 300);
-  d3.csv('/getweather?start='+first_time, {method: "get"})
+  d3.csv('/getweather?start='+first_time+'&pixels='+graphx, {method: "get"})
     .then(function(dataRaw) {
       var data=dataRaw.filter((d) => d.timestamp>=start_time);
       var vscale = d3.scaleLinear()
