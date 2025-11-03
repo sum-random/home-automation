@@ -40,22 +40,26 @@ def get_weather_html():
     retval.append('</script>')
     return '\n'.join(retval)
 
-def get_weather_readings(start=False,end=False,host=None):
+def get_weather_readings(request): 
+    start=int(request['start']) if request['start'] else db.get_first_time(request['host'])
+    end=int(request['end']) if request['end'] else db.get_last_time(request['host'])
+    host=request['host']
+    pixels=int(request['pixels'])
+    mavg = 2 if not (pixels and end and start) else int((end-start)/300/pixels)+1
+    logit('start: {}  end: {}  host: {}  mavg: {}'.format(start,end,host,mavg))
     readings=['host,timestamp,reading,mavg']
     try:
         connection = db.open_sql_connection()
         cursor = connection.cursor()
         query = "SELECT id, timestamp, host, reading, AVG(reading) " \
-         " OVER(PARTITION BY host ORDER BY timestamp ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING) AS moving_average " \
-         " FROM temperatures{}{}{}{}{}{}".format( \
-         #" WHERE" if start or end or host is not None else "", \
+         " OVER(PARTITION BY host ORDER BY timestamp ROWS BETWEEN {} PRECEDING AND {} FOLLOWING) AS moving_average " \
+         " FROM temperatures{}{}{}{}{}{}".format(mavg,mavg, \
          " WHERE timestamp % 300 = 0 AND ", \
          " timestamp>={}".format(start) if start else "", \
          " AND" if start and end else "", \
          " timestamp<={}".format(end) if end else "", \
-         " AND" if (start or end) and host is not None else "", \
-         " host='{}'".format(host) if host is not None else "")
-            
+         " AND" if (start or end) and host else "", \
+         " host IN ('{}')".format(host) if host else "")
         if cursor.execute(query):
             for onereading in cursor.fetchall():
                 readings.append("{},{},{},{}".format(onereading[2],onereading[1],onereading[3],onereading[4]))

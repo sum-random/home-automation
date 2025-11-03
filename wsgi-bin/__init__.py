@@ -362,9 +362,10 @@ def get_weather_data():
         if 'end' not in requestobj:
             requestobj['end']=False
         if 'host' not in requestobj:
-            requestobj['host']=None
-    return Response("\n".join(weather.get_weather_readings(start=requestobj['start'], end=requestobj['end'], host=requestobj['host'])),mimetype="text/csv")
-    #return Response("\n".join(weather.get_weather_readings()),mimetype="text/csv")
+            requestobj['host']=False
+        if 'pixels' not in requestobj:
+            requestobj['pixels']=False
+    return Response("\n".join(weather.get_weather_readings(requestobj)),mimetype="text/csv")
 
 @app.route('/saveweather', methods=['POST'])
 def save_weather_data():
