@@ -46,7 +46,6 @@ def get_weather_readings(request):
     host=request['host']
     pixels=int(request['pixels'])
     mavg = 2 if not (pixels and end and start) else int((end-start)/300/pixels)+1
-    logit('start: {}  end: {}  host: {}  mavg: {}'.format(start,end,host,mavg))
     readings=['host,timestamp,reading,mavg']
     try:
         connection = db.open_sql_connection()
@@ -89,7 +88,6 @@ def get_current_vs_historical():
     return [redval,grnval]
 
 def save_weather_reading(timestamp = None, host = None, reading = None):
-    #logit("save_weather_reading({},{},{})".format(timestamp,host,reading))
     if timestamp is None or host is None or reading is None:
         raise Exception("Cannot use these values - timestamp: {} host: {} reading: {}".format(timestamp, host, reading))
     try:
