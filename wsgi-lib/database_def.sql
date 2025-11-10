@@ -1,8 +1,9 @@
--- MariaDB dump 10.19  Distrib 10.11.6-MariaDB, for FreeBSD13.2 (amd64)
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-11.4.8-MariaDB, for FreeBSD14.3 (amd64)
 --
 -- Host: localhost    Database: jupiter
 -- ------------------------------------------------------
--- Server version	10.11.6-MariaDB
+-- Server version	11.4.8-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -13,7 +14,7 @@
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 --
 -- Table structure for table `crosslinks`
@@ -21,7 +22,7 @@
 
 DROP TABLE IF EXISTS `crosslinks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `crosslinks` (
   `fileid` int(12) NOT NULL AUTO_INCREMENT,
   `fname` varchar(512) NOT NULL,
@@ -33,7 +34,7 @@ CREATE TABLE `crosslinks` (
   KEY `crosslinks_md5` (`md5`),
   KEY `crosslinks_size` (`size`),
   KEY `crosslinks_inode` (`inode`)
-) ENGINE=InnoDB AUTO_INCREMENT=89791 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,14 +43,14 @@ CREATE TABLE `crosslinks` (
 
 DROP TABLE IF EXISTS `devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `devices` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `hostname` varchar(128) NOT NULL,
   `devjson` longtext DEFAULT NULL CHECK (json_valid(`devjson`)),
   PRIMARY KEY (`id`),
   UNIQUE KEY `hostname` (`hostname`)
-) ENGINE=InnoDB AUTO_INCREMENT=36970818 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -58,7 +59,7 @@ CREATE TABLE `devices` (
 
 DROP TABLE IF EXISTS `imgcache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `imgcache` (
   `imgid` int(16) NOT NULL,
   `size` varchar(32) NOT NULL,
@@ -73,12 +74,29 @@ CREATE TABLE `imgcache` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `keyval`
+--
+
+DROP TABLE IF EXISTS `keyval`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `keyval` (
+  `id` int(16) NOT NULL AUTO_INCREMENT,
+  `keyname` varchar(4096) NOT NULL,
+  `valdata` mediumtext NOT NULL,
+  `modified` timestamp NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `keydistinct` (`keyname`) USING HASH
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `lightnames`
 --
 
 DROP TABLE IF EXISTS `lightnames`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `lightnames` (
   `lightid` int(16) NOT NULL,
   `lightname` varchar(256) NOT NULL,
@@ -94,7 +112,7 @@ CREATE TABLE `lightnames` (
 
 DROP TABLE IF EXISTS `lightschedule`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `lightschedule` (
   `hhcode` varchar(1) NOT NULL DEFAULT 'I',
   `lightcode` int(2) NOT NULL,
@@ -105,7 +123,7 @@ CREATE TABLE `lightschedule` (
   `id` int(16) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`hhcode`,`lightcode`,`monthmatch`,`daymatch`,`turnon`,`turnoff`),
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=92 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -114,7 +132,7 @@ CREATE TABLE `lightschedule` (
 
 DROP TABLE IF EXISTS `musicfiles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `musicfiles` (
   `filename` varchar(512) NOT NULL,
   `fileid` int(12) NOT NULL AUTO_INCREMENT,
@@ -129,7 +147,7 @@ CREATE TABLE `musicfiles` (
   KEY `musicfiles_inode` (`inode`),
   KEY `musicfiles_size` (`size`),
   KEY `musicfiles_checksum` (`checksum`)
-) ENGINE=InnoDB AUTO_INCREMENT=80466 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -138,7 +156,7 @@ CREATE TABLE `musicfiles` (
 
 DROP TABLE IF EXISTS `playlist`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `playlist` (
   `fileid` int(12) NOT NULL,
   `timestamp` int(12) DEFAULT NULL,
@@ -147,12 +165,30 @@ CREATE TABLE `playlist` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `temperatures`
+--
+
+DROP TABLE IF EXISTS `temperatures`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `temperatures` (
+  `timestamp` int(11) NOT NULL,
+  `host` varchar(255) NOT NULL,
+  `reading` float NOT NULL,
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `nodupreadings` (`timestamp`,`host`),
+  KEY `host` (`host`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `thumblist`
 --
 
 DROP TABLE IF EXISTS `thumblist`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `thumblist` (
   `urr` int(11) DEFAULT NULL,
   `urg` int(11) DEFAULT NULL,
@@ -170,7 +206,7 @@ CREATE TABLE `thumblist` (
   `imgid` int(16) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`imgid`),
   UNIQUE KEY `thumblist_fname` (`fname`)
-) ENGINE=InnoDB AUTO_INCREMENT=157636 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -180,6 +216,6 @@ CREATE TABLE `thumblist` (
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2024-03-30 14:59:51
+-- Dump completed on 2025-11-10 12:11:32
