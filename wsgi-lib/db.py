@@ -132,6 +132,33 @@ def del_music_row(fileid):
     cursor.close()   
     connection.close()
 
+def set_val_for_key(key, val):
+    query = "INSERT INTO keyval (keyname,valdata) VALUES ('{0}','{1}') ON DUPLICATE KEY UPDATE valdata='{1}';".format(key,val)
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    cursor.execute(query)
+    connection.close()
+    return True
+
+def get_val_for_key(key):
+    retval = ""
+    query = "SELECT valdata FROM keyval WHERE keyname='{}';".format(key)
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute(query):
+        retval = cursor.fetchone()[0]
+    return retval
+
+def get_vals_like_key(key):
+    retval = []
+    query = "SELECT keyname,valdata FROM keyval WHERE keyname LIKE '%{}%';".format(key)
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute(query):
+        for row in cursor.fetchall():
+            retval.append({row[0]:row[1]})
+    cursor.close()
+    return retval
         
 
 if __name__ == "__main__":
