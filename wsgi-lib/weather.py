@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
 # system libraries
-import os
-import time
+import os,time,json
+import urllib.request
+import urllib.request,http.client
+from urllib.request import Request
+import requests
+from multiprocessing import Pool
 
 # local libraries here
 import db
@@ -22,7 +26,11 @@ def get_weather_list():
                '9Mimic_tpw':  { 'url': 'http://tropic.ssec.wisc.edu/real-time/mtpw2',
                                 'ttl': 'MIMIC-TPW',
                                 'uri': 'http://tropic.ssec.wisc.edu/real-time/mtpw2/webAnims/tpw_nrl_colors/global2/mimictpw_global2_latest.gif',
-                                'alt': 'MIMIC-TPW' } }
+                                'alt': 'MIMIC-TPW' },
+               'forecast':    { 'url': '/getforecast',
+                                'ttl': 'SRQ FL Forecast',
+                                'uri': 'https://api.weather.gov/points/27.307,-82.4951',
+                                'alt': 'SRQ FL Forecast' } }
     return wlinks
 
 
@@ -30,11 +38,16 @@ def get_weather_html():
     retval = []
     the_list = get_weather_list()
     for next_item in sorted(the_list):
-        retval.append("<span><a href='{}' title='{}' target=_blank><img class='weatherthumb' src='{}' alt='{}'>"
-                      "</a></span>".format(the_list[next_item]['url'],
-                                           the_list[next_item]['ttl'],
-                                           the_list[next_item]['uri'],
-                                           the_list[next_item]['alt']))
+        if the_list[next_item]['url'] == '/getforecast':
+            retval.append("<span><a href='{}' title='{}' target=_blank><svg class='weatherthumb' id='FORECASTGRAPH'></SVG>"
+                          "</a></span>".format(the_list[next_item]['url'],
+                                               the_list[next_item]['ttl']))
+        else:
+            retval.append("<span><a href='{}' title='{}' target=_blank><img class='weatherthumb' src='{}' alt='{}'>"
+                          "</a></span>".format(the_list[next_item]['url'],
+                                               the_list[next_item]['ttl'],
+                                               the_list[next_item]['uri'],
+                                               the_list[next_item]['alt']))
     retval.append('<script type="text/javascript">')
     retval.append('    setupWeather();')
     retval.append('</script>')
@@ -107,8 +120,47 @@ def save_weather_reading(timestamp = None, host = None, reading = None):
     # don't know what happened here, hope they can recover
     return None
 
+def get_forecast(ip_address):
+    #response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+    thefinaldata = ["location,time,temperature"]
+    for row in db.get_vals_like_key("forecast_data_"):
+        for k in row:
+            v = json.loads(row[k])
+            (p1,p2,location) = k.split('_')
+            for dline in v:
+                thefinaldata.append("{},{},{}".format(location,dline['startTime'],dline['temperature']))
+    return thefinaldata
+
+def fetch_one_location(bundle):
+    thefinaldata=""
+    try:
+      useragent={'User-Agent':'household services host, clayton.69.tucker@gmail.com'}
+      # initial request to get the link to the data
+      apireq = Request(bundle[1],headers=useragent)
+      req = urllib.request.urlopen(apireq)
+      theapidata = json.loads(req.read())
+      # now fetch the forecast data
+      uri=theapidata['properties']['forecastHourly']
+      apireq = Request(uri,headers=useragent)
+      req = urllib.request.urlopen(apireq)
+      theapidata = json.loads(req.read())
+      thefinaldata = json.dumps(theapidata['properties']['periods'])
+      db.set_val_for_key("forecast_data_{}".format(bundle[0]), thefinaldata)
+    except Exception as ex:
+      logit("{}".format(ex))
+    return thefinaldata
+
 
 if __name__ == '__main__':
-    the_weather = get_weather_html()
-    for the_endpoint in the_weather.split('\n'):
-        print(the_endpoint)
+    #theapiuris = [("BTR","https://api.weather.gov/points/30.5315,-91.1522"),
+                  #("NUQ","https://api.weather.gov/points/37.409,-122.0507"),
+                  #("TUS","https://api.weather.gov/points/32.1145,-110.9392"),
+                  #("DRT","https://api.weather.gov/points/29.6897,-101.1754"),
+                  #("SRQ","https://api.weather.gov/points/27.307,-82.4951")]
+    #db.set_val_for_key('forecast_links',json.dumps(theapiuris))
+    theapiuris = json.loads(db.get_val_for_key('forecast_links'))
+    p = Pool(len(theapiuris))
+    retval = p.map(fetch_one_location, theapiuris)
+    p.close()
+    p.join()
+    #print("{}".format(get_forecast('10.4.69.64')))
