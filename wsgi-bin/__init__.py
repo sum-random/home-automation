@@ -382,6 +382,12 @@ def getheatcolor():
     retval = weather.get_current_vs_historical()
     return jsonify({'status': retval})
 
+@app.route('/getforecast', methods=['GET'])
+def getsrqforecast():
+    retval = weather.get_forecast(request.remote_addr)
+    #logit("{}".format(retval))
+    return Response("\n".join(retval),mimetype='text/csv')
+
 
 @app.teardown_appcontext
 def close_db(error):
