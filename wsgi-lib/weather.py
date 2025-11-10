@@ -7,6 +7,7 @@ import urllib.request,http.client
 from urllib.request import Request
 import requests
 from multiprocessing import Pool
+import datetime
 
 # local libraries here
 import db
@@ -136,7 +137,7 @@ def fetch_one_location(bundle):
     try:
       useragent={'User-Agent':'household services host, clayton.69.tucker@gmail.com'}
       # initial request to get the link to the data
-      apireq = Request(bundle[1],headers=useragent)
+      apireq = Request('https://api.weather.gov/points/{}'.format(bundle[1]),headers=useragent)
       req = urllib.request.urlopen(apireq)
       theapidata = json.loads(req.read())
       # now fetch the forecast data
@@ -144,20 +145,23 @@ def fetch_one_location(bundle):
       apireq = Request(uri,headers=useragent)
       req = urllib.request.urlopen(apireq)
       theapidata = json.loads(req.read())
+      #db.set_val_for_key('one_raw_forecast',json.dumps(theapidata))
       thefinaldata = json.dumps(theapidata['properties']['periods'])
-      db.set_val_for_key("forecast_data_{}".format(bundle[0]), thefinaldata)
+      (yr,mo,dy,tz) = theapidata['properties']['periods'][0]['startTime'].split('-')
+      db.set_val_for_key("forecast_data_{}".format(bundle[0]), thefinaldata, '{}-{}-{}'.format(yr,mo,dy))
     except Exception as ex:
       logit("{}".format(ex))
     return thefinaldata
 
 
 if __name__ == '__main__':
-    #theapiuris = [("BTR","https://api.weather.gov/points/30.5315,-91.1522"),
-                  #("NUQ","https://api.weather.gov/points/37.409,-122.0507"),
-                  #("TUS","https://api.weather.gov/points/32.1145,-110.9392"),
-                  #("DRT","https://api.weather.gov/points/29.6897,-101.1754"),
-                  #("SRQ","https://api.weather.gov/points/27.307,-82.4951")]
-    #db.set_val_for_key('forecast_links',json.dumps(theapiuris))
+    theapiuris = [["BTR","30.5315,-91.1522" ],
+                  ["NUQ","37.4090,-122.0507"],
+                  ["TCS","32.1145,-110.9392"],
+                  ["DRT","29.6897,-101.1754"],
+                  ["RNO","39.4968,-119.7707"],
+                  ["SRQ","27.3070,-82.4951" ]]
+    db.set_val_for_key('forecast_links',json.dumps(theapiuris))
     theapiuris = json.loads(db.get_val_for_key('forecast_links'))
     p = Pool(len(theapiuris))
     retval = p.map(fetch_one_location, theapiuris)
