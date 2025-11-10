@@ -43,7 +43,7 @@ function forecastGraph() {
       Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
       console.log(locations);
       var color = d3.scaleOrdinal()
-        .domain(locations)
+        .domain(locations.sort())
         .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
       var vscale = d3.scaleLinear()
         .domain(d3.extent(fcdata, d => d.temperature))
@@ -750,7 +750,7 @@ function showWImg(evt) {
                 var graphdata = d3.groups(rawdata, d => d.location);
                 Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
                 var color = d3.scaleOrdinal()
-                  .domain(locations)
+                  .domain(locations.sort())
                   .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
                 var vscale = d3.scaleLinear()
                   .domain(d3.extent(rawdata, d => d.temperature))
