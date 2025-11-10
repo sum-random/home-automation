@@ -84,7 +84,7 @@ CREATE TABLE `keyval` (
   `id` int(16) NOT NULL AUTO_INCREMENT,
   `keyname` varchar(4096) NOT NULL,
   `valdata` mediumtext NOT NULL,
-  `modified` timestamp NOT NULL,
+  `modified` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `keydistinct` (`keyname`) USING HASH
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -218,4 +218,4 @@ CREATE TABLE `thumblist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-11-10 12:11:32
+-- Dump completed on 2025-11-10 16:15:48
