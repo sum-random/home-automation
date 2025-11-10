@@ -11,15 +11,61 @@ function setupWeather() {
   var temps = d3.select('#TEMPERATURES');
   temps.selectAll('svg').remove();
   var svg=temps.append('svg');
-  svg.append('g').attr('id','graph');//graph
+  svg.append('g').attr('id','graph')//graph
+    .on('doubleclick',function(){
+      d3.select(this).selectAll('path')
+        .style('opacity','100%');
+    });
   svg.append('g').attr('id','vscale');//vscale
   svg.append('g').attr('id','hscale');//hscale
   svg.append('g').attr('id','legend').append('rect');//legend
   cpuTemperatureGraph();
   setInterval(cpuTemperatureGraph,300000);
   d3.select(window).on('resize', resizeGraph);
+  d3.select('#FORECASTGRAPH')
+    .attr('width',90)
+    .attr('height',64)
+    .append('g');
+  //setInterval(forecastGraph,3600000);
+  forecastGraph();
 }
 
+function forecastGraph() {
+  var fccontainer = d3.select('#FORECASTGRAPH');
+  var fcthumb = d3.select('#FORECASTGRAPH').select('g');
+  //fcthumb.width = 64;
+  //fcthumb.height= 64;
+
+  d3.csv('/getforecast')
+    .then(function(fcdata){
+      var locations=[];
+      var graphdata = d3.groups(fcdata, d => d.location);
+      Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
+      console.log(locations);
+      var color = d3.scaleOrdinal()
+        .domain(locations)
+        .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
+      var vscale = d3.scaleLinear()
+        .domain(d3.extent(fcdata, d => d.temperature))
+        .range([fccontainer.attr('height'),0]);
+      var hscale = d3.scaleTime()
+        .domain(d3.extent(fcdata, function(d) {return new Date(d.time);}))
+        .range([0,fccontainer.attr('width')]);
+      var linefunc =  d3.line()
+        .x(function(d){return hscale(new Date(d.time));})
+        .y(function(d){return vscale(d.temperature);});
+      fcthumb.selectAll('path')
+        .data(graphdata)
+        .enter().append('path')
+          .attr('fill', 'none')
+          .attr('stroke', function(d) {return color(d[0]);})
+          .attr('stroke-width', 3)
+          .attr('d',function(d){return linefunc(d[1]);});
+      fcthumb.selectAll('path')
+        .exit().remove();
+    });
+  
+}
 function resizeGraph(arg) {
   var margins = 50;
   var graphx = window.innerWidth - margins*2;
@@ -115,7 +161,9 @@ function cpuTemperatureGraph(doResize=true) {
                 .attr('stroke', function(d) {return d3.color(color(d[0]));})
                 .attr('fill', 'none')
                 .attr('stroke-width', 3)
-                .on('mouseover',function(d){d3.select('#'+d3.select(this).attr('id')).raise();})
+                //.on('mouseover',function(d){d3.select('#'+d3.select(this).attr('id')).raise();})
+                .on('mouseover',function(d){d3.select(this).raise();})
+                .on('click',function(){d3.select('#'+d3.select(this).attr('id')).style('opacity','25%');})
                 .attr('id', function(d) {return d[0];})
                 .attr('d', function(d) {return linefunc(d[1]);});
             gcon.selectAll('path').exit().remove();
@@ -143,6 +191,7 @@ function cpuTemperatureGraph(doResize=true) {
                 .attr('y', function(temps){var t = temps[1]; return vscale(t[t.length-1].mavg);})
                 .attr('id',function(d) {return d[0];})
                 .on('mouseover',function(d){d3.select('#'+d3.select(this).attr('id')).raise();})
+                .on('click',function(){d3.select('#'+d3.select(this).attr('id')).style('opacity','85%');})
                 .attr('fill',function(d) {return d3.color(color(d[0])).brighter();})
                 .attr('stroke',function(d) {return d3.color(color(d[0])).darker();})
                 .attr('stroke-width','0.5');
@@ -535,7 +584,6 @@ function d3mixer() {
     mixpos = d3.scaleLinear().range([1, 100]).domain([thumbwidth, slwidth - thumbwidth]);
 
     d3.csv('/listmixer').then(function(data) {
-      //console.log(data);
       d3.select('#MIXER').selectAll('svg').remove();
       mixsvg = d3.select('#MIXER')
                  .append('svg')
@@ -662,7 +710,83 @@ function showWImg(evt) {
         }
 
         var prevWin = document.getElementById("WEATHERIMG");
-        prevWin.innerHTML = "<CENTER><IMG BORDER='5' SRC='" + url + "' CLASS='weathershow'></CENTER>";
+        if (typeof url == 'undefined'){
+            var margins=50;
+            var pw = d3.select(prevWin);
+            var graphx = window.innerWidth - margins*2;
+            var graphy = window.innerHeight - margins*2;
+            if(graphx<640) graphx=640;
+            if(graphy<480) graphy=480;
+            pw.selectAll('img').remove();
+            pw.selectAll('svg').remove();
+            cleanwin = pw.append('svg')
+              .attr('width',graphx)
+              .attr('height',graphy);
+            fcfull = cleanwin.append('g')
+              .attr('id','fcfull')
+              .attr('width', graphx-margins*2)
+              .attr('height', graphy-margins)
+              .attr('transform',
+                    'translate('+margins+',0)');      
+            vscalecontainer = cleanwin.append('g')
+              .attr('id','vscale')
+              .attr('width', margins)
+              .attr('height', graphy-margins)
+              .attr('transform', 'translate('+margins+',0)');
+            hscalecontainer = cleanwin.append('g')
+              .attr('id','hscale')
+              .attr('width', graphx-margins*2)
+              .attr('height', margins)
+              .attr('transform', 'translate('+margins+','+(graphy-margins*2)+')');
+            legend = cleanwin.append('g')
+              .attr('id','legend')
+              .attr('width',margins)
+              .attr('height',graphy-margins*2)
+              .attr('text-anchor','top')
+              .attr('transform','translate('+(graphx-margins)+',0)');
+            d3.csv('/getforecast')
+              .then(function(rawdata){
+                locations=[];
+                var graphdata = d3.groups(rawdata, d => d.location);
+                Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
+                var color = d3.scaleOrdinal()
+                  .domain(locations)
+                  .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
+                var vscale = d3.scaleLinear()
+                  .domain(d3.extent(rawdata, d => d.temperature))
+                  .range([graphy-margins*2-1,0]);
+                var hscale = d3.scaleTime()
+                  .domain(d3.extent(rawdata, function(d) {return new Date(d.time);}))
+                  .range([0,graphx-margins*2-1]);
+                var linefunc =  d3.line()
+                  .x(function(d){return hscale(new Date(d.time));})
+                  .y(function(d){return vscale(d.temperature);});
+                fcfull.selectAll('path')
+                  .data(graphdata)
+                  .enter().append('path')
+                    .attr('fill', 'none')
+                    .attr('stroke', function(d) {return color(d[0]);})
+                    .attr('stroke-width', 3)
+                    .attr('d',function(d){return linefunc(d[1]);});
+                fcfull.selectAll('path')
+                  .exit().remove();
+                vscalecontainer.call(d3.axisLeft(vscale));
+                hscalecontainer.call(d3.axisBottom(hscale));
+                legend.selectAll('text')
+                  .data(graphdata)
+                  .enter().append('text')
+                    .attr('x',5)
+                    .attr('y',function(d){return vscale(d[1][d[1].length-1].temperature);})
+                    .attr('fill', d3.color('black'))
+                    .attr('stroke', function(d) {return color(d[0]);})
+                    .attr('stroke-width', 1)
+                    .attr('value',function(d) {return d[0];})
+                    .style("font-size",function(d) {fs=22-d[0].length*1.5;return fs+"px";})
+                    .text(function(d){return d[0];});
+              });
+        } else {
+            prevWin.innerHTML = "<CENTER><IMG BORDER='5' SRC='" + url + "' CLASS='weathershow'></CENTER>";
+        }
         prevWin.style.visibility = "visible";
 }
 
