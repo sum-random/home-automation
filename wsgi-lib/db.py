@@ -132,8 +132,11 @@ def del_music_row(fileid):
     cursor.close()   
     connection.close()
 
-def set_val_for_key(key, val):
-    query = "INSERT INTO keyval (keyname,valdata) VALUES ('{0}','{1}') ON DUPLICATE KEY UPDATE valdata='{1}';".format(key,val)
+def set_val_for_key(key, val, asofdate=False):
+    mfield = ',modified' if asofdate else ''
+    mval = ",'{}'".format(asofdate) if asofdate else ''
+    mupd = "modified='{}',".format(asofdate) if asofdate else ''
+    query = "INSERT INTO keyval (keyname,valdata{2}) VALUES ('{0}','{1}'{3}) ON DUPLICATE KEY UPDATE {4}valdata='{1}';".format(key,val,mfield,mval,mupd)
     connection = open_sql_connection()
     cursor = connection.cursor()
     cursor.execute(query)
