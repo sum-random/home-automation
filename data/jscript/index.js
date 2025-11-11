@@ -41,7 +41,6 @@ function forecastGraph() {
       var locations=[];
       var graphdata = d3.groups(fcdata, d => d.location);
       Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
-      console.log(locations);
       var color = d3.scaleOrdinal()
         .domain(locations.sort())
         .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
@@ -700,6 +699,7 @@ function hideIt(id) {
 }
 
 
+
 function showWImg(evt) {
         if (evt) {
                 var url = evt.target.src;
@@ -747,22 +747,29 @@ function showWImg(evt) {
             d3.csv('/getforecast')
               .then(function(rawdata){
                 locations=[];
-                var graphdata = d3.groups(rawdata, d => d.location);
-                Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
+                var filterdata = d3.filter(rawdata,(d) => Date.parse(d.time) >= Date.now()-7200000);
+                var graphdata = d3.groups(filterdata, d => d.location);
+                maxdateper=Array.from(graphdata, ([key,values]) => {return {location:key,maxvalue:d3.max(values,d=>d.time)};});
+                minmax=Date.parse(d3.min(maxdateper,(d)=>d.maxvalue));
+                var trimdata = d3.filter(rawdata, (d) => Date.parse(d.time) <= minmax && Date.parse(d.time) >= Date.now()-7200000);
+                var trimgroup = d3.groups(trimdata, d=>d.location);
+                Array.from(trimgroup).forEach(function(d){locations.push(d[0]);});
                 var color = d3.scaleOrdinal()
                   .domain(locations.sort())
                   .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
                 var vscale = d3.scaleLinear()
-                  .domain(d3.extent(rawdata, d => d.temperature))
+                  .domain(d3.extent(trimdata, d => d.temperature))
                   .range([graphy-margins*2-1,0]);
+                var nowlinedata=[];
+                d3.extent(rawdata, d => d.temperature).forEach(function(d){nowlinedata.push({"location":"","time":new Date().toString(),"temperature":d});});
                 var hscale = d3.scaleTime()
-                  .domain(d3.extent(rawdata, function(d) {return new Date(d.time);}))
+                  .domain(d3.extent(trimdata, function(d) {return new Date(d.time);}))
                   .range([0,graphx-margins*2-1]);
                 var linefunc =  d3.line()
                   .x(function(d){return hscale(new Date(d.time));})
                   .y(function(d){return vscale(d.temperature);});
                 fcfull.selectAll('path')
-                  .data(graphdata)
+                  .data(trimgroup)
                   .enter().append('path')
                     .attr('fill', 'none')
                     .attr('stroke', function(d) {return color(d[0]);})
@@ -770,10 +777,16 @@ function showWImg(evt) {
                     .attr('d',function(d){return linefunc(d[1]);});
                 fcfull.selectAll('path')
                   .exit().remove();
+                fcfull.append('path')
+                  .data([nowlinedata])
+                    .attr('fill', 'none')
+                    .attr('stroke', function(d) {return d3.color('red');})
+                    .attr('stroke-width', 1)
+                    .attr('d',function(d){return linefunc(d);});
                 vscalecontainer.call(d3.axisLeft(vscale));
                 hscalecontainer.call(d3.axisBottom(hscale));
                 legend.selectAll('text')
-                  .data(graphdata)
+                  .data(trimgroup)
                   .enter().append('text')
                     .attr('x',5)
                     .attr('y',function(d){return vscale(d[1][d[1].length-1].temperature);})
