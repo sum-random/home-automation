@@ -23,15 +23,18 @@ function setupWeather() {
   setInterval(cpuTemperatureGraph,300000);
   d3.select(window).on('resize', resizeGraph);
   d3.select('#FORECASTGRAPH')
-    .attr('width',90)
-    .attr('height',64)
-    .append('g');
+    .attr('width','100')
+    .attr('height','70')
+    .append('g')
+    .attr('width','100%')
+    .attr('height','100%');
   //setInterval(forecastGraph,3600000);
   forecastGraph();
 }
 
 function forecastGraph() {
   var fccontainer = d3.select('#FORECASTGRAPH');
+  console.log(fccontainer.node().getBBox());
   var fcthumb = d3.select('#FORECASTGRAPH').select('g');
   //fcthumb.width = 64;
   //fcthumb.height= 64;
@@ -58,7 +61,7 @@ function forecastGraph() {
         .enter().append('path')
           .attr('fill', 'none')
           .attr('stroke', function(d) {return color(d[0]);})
-          .attr('stroke-width', 3)
+          .attr('stroke-width', 1)
           .attr('d',function(d){return linefunc(d[1]);});
       fcthumb.selectAll('path')
         .exit().remove();

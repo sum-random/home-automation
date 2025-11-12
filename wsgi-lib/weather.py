@@ -40,7 +40,7 @@ def get_weather_html():
     the_list = get_weather_list()
     for next_item in sorted(the_list):
         if the_list[next_item]['url'] == '/getforecast':
-            retval.append("<span><a href='{}' title='{}' target=_blank><svg class='weatherthumb' id='FORECASTGRAPH'></SVG>"
+            retval.append("<span><a href='{}' title='{}' target=_blank onMouseOver='forecastGraph();'><svg class='weatherthumb' id='FORECASTGRAPH'></SVG>"
                           "</a></span>".format(the_list[next_item]['url'],
                                                the_list[next_item]['ttl']))
         else:
