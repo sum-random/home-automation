@@ -134,6 +134,7 @@ def check_ssh(device):
             output = Popen([CONFIG['path']['ssh_cmd'],
                             "-f",
                             "-o", "StrictHostKeyChecking=no",
+                            "-o", "HostkeyAlgorithms=+ssh-rsa",
                             "-o", "BatchMode=yes",
                             "-i", CONFIG['path']['ssh_key'],
                             "-p", "{}".format(device['sshport']),
