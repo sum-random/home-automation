@@ -52,21 +52,21 @@ def index():
 
 @app.route('/getimages', methods = ['POST'])
 def getimages():
-    the_folder_id = -1
+    folder_id = -1
     if request.method == 'POST':
         requestobj = parseData(request.data)
     if requestobj:
-        if 'the_folder_id' in requestobj:
-            the_folder_id = requestobj['the_folder_id']
-    return jsonify(pix.list_folder(the_folder_id))
+        if 'folder_id' in requestobj:
+            folder_id = requestobj['folder_id']
+    return jsonify(pix.list_folder(folder_id))
 
 @app.route('/getdevices')
 def getdevices():
     return devices.get_device_html()
 
-@app.route('/deviceinfo/<the_host>')
-def cpuinfo(the_host):
-    return jsonify(devices.get_device_info(the_host))
+@app.route('/deviceinfo/<host>')
+def cpuinfo(host):
+    return jsonify(devices.get_device_info(host))
 
 @app.route('/listlight')
 def listlight():
@@ -120,15 +120,15 @@ def schedlight():
     retval = lightctl.lightsched(requestobj)
     return Response(retval,mimetype='text/html')
 
-@app.route('/getonelightsched/<the_light>', methods = ['GET','POST'])
-def getlightsched(the_light):
-    retval = lightctl.get_desired_light_states(the_light)
+@app.route('/getonelightsched/<light>', methods = ['GET','POST'])
+def getlightsched(light):
+    retval = lightctl.get_desired_light_states(light)
     return Response("\n".join(retval),mimetype='text/tsv')
 
-@app.route('/getlightscheddetail/<the_index>', methods = ['GET', 'POST'])
-def getscheddetail(the_index):
-    retval = lightctl.get_light_schedule_detail(the_index)
-    #logit("/getlightscheddetail/{} {}".format(the_index, retval))
+@app.route('/getlightscheddetail/<index>', methods = ['GET', 'POST'])
+def getscheddetail(index):
+    retval = lightctl.get_light_schedule_detail(index)
+    #logit("/getlightscheddetail/{} {}".format(index, retval))
     return jsonify(retval)
    
 @app.route('/setlightscheddetail', methods = ['POST'])
@@ -144,13 +144,13 @@ def setscheddetail():
         #logit("requestobj {}".format(requestobj))
         #for key in requestobj:
             #logit("key: " + key + " val: " + requestobj[key]);
-    retval = lightctl.set_light_schedule_detail(the_id = requestobj['the_id'],
-                                                the_hhcode = requestobj['the_hhcode'],
-                                                the_lightcode = requestobj['the_lightcode'],
-                                                the_month = requestobj['the_month'],
-                                                the_day = requestobj['the_day'],
-                                                the_on_time = requestobj['the_on_time'],
-                                                the_off_time = requestobj['the_off_time'],
+    retval = lightctl.set_light_schedule_detail(id = requestobj['id'],
+                                                hhcode = requestobj['hhcode'],
+                                                lightcode = requestobj['lightcode'],
+                                                month = requestobj['month'],
+                                                day = requestobj['day'],
+                                                on_time = requestobj['on_time'],
+                                                off_time = requestobj['off_time'],
                                                 is_new = requestobj['new_item'])
     #logit("/setlightscheddetail/ {}".format(retval))
     return Response(retval,mimetype='text/html')
@@ -159,7 +159,7 @@ def setscheddetail():
 def deletescheddetail():
     retval = 'Undefined'
     requestobj = parseData(request.data)
-    retval = lightctl.delete_light_schedule_detail(the_id = requestobj['the_id'])
+    retval = lightctl.delete_light_schedule_detail(id = requestobj['id'])
     #logit("/deletelightscheddetail/ {}".format(retval))
     return Response(retval,mimetype='text/html')
 

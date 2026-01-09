@@ -20,20 +20,20 @@ def open_sql_connection():
   return pymysql.connections.Connection(**CONFIG)
 
 
-def update_sql(the_sql):
+def update_sql(query_string):
     thewriteconnection = False
     try:
         #write_lock.acquire()
         thewriteconnection = open_sql_connection()
     
         cursor = thewriteconnection.cursor()
-        cursor.execute(the_sql)
+        cursor.execute(query_string)
         cursor.close()
         thewriteconnection.commit()
         thewriteconnection.close()
         #write_lock.release()
     except Exception as e:
-        logit("update query {} failed {}".format(the_sql, e))
+        logit("update query {} failed {}".format(query_string, e))
         if thewriteconnection:
             thewriteconnection.close()
         return False

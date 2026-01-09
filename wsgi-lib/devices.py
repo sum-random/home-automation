@@ -39,7 +39,7 @@ def _shortname(longname):
 
 def readdevice(ipaddr):
     fields = ['type', 'maker', 'model', 'version', 'misc1' , 'misc2']
-    the_srv_type = {}
+    srv_type = {}
     try:
     	hostname = socket.gethostbyaddr(ipaddr)
     except:
@@ -57,26 +57,26 @@ def readdevice(ipaddr):
             typeline = type.sub('', typeraw)[:-1]
             typeinfo = typeline.split(' ')
             for x in range(len(typeinfo)):
-              the_srv_type[fields[x]] = typeinfo[x]
+              srv_type[fields[x]] = typeinfo[x]
             break
     f.close()
-    the_srv_type['hostname'] = short
-    if not 'type' in the_srv_type:
-        the_srv_type['type'] = 'server'
+    srv_type['hostname'] = short
+    if not 'type' in srv_type:
+        srv_type['type'] = 'server'
 
     # get SSH port number, if previously saved
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    the_sql = "SELECT devjson FROM devices where hostname='{}';".format(short)
-    if cursor.execute(the_sql) > 0:
+    query_string = "SELECT devjson FROM devices where hostname='{}';".format(short)
+    if cursor.execute(query_string) > 0:
         for nextrowraw in cursor.fetchall():
             if nextrowraw[0] is not None:
                 nextrow = json.loads(nextrowraw[0])
-                the_srv_type.update(nextrow)
+                srv_type.update(nextrow)
     cursor.close()
     connection.close()
 
-    return(the_srv_type)
+    return(srv_type)
 
 
 def _device_ip_list():
@@ -178,13 +178,13 @@ def renderdevices():
     retval = []
     connection = db.open_sql_connection()
     tablecursor = connection.cursor()
-    the_sql = "SELECT devjson FROM devices where json_value(devjson,'$.type') is not null;"
-    if tablecursor.execute(the_sql) > 0:
+    query_string = "SELECT devjson FROM devices where json_value(devjson,'$.type') is not null;"
+    if tablecursor.execute(query_string) > 0:
         for nexttable in tablecursor.fetchall():
-            the_host_json = json.loads(nexttable[0])
-            if 'recd_pkts' in the_host_json and the_host_json['recd_pkts'] != '0':
-                if 'last_checked' in the_host_json and int(the_host_json['last_checked']) >= CURTIME-900:
-                    retval.append(the_host_json)
+            host_json = json.loads(nexttable[0])
+            if 'recd_pkts' in host_json and host_json['recd_pkts'] != '0':
+                if 'last_checked' in host_json and int(host_json['last_checked']) >= CURTIME-900:
+                    retval.append(host_json)
     tablecursor.close()
     connection.close()
     return retval
@@ -222,14 +222,14 @@ def get_device_html():
         alttext = ''
         if 'cpuinfo' in thehost:
             cpuinfo = thehost['cpuinfo']
-            the_cpu = False
+            new_cpuinfo = False
             if armalt in cpuinfo:
-                the_cpu = '{}: ARM v{}'.format(armalt, cpuinfo[armalt])
+                new_cpuinfo = '{}: ARM v{}'.format(armalt, cpuinfo[armalt])
             for next_cpu  in cpus:
                 if next_cpu in cpuinfo:
-                    the_cpu = cpuinfo[next_cpu]
-            if the_cpu:
-                alttext = '<td>{}</td>'.format(the_cpu)
+                    new_cpuinfo = cpuinfo[next_cpu]
+            if new_cpuinfo:
+                alttext = '<td>{}</td>'.format(new_cpuinfo)
         retval.append("<tr><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(thehost['hostname'],
                                                                                 thehost['type'],
                                                                                 hoststat,
@@ -241,17 +241,17 @@ def get_device_html():
     return "{}".format(e)
     
 
-def get_device_info(the_host):
+def get_device_info(host):
     """ Return device info """
     retval = False
     connection = db.open_sql_connection()
     tablecursor = connection.cursor()
-    the_sql = "SELECT devjson FROM devices WHERE hostname='{}'".format(the_host)
-    if tablecursor.execute(the_sql) > 0:
+    query_string = "SELECT devjson FROM devices WHERE hostname='{}'".format(host)
+    if tablecursor.execute(query_string) > 0:
         for nexttable in tablecursor.fetchall():
-            the_host_json = json.loads(nexttable[0])
-            if the_host_json['recd_pkts'] != '0' and 'cpuinfo' in the_host_json:
-                retval = the_host_json['cpuinfo']
+            host_json = json.loads(nexttable[0])
+            if host_json['recd_pkts'] != '0' and 'cpuinfo' in host_json:
+                retval = host_json['cpuinfo']
     tablecursor.close()
     connection.close()
     return retval
@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     for nextdev in scandevices():
         tablecursor = connection.cursor()
-        the_sql = "INSERT INTO devices(hostname, devjson) VALUES('{0}', '{1}') ON DUPLICATE KEY UPDATE devjson='{1}';".format(nextdev['hostname'], json.dumps(nextdev))
-        tablecursor.execute(the_sql)
+        query_string = "INSERT INTO devices(hostname, devjson) VALUES('{0}', '{1}') ON DUPLICATE KEY UPDATE devjson='{1}';".format(nextdev['hostname'], json.dumps(nextdev))
+        tablecursor.execute(query_string)
         connection.commit()
     connection.close()

@@ -54,12 +54,12 @@ def get_light_list():
     return lights
 
 
-def dev_path(the_light):
-    return CONFIG['path']['config'] + 'DEV' + str(the_light)
+def dev_path(light):
+    return CONFIG['path']['config'] + 'DEV' + str(light)
 
-def get_light_state(the_light):
+def get_light_state(light):
     status = 'Auto'
-    devpath = dev_path(the_light)
+    devpath = dev_path(light)
     if os.path.exists(devpath):
         f = open(devpath, 'rt')
         status = f.readline()
@@ -67,17 +67,17 @@ def get_light_state(the_light):
     return status.strip()
 
 
-def apply_light_state(the_light, the_state):
+def apply_light_state(light, state):
     mylock = lockobject()
     mylock.getlock()
-    cmd = "-{}".format(the_state[1:2])
-    brcmd = [CONFIG['path']['brcmd'], '-x', CONFIG['path']['brdevice'], '-c','I', '-r', '5', cmd, str(the_light)]
+    cmd = "-{}".format(state[1:2])
+    brcmd = [CONFIG['path']['brcmd'], '-x', CONFIG['path']['brdevice'], '-c','I', '-r', '5', cmd, str(light)]
     brout = Popen(brcmd, stdout=PIPE).communicate()
     mylock.droplock()
     return ' '.join(brcmd)
 
 
-def set_light_state(the_light, the_state):
+def set_light_state(light, state):
     """ Turn a light on or off
     Record or clear status file
     Acquire a lock
@@ -86,30 +86,30 @@ def set_light_state(the_light, the_state):
     
     Args:
     """
-    retval = "state {} unchanged {}".format(the_light, the_state)
-    devpath = dev_path(the_light)
-    if get_light_state(the_light) != the_state:
-        if the_state == 'Auto':
+    retval = "state {} unchanged {}".format(light, state)
+    devpath = dev_path(light)
+    if get_light_state(light) != state:
+        if state == 'Auto':
             if os.path.exists(devpath):
                 os.remove(devpath)
-                retval = "state {} changed to Auto".format(the_light)
-        elif the_state in ['Off', 'On']:
+                retval = "state {} changed to Auto".format(light)
+        elif state in ['Off', 'On']:
             f = open(devpath, 'w')
-            f.write(the_state)
+            f.write(state)
             f.close()
-            retval = apply_light_state(the_light, the_state)
+            retval = apply_light_state(light, state)
         else:
-            retval = "Unknown STATE: {}".format(the_state)
+            retval = "Unknown STATE: {}".format(state)
     return retval
 
-def get_desired_light_states(the_light):
+def get_desired_light_states(light):
     retval = ['id\tdescr']
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    if the_light == -1:
+    if light == -1:
         where = '' #  all light codes
     else:
-        where = " WHERE lightcode={}".format(the_light)
+        where = " WHERE lightcode={}".format(light)
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
             retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
@@ -117,14 +117,14 @@ def get_desired_light_states(the_light):
     connection.close()
     return retval
 
-def get_light_state_ids(the_light):
+def get_light_state_ids(light):
     retval = []
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    if the_light == -1:
+    if light == -1:
         where = '' #  all light codes
     else:
-        where = " WHERE lightcode={}".format(the_light)
+        where = " WHERE lightcode={}".format(light)
     if cursor.execute("SELECT id FROM lightschedule{}".format(where)):
         for nextrow in cursor.fetchall():
             retval.append(nextrow[0])
@@ -132,53 +132,53 @@ def get_light_state_ids(the_light):
     connection.close()
     return retval
     
-def get_light_schedule_detail(the_id):
+def get_light_schedule_detail(id):
     retval = {}
     connection = db.open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(the_id)):
+    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(id)):
         for nextrow in cursor.fetchall():
             retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
     cursor.close()
     connection.close()
     return retval
 
-def set_light_schedule_detail(the_id, the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, is_new):
+def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new):
     connection = db.open_sql_connection()
-    the_cursor = connection.cursor()
+    cursor = connection.cursor()
     if is_new == 'true':
-        the_sql = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
+        query_string = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
                      VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
-                  """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time)
+                  """.format(hhcode, lightcode, month, day, on_time, off_time)
     else:
-        the_sql = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
+        query_string = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
                      WHERE id={}
-                  """.format(the_hhcode, the_lightcode, the_month, the_day, the_on_time, the_off_time, the_id)
-    the_response = "no error"
+                  """.format(hhcode, lightcode, month, day, on_time, off_time, id)
+    response = "no error"
     try:
-        the_cursor.execute(the_sql)
-        the_response = the_sql
+        cursor.execute(query_string)
+        response = query_string
     except Exception as ex:
-        logit("failed to execute {} because {}".format(the_sql, ex))
-        the_response = "{}".format(ex)
-    the_cursor.close()
+        logit("failed to execute {} because {}".format(query_string, ex))
+        response = "{}".format(ex)
+    cursor.close()
     connection.close()
-    return the_response
+    return response
 
-def delete_light_schedule_detail(the_id):
-    the_response = "no error"
+def delete_light_schedule_detail(id):
+    response = "no error"
     connection = db.open_sql_connection()
-    the_cursor = connection.cursor()
-    the_sql = "DELETE FROM lightschedule WHERE id = {}".format(the_id)
+    cursor = connection.cursor()
+    query_string = "DELETE FROM lightschedule WHERE id = {}".format(id)
     try:
-        the_cursor.execute(the_sql)
-        the_response = the_sql
+        cursor.execute(query_string)
+        response = query_string
     except Exception as ex:
-        logit("failed to execute {} because {}".format(the_sql, ex))
-        the_response = "{}".format(ex)
-    the_cursor.close()
+        logit("failed to execute {} because {}".format(query_string, ex))
+        response = "{}".format(ex)
+    cursor.close()
     connection.close()
-    return the_response
+    return response
 
 def date_match(light_schedule):
     month = False
@@ -223,7 +223,7 @@ def date_match(light_schedule):
     except Exception as ex:
         logit("Unable to parse hour match {} {} {}".format(light_schedule['turnon'], light_schedule['turnoff'], ex))
         hour = False
-    override = get_light_state(the_light) 
+    override = get_light_state(light) 
     if re.match('Auto',override):
         return month and day and hour
     else:
@@ -254,19 +254,19 @@ def lightsched(cgi_options):
                 retval.append("{} is not a valid month spec".format(monthmatch))
             nextlight = pickalight
             if valid:
-                sql = ("INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff) "
+                query_string = ("INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff) "
                        "VALUES ('I', {}, '{}', '{}', '{}', '{}')"
                        "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
-                db.update_sql(sql)
+                db.update_sql(query_string)
                 retval.append("Added new item to schedule<BR>")
     retval.append("<HR/><FORM METHOD=POST><SELECT NAME='PICKALIGHT' ID='PICKALIGHT' onChange='showOneLightSchedule();'>")
     retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
-    the_lights = get_light_list()
-    for nextlight in the_lights:
+    lights = get_light_list()
+    for nextlight in lights:
         selected = ''
         if nextlight == pickalight:
             selected = ' SELECTED'
-        retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  the_lights[nextlight]))
+        retval.append("<OPTION VALUE='{}'{}>{}</OPTION>".format(nextlight, selected,  lights[nextlight]))
     retval.append("</SELECT>")
     retval.append('<DIV STYLE="visibility:hidden;" ID=DIVSCHED>');
     retval.append('<HR/>Schedules<BR>')
@@ -285,16 +285,16 @@ def lightsched(cgi_options):
     retval.append("</FORM>")
     return '\n'.join(retval)
 
-def process_light_schedule(the_light):
-    current_state = get_light_state(the_light)
+def process_light_schedule(light):
+    current_state = get_light_state(light)
     new_state = "Off"
     if re.match('Auto', current_state):
-        for nextrow in get_light_state_ids(the_light):
+        for nextrow in get_light_state_ids(light):
             if date_match(get_light_schedule_detail(nextrow)):
                 new_state = "On"
-        apply_light_state(the_light, new_state)
+        apply_light_state(light, new_state)
     else:
-        apply_light_state(the_light, current_state)
+        apply_light_state(light, current_state)
 
 def check_router():
     do_reset = True
@@ -310,7 +310,7 @@ def check_router():
 
 if __name__ == '__main__':
     light_list = get_light_list()
-    for the_light in light_list:
-        process_light_schedule(the_light)
+    for light in light_list:
+        process_light_schedule(light)
         time.sleep(5)
     check_router()

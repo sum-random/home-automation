@@ -210,23 +210,23 @@ function cpuTemperatureGraph(doResize=true) {
 
 function showOneLightSchedule() {
     thelight = d3.select("#PICKALIGHT").node().value;
-    the_display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
+    display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
     if(thelight > -1) {
         d3.tsv('/getonelightsched/' + thelight).then(function(rawdata) {
             data = rawdata.sort(function(d){return d.descr;})
-            the_options = the_display.selectAll("option").data(data, function(d){return d.id;});
-            the_options.exit().remove();
-            the_options.enter().append("option");
-            the_display.selectAll("option")
+            options = display.selectAll("option").data(data, function(d){return d.id;});
+            options.exit().remove();
+            options.enter().append("option");
+            display.selectAll("option")
                 .attr('value', function(d) {return d.id;})
                 .text(function(d){return d.descr;});
-            the_display.attr("size", data.length<2?2:data.length);
+            display.attr("size", data.length<2?2:data.length);
             showScheduleItem();
         });
         d3.select('#DIVSCHED').style('visibility','visible');
     } else {
-        the_display.selectAll("option").remove();
-        the_display.attr("size", 4);
+        display.selectAll("option").remove();
+        display.attr("size", 4);
         d3.select('#UPDATE').style('visibility','hidden');
         d3.select('#DELETE').style('visibility','hidden');
         d3.select('#DIVSCHED').style('visibility','hidden');
@@ -234,9 +234,9 @@ function showOneLightSchedule() {
 }
 
 function showScheduleItem() {
-    the_item = d3.select("#SCHEDLIST").node().value;
-    if(the_item.length > 0)
-        d3.json('/getlightscheddetail/' + the_item).then(function(data) {
+    item = d3.select("#SCHEDLIST").node().value;
+    if(item.length > 0)
+        d3.json('/getlightscheddetail/' + item).then(function(data) {
             d3.select('#MONTHMATCH').node().value = data['monthmatch'];
             d3.select('#DAYMATCH').node().value = data['daymatch'];
             d3.select('#TURNON').node().value = data['turnon'];
@@ -270,7 +270,7 @@ function showNewButton() {
 }
 
 function submitScheduleUpdate(newItem=false) {
-    d3.text('/setlightscheddetail',{method: 'post', body: 'the_id='+d3.select('#SCHEDLIST').node().value+'\nthe_hhcode=I\nthe_lightcode='+d3.select('#PICKALIGHT').node().value+'\nthe_month='+d3.select('#MONTHMATCH').node().value+'\nthe_day='+d3.select('#DAYMATCH').node().value+'\nthe_on_time='+d3.select('#TURNON').node().value+'\nthe_off_time='+d3.select('#TURNOFF').node().value+'\nnew_item='+(newItem?'true':'false')+'\n'}).then(function(data) {
+    d3.text('/setlightscheddetail',{method: 'post', body: 'id='+d3.select('#SCHEDLIST').node().value+'\nhhcode=I\nlightcode='+d3.select('#PICKALIGHT').node().value+'\nmonth='+d3.select('#MONTHMATCH').node().value+'\nday='+d3.select('#DAYMATCH').node().value+'\non_time='+d3.select('#TURNON').node().value+'\noff_time='+d3.select('#TURNOFF').node().value+'\nnew_item='+(newItem?'true':'false')+'\n'}).then(function(data) {
         showOneLightSchedule();
         showScheduleItem();
        });
@@ -278,7 +278,7 @@ function submitScheduleUpdate(newItem=false) {
 
 function deleteScheduleItem() {
     d3.json('/deletelightscheddetail')
-        .post('the_id='+d3.select('#SCHEDLIST').node().value).then(function(data) {
+        .post('id='+d3.select('#SCHEDLIST').node().value).then(function(data) {
             showOneLightSchedule();
        });
 
@@ -408,7 +408,7 @@ function populateThumbs() {
     imgrect = slider.append('g')
         .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')')
         .attr('id','IMGSLIDER');
-    d3.json("/getimages",{'method': 'post', 'body': "the_folder_id="+fldr})
+    d3.json("/getimages",{'method': 'post', 'body': "folder_id="+fldr})
         .then(function(data) {
             slider.attr('height', Math.floor(data.length/breakpt + 1)*(imgsz.size + imgsz.spacing) + 'px');
             data.forEach(function(d,i) {
@@ -822,17 +822,17 @@ function refreshHostList() {
   });
 }
 
-function showHostDetail(the_host) {
+function showHostDetail(host) {
   td = d3.select(this).select('td');
   if(td.empty())
     return;
-  the_host = td.text();
+  host = td.text();
   margin = {top: 20, bottom: 20, left: 20, right: 20};
   width = 700;
   itemheight = 20;
   cpudiv = d3.select("#HOSTINFO");
   cpudiv.selectAll('svg').remove();
-  d3.json('/deviceinfo/' + the_host).then(function(data) {
+  d3.json('/deviceinfo/' + host).then(function(data) {
     if(! data) return;
     cpudisplay = cpudiv.style('display','block').style('visibility','visible')
       .append('svg')
@@ -851,7 +851,7 @@ function showHostDetail(the_host) {
     });
     cpudisplay.append('g').append('text')
       .attr("font-size", "20px")
-      .text(the_host);
+      .text(host);
   });
 }
 

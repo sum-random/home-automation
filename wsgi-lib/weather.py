@@ -37,18 +37,18 @@ def get_weather_list():
 
 def get_weather_html():
     retval = []
-    the_list = get_weather_list()
-    for next_item in sorted(the_list):
-        if the_list[next_item]['url'] == '/getforecast':
+    weather = get_weather_list()
+    for next_item in sorted(weather):
+        if weather[next_item]['url'] == '/getforecast':
             retval.append("<span><a href='{}' title='{}' target=_blank onMouseOver='forecastGraph();'><svg class='weatherthumb' id='FORECASTGRAPH'></SVG>"
-                          "</a></span>".format(the_list[next_item]['url'],
-                                               the_list[next_item]['ttl']))
+                          "</a></span>".format(weather[next_item]['url'],
+                                               weather[next_item]['ttl']))
         else:
             retval.append("<span><a href='{}' title='{}' target=_blank><img class='weatherthumb' src='{}' alt='{}'>"
-                          "</a></span>".format(the_list[next_item]['url'],
-                                               the_list[next_item]['ttl'],
-                                               the_list[next_item]['uri'],
-                                               the_list[next_item]['alt']))
+                          "</a></span>".format(weather[next_item]['url'],
+                                               weather[next_item]['ttl'],
+                                               weather[next_item]['uri'],
+                                               weather[next_item]['alt']))
     retval.append('<script type="text/javascript">')
     retval.append('    setupWeather();')
     retval.append('</script>')

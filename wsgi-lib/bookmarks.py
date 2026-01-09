@@ -16,8 +16,8 @@ def get_bookmarks():
     retval = []
     dlmatch = re.compile('<dl>', flags=re.I)
     has_matched =  False
-    the_file = open(config()['path']['bookmarks'], 'rb');
-    for nextline in the_file:
+    bookmarks = open(config()['path']['bookmarks'], 'rb');
+    for nextline in bookmarks:
         textline = nextline.decode('utf-8', 'ignore')
         if dlmatch.search(textline):
             has_matched = True
@@ -27,7 +27,7 @@ def get_bookmarks():
 
 
 if __name__ == '__main__':
-    the_bookmarks = get_bookmarks()
-    for the_line in the_bookmarks.split('\n'):
-        the_printable = the_line.encode('utf-8')
-        print(the_printable)
+    bookmarks = get_bookmarks()
+    for line in bookmarks.split('\n'):
+        printable = line.encode('utf-8')
+        print(printable)
