@@ -162,7 +162,95 @@ def get_vals_like_key(key):
             retval.append({row[0]:row[1]})
     cursor.close()
     return retval
+
+def get_light_list():
+    lights={}
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute("SELECT lightid, lightname FROM lightnames"):
+        for nextrow in cursor.fetchall():
+            lights[nextrow[0]] = nextrow[1]
+    cursor.close()
+    connection.close()
+    return lights
         
+def get_light_state_ids(light=-1):
+    retval = []
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if light == -1:
+        where = '' #  all light codes
+    else:
+        where = " WHERE lightcode={}".format(light)
+    if cursor.execute("SELECT id FROM lightschedule{}".format(where)):
+        for nextrow in cursor.fetchall():
+            retval.append(nextrow[0])
+    cursor.close()
+    connection.close()
+    return retval
+
+def get_desired_light_states(light):
+    retval = ['id\tdescr']
+    connection = open_sql_connection()
+    cursor = connection.cursor()
+    if light == -1:
+        where = '' #  all light codes
+    else:
+        where = " WHERE lightcode={}".format(light)
+    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
+        for nextrow in cursor.fetchall():
+            retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
+    cursor.close()
+    connection.close()
+    return retval
+
+def get_light_schedule_detail(id):
+    retval = {}
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(id)):
+        for nextrow in cursor.fetchall():
+            retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
+    cursor.close()
+    connection.close()
+    return retval
+
+def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new):
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    if is_new == 'true':
+        query_string = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
+                     VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
+                  """.format(hhcode, lightcode, month, day, on_time, off_time)
+    else:
+        query_string = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
+                     WHERE id={}
+                  """.format(hhcode, lightcode, month, day, on_time, off_time, id)
+    response = "no error"
+    try:
+        cursor.execute(query_string)
+        response = query_string
+    except Exception as ex:
+        logit("failed to execute {} because {}".format(query_string, ex))
+        response = "{}".format(ex)
+    cursor.close()
+    connection.close()
+    return response
+
+def delete_light_schedule_detail(id):
+    response = "no error"
+    connection = db.open_sql_connection()
+    cursor = connection.cursor()
+    query_string = "DELETE FROM lightschedule WHERE id = {}".format(id)
+    try:
+        cursor.execute(query_string)
+        response = query_string
+    except Exception as ex:
+        logit("failed to execute {} because {}".format(query_string, ex))
+        response = "{}".format(ex)
+    cursor.close()
+    connection.close()
+    return response
 
 if __name__ == "__main__":
   connection = open_sql_connection()

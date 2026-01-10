@@ -43,15 +43,7 @@ def _shortname(longname):
 
     
 def get_light_list():
-    lights = {}
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if cursor.execute("SELECT lightid, lightname FROM lightnames"):
-        for nextrow in cursor.fetchall():
-            lights[nextrow[0]] = nextrow[1]
-    cursor.close()
-    connection.close()
-    return lights
+    return db.get_lightList()
 
 
 def dev_path(light):
@@ -102,83 +94,20 @@ def set_light_state(light, state):
             retval = "Unknown STATE: {}".format(state)
     return retval
 
-def get_desired_light_states(light):
-    retval = ['id\tdescr']
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if light == -1:
-        where = '' #  all light codes
-    else:
-        where = " WHERE lightcode={}".format(light)
-    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
-        for nextrow in cursor.fetchall():
-            retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
-    cursor.close()
-    connection.close()
-    return retval
+def get_desired_light_states(light=-1):
+    return db.get_desired_light_states(light)
 
-def get_light_state_ids(light):
-    retval = []
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if light == -1:
-        where = '' #  all light codes
-    else:
-        where = " WHERE lightcode={}".format(light)
-    if cursor.execute("SELECT id FROM lightschedule{}".format(where)):
-        for nextrow in cursor.fetchall():
-            retval.append(nextrow[0])
-    cursor.close()
-    connection.close()
-    return retval
+def get_light_state_ids(light=-1):
+    return db.get_light_state_ids(light)
     
 def get_light_schedule_detail(id):
-    retval = {}
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(id)):
-        for nextrow in cursor.fetchall():
-            retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
-    cursor.close()
-    connection.close()
-    return retval
+    return db.get_light_schedule_detail(id)
 
 def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new):
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    if is_new == 'true':
-        query_string = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
-                     VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
-                  """.format(hhcode, lightcode, month, day, on_time, off_time)
-    else:
-        query_string = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
-                     WHERE id={}
-                  """.format(hhcode, lightcode, month, day, on_time, off_time, id)
-    response = "no error"
-    try:
-        cursor.execute(query_string)
-        response = query_string
-    except Exception as ex:
-        logit("failed to execute {} because {}".format(query_string, ex))
-        response = "{}".format(ex)
-    cursor.close()
-    connection.close()
-    return response
+    return db.set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new)
 
 def delete_light_schedule_detail(id):
-    response = "no error"
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    query_string = "DELETE FROM lightschedule WHERE id = {}".format(id)
-    try:
-        cursor.execute(query_string)
-        response = query_string
-    except Exception as ex:
-        logit("failed to execute {} because {}".format(query_string, ex))
-        response = "{}".format(ex)
-    cursor.close()
-    connection.close()
-    return response
+    return db.delete_light_schedule_detail(id)
 
 def date_match(light_schedule):
     month = False
@@ -254,11 +183,8 @@ def lightsched(cgi_options):
                 retval.append("{} is not a valid month spec".format(monthmatch))
             nextlight = pickalight
             if valid:
-                query_string = ("INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff) "
-                       "VALUES ('I', {}, '{}', '{}', '{}', '{}')"
-                       "".format(nextlight, monthmatch, daymatch, turnon, turnoff))
-                db.update_sql(query_string)
-                retval.append("Added new item to schedule<BR>")
+                result = db.set_light_schedule_detail(id=False, hhcode='I', lightcode=nextlight, month=monthmatch, day=daymatch, on_time=turnon, off_time=turnoff, is_new=True)
+                retval.append("Added new item to schedule {}<BR>".format(result))
     retval.append("<HR/><FORM METHOD=POST><SELECT NAME='PICKALIGHT' ID='PICKALIGHT' onChange='showOneLightSchedule();'>")
     retval.append("<OPTION VALUE='-1'>Choose a light</OPTION>")
     lights = get_light_list()
@@ -285,16 +211,18 @@ def lightsched(cgi_options):
     retval.append("</FORM>")
     return '\n'.join(retval)
 
-def process_light_schedule(light):
+def next_light_state(light):
     current_state = get_light_state(light)
     new_state = "Off"
     if re.match('Auto', current_state):
         for nextrow in get_light_state_ids(light):
             if date_match(get_light_schedule_detail(nextrow)):
                 new_state = "On"
-        apply_light_state(light, new_state)
-    else:
-        apply_light_state(light, current_state)
+        current_state=new_state
+    return current_state
+
+def process_light_schedule(light):
+    apply_light_state(light, next_light_state(light))
 
 def check_router():
     do_reset = True

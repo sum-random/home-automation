@@ -160,7 +160,11 @@ def deletescheddetail():
     retval = 'Undefined'
     requestobj = parseData(request.data)
     retval = lightctl.delete_light_schedule_detail(id = requestobj['id'])
-    #logit("/deletelightscheddetail/ {}".format(retval))
+    return Response(retval,mimetype='text/html')
+
+@app.route('/getlightcurrentstatus/<index>', methods = ['GET','POST'])
+def readonelightcurrentstate():
+    retval = lightctl.next_light_state(index)
     return Response(retval,mimetype='text/html')
 
 @app.route('/listmixer')
