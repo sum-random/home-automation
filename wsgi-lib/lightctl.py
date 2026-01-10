@@ -43,7 +43,7 @@ def _shortname(longname):
 
     
 def get_light_list():
-    return db.get_lightList()
+    return db.get_light_list()
 
 
 def dev_path(light):
