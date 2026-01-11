@@ -34,7 +34,6 @@ function setupWeather() {
 
 function forecastGraph() {
   var fccontainer = d3.select('#FORECASTGRAPH');
-  console.log(fccontainer.node().getBBox());
   var fcthumb = d3.select('#FORECASTGRAPH').select('g');
   //fcthumb.width = 64;
   //fcthumb.height= 64;
@@ -51,10 +50,10 @@ function forecastGraph() {
         .domain(d3.extent(fcdata, d => d.temperature))
         .range([fccontainer.attr('height'),0]);
       var hscale = d3.scaleTime()
-        .domain(d3.extent(fcdata, function(d) {return new Date(d.time);}))
+        .domain(d3.extent(fcdata, function(d) {return new Date(d.timestamp);}))
         .range([0,fccontainer.attr('width')]);
       var linefunc =  d3.line()
-        .x(function(d){return hscale(new Date(d.time));})
+        .x(function(d){return hscale(new Date(d.timestamp));})
         .y(function(d){return vscale(d.temperature);});
       fcthumb.selectAll('path')
         .data(graphdata)
@@ -750,11 +749,11 @@ function showWImg(evt) {
             d3.csv('/getforecast')
               .then(function(rawdata){
                 locations=[];
-                var filterdata = d3.filter(rawdata,(d) => Date.parse(d.time) >= Date.now()-7200000);
+                var filterdata = d3.filter(rawdata,(d) => Date.parse(d.timestamp) >= Date.now()-7200000);
                 var graphdata = d3.groups(filterdata, d => d.location);
-                maxdateper=Array.from(graphdata, ([key,values]) => {return {location:key,maxvalue:d3.max(values,d=>d.time)};});
+                maxdateper=Array.from(graphdata, ([key,values]) => {return {location:key,maxvalue:d3.max(values,d=>d.timestamp)};});
                 minmax=Date.parse(d3.min(maxdateper,(d)=>d.maxvalue));
-                var trimdata = d3.filter(rawdata, (d) => Date.parse(d.time) <= minmax && Date.parse(d.time) >= Date.now()-7200000);
+                var trimdata = d3.filter(rawdata, (d) => Date.parse(d.timestamp) <= minmax && Date.parse(d.timestamp) >= Date.now()-7200000);
                 var trimgroup = d3.groups(trimdata, d=>d.location);
                 Array.from(trimgroup).forEach(function(d){locations.push(d[0]);});
                 var color = d3.scaleOrdinal()
@@ -764,12 +763,12 @@ function showWImg(evt) {
                   .domain(d3.extent(trimdata, d => d.temperature))
                   .range([graphy-margins*2-1,0]);
                 var nowlinedata=[];
-                d3.extent(rawdata, d => d.temperature).forEach(function(d){nowlinedata.push({"location":"","time":new Date().toString(),"temperature":d});});
+                d3.extent(rawdata, d => d.temperature).forEach(function(d){nowlinedata.push({"location":"","timestamp":new Date().toString(),"temperature":d});});
                 var hscale = d3.scaleTime()
-                  .domain(d3.extent(trimdata, function(d) {return new Date(d.time);}))
+                  .domain(d3.extent(trimdata, function(d) {return new Date(d.timestamp);}))
                   .range([0,graphx-margins*2-1]);
                 var linefunc =  d3.line()
-                  .x(function(d){return hscale(new Date(d.time));})
+                  .x(function(d){return hscale(new Date(d.timestamp));})
                   .y(function(d){return vscale(d.temperature);});
                 fcfull.selectAll('path')
                   .data(trimgroup)

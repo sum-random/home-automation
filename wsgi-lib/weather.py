@@ -123,13 +123,14 @@ def save_weather_reading(timestamp = None, host = None, reading = None):
 
 def get_forecast(ip_address):
     #response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
-    thefinaldata = ["location,time,temperature"]
+    thefinaldata = ["location,timestamp,temperature"]
     for row in db.get_vals_like_key("forecast_data_"):
         for k in row:
             v = json.loads(row[k])
             (p1,p2,location) = k.split('_')
             for dline in v:
-                thefinaldata.append("{},{},{}".format(location,dline['startTime'],dline['temperature']))
+                if dline['temperature'] is not None:
+                    thefinaldata.append("{},{},{}".format(location,dline['startTime'],dline['temperature']))
     return thefinaldata
 
 def fetch_one_location(bundle):
