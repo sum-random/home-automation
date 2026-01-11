@@ -163,7 +163,7 @@ def deletescheddetail():
     return Response(retval,mimetype='text/html')
 
 @app.route('/getlightcurrentstatus/<index>', methods = ['GET','POST'])
-def readonelightcurrentstate():
+def readonelightcurrentstate(index):
     retval = lightctl.next_light_state(index)
     return Response(retval,mimetype='text/html')
 
