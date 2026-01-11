@@ -152,7 +152,7 @@ def date_match(light_schedule):
     except Exception as ex:
         logit("Unable to parse hour match {} {} {}".format(light_schedule['turnon'], light_schedule['turnoff'], ex))
         hour = False
-    override = get_light_state(light) 
+    override = get_light_state(light_schedule['lightcode']) 
     if re.match('Auto',override):
         return month and day and hour
     else:
