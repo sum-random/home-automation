@@ -206,7 +206,7 @@ def get_desired_light_states(light):
 
 def get_light_schedule_detail(id):
     retval = {}
-    connection = db.open_sql_connection()
+    connection = open_sql_connection()
     cursor = connection.cursor()
     if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(id)):
         for nextrow in cursor.fetchall():
@@ -216,7 +216,7 @@ def get_light_schedule_detail(id):
     return retval
 
 def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new):
-    connection = db.open_sql_connection()
+    connection = open_sql_connection()
     cursor = connection.cursor()
     if is_new == 'true':
         query_string = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
@@ -239,7 +239,7 @@ def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_ti
 
 def delete_light_schedule_detail(id):
     response = "no error"
-    connection = db.open_sql_connection()
+    connection = open_sql_connection()
     cursor = connection.cursor()
     query_string = "DELETE FROM lightschedule WHERE id = {}".format(id)
     try:
