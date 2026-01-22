@@ -276,8 +276,7 @@ function submitScheduleUpdate(newItem=false) {
 }
 
 function deleteScheduleItem() {
-    d3.json('/deletelightscheddetail')
-        .post('id='+d3.select('#SCHEDLIST').node().value).then(function(data) {
+    d3.text('/deletelightscheddetail', {method: 'post', body: "id="+d3.select('#SCHEDLIST').node().value}).then(function(data) {
             showOneLightSchedule();
        });
 
