@@ -100,9 +100,9 @@ DROP TABLE IF EXISTS `lightnames`;
 CREATE TABLE `lightnames` (
   `lightid` int(16) NOT NULL,
   `lightname` varchar(256) NOT NULL,
-  `housecode` varchar(1) NOT NULL DEFAULT 'I',
+  `housecode` varchar(1) DEFAULT NULL,
   `state` varchar(4) DEFAULT 'Auto',
-  PRIMARY KEY (`lightid`,`housecode`)
+  PRIMARY KEY (`lightid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -114,14 +114,14 @@ DROP TABLE IF EXISTS `lightschedule`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `lightschedule` (
-  `hhcode` varchar(1) NOT NULL DEFAULT 'I',
+  `hhcode` varchar(1) DEFAULT NULL,
   `lightcode` int(2) NOT NULL,
   `monthmatch` varchar(20) NOT NULL,
   `daymatch` varchar(20) NOT NULL,
   `turnon` varchar(20) NOT NULL,
   `turnoff` varchar(20) NOT NULL,
   `id` int(16) NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`hhcode`,`lightcode`,`monthmatch`,`daymatch`,`turnon`,`turnoff`),
+  PRIMARY KEY (`lightcode`,`monthmatch`,`daymatch`,`turnon`,`turnoff`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -218,4 +218,4 @@ CREATE TABLE `thumblist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-11-10 16:15:48
+-- Dump completed on 2026-01-26  9:21:10
