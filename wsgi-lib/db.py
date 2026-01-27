@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+"""database functionality helper, migrate all SQL into this module"""
 
 # system libraries
-import pymysql
-import multiprocessing
 from os import path
-import traceback
-import json
+#import multiprocessing
+#import traceback
+#import json
+import pymysql
 
 
 # local libraries
@@ -17,15 +18,17 @@ from config import config
 CONFIG = config()['database']
 
 def open_sql_connection():
-  return pymysql.connections.Connection(**CONFIG)
+    """Return a connection from the pool"""
+    return pymysql.connections.Connection(**CONFIG)
 
 
 def update_sql(query_string):
+    """Execute an UPDATE or INSERT statement"""
     thewriteconnection = False
     try:
         #write_lock.acquire()
         thewriteconnection = open_sql_connection()
-    
+
         cursor = thewriteconnection.cursor()
         cursor.execute(query_string)
         cursor.close()
@@ -33,27 +36,42 @@ def update_sql(query_string):
         thewriteconnection.close()
         #write_lock.release()
     except Exception as e:
-        logit("update query {} failed {}".format(query_string, e))
+        logit(f"update query {query_string} failed {e}")
         if thewriteconnection:
             thewriteconnection.close()
         return False
     return True
 
-    
 def match_image(values):
-  retval = False
-  sql = "SELECT fname,imgid, ABS(ulr-{0})+ABS(ulg-{1})+ABS(ulb-{2})+ABS(urr-{3})+ABS(urg-{4})+ABS(urb-{5})+ABS(llr-{6})+ABS(llg-{7})+ABS(llb-{8})+ABS(lrr-{9})+ABS(lrg-{10})+ABS(lrb-{11}) AS score FROM thumblist a WHERE a.fname LIKE '%jpg' ORDER BY 3 LIMIT 1".format(*(values.split(':')))
-  connection = open_sql_connection()
-  thecursor = connection.cursor()
-  if thecursor.execute(sql) > 0:
-      retval = thecursor.fetchone()
-  thecursor.close()
-  connection.close()
-  return retval
+    """Collage function, find an image whose color quadrant values match the input"""
+    retval=False
+    # this is an artifact of older bash code, needs to be redone
+    rgbarr=values.split(':')
+    sql=f"""
+SELECT fname,imgid,
+       ABS(ulr-{rgbarr[0]})+ABS(ulg-{rgbarr[1]})+ABS(ulb-{rgbarr[2]})+
+       ABS(urr-{rgbarr[3]})+ABS(urg-{rgbarr[4]})+ABS(urb-{rgbarr[5]})+
+       ABS(llr-{rgbarr[6]})+ABS(llg-{rgbarr[7]})+ABS(llb-{rgbarr[8]})+
+       ABS(lrr-{rgbarr[9]})+ABS(lrg-{rgbarr[10]})+ABS(lrb-{rgbarr[11]}) AS score 
+FROM thumblist a 
+WHERE a.fname LIKE '%jpg' 
+ORDER BY 3 LIMIT 1"""
+    connection = open_sql_connection()
+    thecursor = connection.cursor()
+    if thecursor.execute(sql) > 0:
+        retval = thecursor.fetchone()
+    thecursor.close()
+    connection.close()
+    return retval
 
-def get_first_time(host):
+def get_first_time(host=False):
+    """Returns the lowest timestamp value from temperatures table"""
     thetime=False
-    sql = "SELECT MIN(timestamp) AS timestamp FROM temperatures{}".format(" where host IN ('{}');".format(host) if host else "")
+    whereclause=" WHERE host IN ('{host}');" if host else ""
+    sql = f"""
+SELECT MIN(timestamp) AS timestamp
+FROM temperatures
+{whereclause}"""
     connection = open_sql_connection()
     thecursor = connection.cursor()
     if thecursor.execute(sql) > 0:
@@ -63,9 +81,14 @@ def get_first_time(host):
     connection.close()
     return thetime
 
-def get_last_time(host):
+def get_last_time(host=False):
+    """Returns the highest timestamp value from temperatures table"""
     thetime=False
-    sql = "SELECT MAX(timestamp) AS timestamp FROM temperatures{}".format(" where host IN ('{}');".format(host) if host else "")
+    whereclause=f" WHERE host IN ('{host}');" if host else ""
+    sql = f"""
+SELECT MAX(timestamp) AS timestamp
+FROM temperatures
+{whereclause}"""
     connection = open_sql_connection()
     thecursor = connection.cursor()
     if thecursor.execute(sql) > 0:
@@ -76,6 +99,7 @@ def get_last_time(host):
     return thetime
 
 def list_img_folders():
+    """Return a list of folders for the image viewer"""
     retval = []
     sql = "SELECT fname FROM thumblist;"
     connection = open_sql_connection()
@@ -90,53 +114,80 @@ def list_img_folders():
     return retval
 
 def get_imgid(img_path):
+    """Return the database id of an image file or False if not found"""
     connection = open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT imgid FROM thumblist WHERE fname='{}';".format(connection.escape_string(img_path))):
+    eimg_path=connection.escape_string(img_path)
+    sql=f"""
+SELECT imgid
+FROM thumblist
+WHERE fname='{eimg_path}';"""
+    if cursor.execute(sql):
         imgid = cursor.fetchone()[0]
         # logit("found imgid: {}".format(imgid))
     else:
-        logit("not in db: {}".format(img_path))
+        logit(f"not in db: {img_path}")
         imgid = False
     cursor.close()
     connection.close()
     return imgid
 
 def get_musicid(file_path):
+    """Return the database id of an audio file or False if not found"""
     connection = open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT fileid FROM musicfiles WHERE filename='{}';".format(connection.escape_string(file_path))):
+    efile_path=connection.escape_string(file_path)
+    sql=f"""
+SELECT fileid
+FROM musicfiles
+WHERE filename='{efile_path}';"""
+    if cursor.execute(sql):
         fileid = cursor.fetchone()[0]
     else:
-        logit("not in db: {}".format(file_path))
+        logit(f"not in db: {file_path}")
         fileid = False
     cursor.close()
     connection.close()
     return fileid
 
-def save_music_file(file_name, short_name, inode, size, hash):
+def save_music_file(file_name, short_name, inode, size, hashval):
+    """Save information about a new audio file"""
     fileid = False
     connection = open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("INSERT INTO musicfiles(filename, shortname, inode, size, checksum) VALUES('{}', '{}', {}, {}, '{}')".format(connection.escape_string(file_name), connection.escape_string(short_name), inode, size, hash)):
-        if cursor.execute("SELECT fileid FROM musicfiles WHERE filename='{}'".format(connection.escape_string(file_name))):
+    efile_name=connection.escape_string(file_name)
+    eshort_name=connection.escape_string(short_name)
+    sql=f"""
+INSERT INTO musicfiles(filename, shortname, inode, size, checksum)
+VALUES('{efile_name}', '{eshort_name}', {inode}, {size}, '{hashval}')"""
+    if cursor.execute(sql):
+        if cursor.execute(f"""
+SELECT fileid
+FROM musicfiles
+WHERE filename='{efile_name}'"""):
             fileid = cursor.fetchone()[0]
-    cursor.close()   
+    cursor.close()
     connection.close()
     return fileid
 
 def del_music_row(fileid):
+    """Remove db entry for deleted file"""
     connection = open_sql_connection()
     cursor = connection.cursor()
-    cursor.execute("DELETE FROM musicfiles WHERE fileid={}".format(fileid))
-    cursor.close()   
+    cursor.execute(f"DELETE FROM musicfiles WHERE fileid={fileid}")
+    cursor.close()
     connection.close()
 
+# implement mongodb in SQL
 def set_val_for_key(key, val, asofdate=False):
+    """Change the value for a key"""
     mfield = ',modified' if asofdate else ''
-    mval = ",'{}'".format(asofdate) if asofdate else ''
-    mupd = "modified='{}',".format(asofdate) if asofdate else ''
-    query = "INSERT INTO keyval (keyname,valdata{2}) VALUES ('{0}','{1}'{3}) ON DUPLICATE KEY UPDATE {4}valdata='{1}';".format(key,val,mfield,mval,mupd)
+    mval = f",'{asofdate}'" if asofdate else ''
+    mupd = f"modified='{asofdate}'," if asofdate else ''
+    query = f"""
+INSERT INTO keyval (keyname,valdata{mfield})
+VALUES ('{key}','{val}'{mval})
+ON DUPLICATE KEY UPDATE {mupd}valdata='{val}';"""
     connection = open_sql_connection()
     cursor = connection.cursor()
     cursor.execute(query)
@@ -144,8 +195,9 @@ def set_val_for_key(key, val, asofdate=False):
     return True
 
 def get_val_for_key(key):
+    """Retrieve value for key"""
     retval = ""
-    query = "SELECT valdata FROM keyval WHERE keyname='{}';".format(key)
+    query = f"SELECT valdata FROM keyval WHERE keyname='{key}';"
     connection = open_sql_connection()
     cursor = connection.cursor()
     if cursor.execute(query):
@@ -153,8 +205,9 @@ def get_val_for_key(key):
     return retval
 
 def get_vals_like_key(key):
+    """Fuzzy search for key, return array of matches"""
     retval = []
-    query = "SELECT keyname,valdata FROM keyval WHERE keyname LIKE '%{}%';".format(key)
+    query = f"SELECT keyname,valdata FROM keyval WHERE keyname LIKE '%{key}%';"
     connection = open_sql_connection()
     cursor = connection.cursor()
     if cursor.execute(query):
@@ -163,7 +216,9 @@ def get_vals_like_key(key):
     cursor.close()
     return retval
 
+#lightcontrol helpers
 def get_light_list():
+    """Return array of light names and ids"""
     lights={}
     connection = open_sql_connection()
     cursor = connection.cursor()
@@ -173,16 +228,17 @@ def get_light_list():
     cursor.close()
     connection.close()
     return lights
-        
+
 def get_light_state_ids(light=-1):
+    """Maps light code back to db id, this is mostly for X10"""
     retval = []
     connection = open_sql_connection()
     cursor = connection.cursor()
     if light == -1:
         where = '' #  all light codes
     else:
-        where = " WHERE lightcode={}".format(light)
-    if cursor.execute("SELECT id FROM lightschedule{}".format(where)):
+        where = f" WHERE lightcode={light}"
+    if cursor.execute(f"SELECT id FROM lightschedule{where}"):
         for nextrow in cursor.fetchall():
             retval.append(nextrow[0])
     cursor.close()
@@ -190,71 +246,85 @@ def get_light_state_ids(light=-1):
     return retval
 
 def get_desired_light_states(light):
+    """return current setting for one or all lights"""
     retval = ['id\tdescr']
     connection = open_sql_connection()
     cursor = connection.cursor()
     if light == -1:
         where = '' #  all light codes
     else:
-        where = " WHERE lightcode={}".format(light)
-    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule{}".format(where)):
+        where = f" WHERE lightcode={light}"
+    if cursor.execute(f"""
+SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode
+FROM lightschedule{where}"""):
         for nextrow in cursor.fetchall():
-            retval.append("{}\tHousecode: {} Month: {} Day: {} Turn On: {} Turn Off: {}".format(nextrow[0], nextrow[6], nextrow[2], nextrow[3], nextrow[4], nextrow[5]))
+            retval.append(f"""
+{nextrow[0]}\tHousecode: {nextrow[6]} Month: {nextrow[2]} Day: {nextrow[3]} Turn On: {nextrow[4]} Turn Off: {nextrow[5]}""")
     cursor.close()
     connection.close()
     return retval
 
-def get_light_schedule_detail(id):
+def get_light_schedule_detail(lightid):
+    """retrieve all the light schedule entries for one light"""
     retval = {}
     connection = open_sql_connection()
     cursor = connection.cursor()
-    if cursor.execute("SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode FROM lightschedule WHERE id={}".format(id)):
+    if cursor.execute(f"""
+SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode
+FROM lightschedule
+WHERE id={lightid}"""):
         for nextrow in cursor.fetchall():
-            retval = {'id': nextrow[0], 'lightcode': nextrow[1], 'monthmatch': nextrow[2], 'daymatch': nextrow[3], 'turnon': nextrow[4], 'turnoff': nextrow[5], 'hhcode': nextrow[6]}
+            retval = {'id': nextrow[0],\
+                      'lightcode': nextrow[1],\
+                      'monthmatch': nextrow[2],\
+                      'daymatch': nextrow[3],\
+                      'turnon': nextrow[4],\
+                      'turnoff': nextrow[5],\
+                      'hhcode': nextrow[6]}
     cursor.close()
     connection.close()
     return retval
 
-def set_light_schedule_detail(id, hhcode, lightcode, month, day, on_time, off_time, is_new):
+def set_light_schedule_detail(lightid, hhcode, lightcode, month, day, on_time, off_time, is_new):
+    """create or update a new light schedule item"""
     connection = open_sql_connection()
     cursor = connection.cursor()
     if is_new == 'true':
-        query_string = """INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
-                     VALUES ('{}', '{}', '{}', '{}', '{}', '{}')
-                  """.format(hhcode, lightcode, month, day, on_time, off_time)
+        query_string = f"""
+INSERT INTO lightschedule (hhcode, lightcode, monthmatch, daymatch, turnon, turnoff)
+VALUES ('{hhcode}', '{lightcode}', '{month}', '{day}', '{on_time}', '{off_time}')"""
     else:
-        query_string = """UPDATE lightschedule SET hhcode='{}', lightcode='{}', monthmatch='{}', daymatch='{}', turnon='{}', turnoff='{}'
-                     WHERE id={}
-                  """.format(hhcode, lightcode, month, day, on_time, off_time, id)
+        query_string = f"""
+UPDATE lightschedule
+SET hhcode='{hhcode}', lightcode='{lightcode}', monthmatch='{month}', daymatch='{day}', turnon='{on_time}', turnoff='{off_time}'
+WHERE id={lightid}"""
     response = "no error"
     try:
         cursor.execute(query_string)
         response = query_string
     except Exception as ex:
-        logit("failed to execute {} because {}".format(query_string, ex))
-        response = "{}".format(ex)
+        logit(f"failed to execute {query_string} because {ex}")
+        response = f"{ex}"
     cursor.close()
     connection.close()
     return response
 
-def delete_light_schedule_detail(id):
+def delete_light_schedule_detail(lightid):
+    """delete one schedule row"""
     response = "no error"
     connection = open_sql_connection()
     cursor = connection.cursor()
-    query_string = "DELETE FROM lightschedule WHERE id = {}".format(id)
+    query_string = f"DELETE FROM lightschedule WHERE id = {lightid}"
     try:
         cursor.execute(query_string)
         response = query_string
     except Exception as ex:
-        logit("failed to execute {} because {}".format(query_string, ex))
-        response = "{}".format(ex)
+        logit(f"failed to execute {query_string} because {ex}")
+        response = f"{ex}"
     cursor.close()
     connection.close()
     return response
 
 if __name__ == "__main__":
-  connection = open_sql_connection()
-  connection.close()
-  print(match_image('219:244:251:218:243:252:221:246:252:220:245:252'))
-  print(list_img_folders())
-
+    print(match_image('219:244:251:218:243:252:221:246:252:220:245:252'))
+    print(list_img_folders())
