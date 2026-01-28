@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: freebsd-latest
+    runs-on: ubuntu-slim
     strategy:
       matrix:
         python-version: ["3.11"]
