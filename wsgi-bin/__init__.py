@@ -138,10 +138,10 @@ def schedlight():
 def getlightsched(light):
     """get all entries for one light"""
     retval = lightctl.get_desired_light_states(light)
-    return Response("\n".join(retval),mimetype='text/tsv')
+    return jsonify(retval)
 
 @app.route('/getlightscheddetail/<index>', methods = ['GET', 'POST'])
-def getscheddetail():
+def getscheddetail(index):
     """get a single schedule item"""
     retval = lightctl.get_light_schedule_detail(index)
     #logit("/getlightscheddetail/{} {}".format(index, retval))

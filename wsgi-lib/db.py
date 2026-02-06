@@ -247,7 +247,7 @@ def get_light_state_ids(light=-1):
 
 def get_desired_light_states(light):
     """return current setting for one or all lights"""
-    retval = ['id\tdescr']
+    retval = []
     connection = open_sql_connection()
     cursor = connection.cursor()
     if light == -1:
@@ -258,8 +258,8 @@ def get_desired_light_states(light):
 SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode
 FROM lightschedule{where}"""):
         for nextrow in cursor.fetchall():
-            retval.append(f"""
-{nextrow[0]}\tHousecode: {nextrow[6]} Month: {nextrow[2]} Day: {nextrow[3]} Turn On: {nextrow[4]} Turn Off: {nextrow[5]}""")
+            retval.append({"id":f"{nextrow[0]}","Housecode":f"{nextrow[6]}","Month":f"{nextrow[2]}","Day":f"{nextrow[3]}","TurnOn":f"{nextrow[4]}","TurnOff":f"{nextrow[5]}"})
+    logit(f"{retval}")
     cursor.close()
     connection.close()
     return retval

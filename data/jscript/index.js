@@ -211,15 +211,14 @@ function showOneLightSchedule() {
     thelight = d3.select("#PICKALIGHT").node().value;
     display = d3.select("#LIGHTSCHED").select("#SCHEDLIST");
     if(thelight > -1) {
-        d3.tsv('/getonelightsched/' + thelight).then(function(rawdata) {
-            data = rawdata.sort(function(d){return d.descr;})
-            options = display.selectAll("option").data(data, function(d){return d.id;});
-            options.exit().remove();
-            options.enter().append("option");
-            display.selectAll("option")
+        d3.json('/getonelightsched/' + thelight).then(function(rawdata) {
+            data = rawdata.sort(function(d){return d.Month+d.Day+d.TurnOn+d.TurnOff;})
+            options = display.selectAll("option").data(data,function(d){return d.id;});
+            options.enter().append("option")
                 .attr('value', function(d) {return d.id;})
-                .text(function(d){return d.descr;});
+                .text(function(d){return "Month: "+d.Month+" Day: "+d.Day+" On: "+d.TurnOn+" Off: "+d.TurnOff;});
             display.attr("size", data.length<2?2:data.length);
+            options.exit().remove();
             showScheduleItem();
         });
         d3.select('#DIVSCHED').style('visibility','visible');
