@@ -115,7 +115,7 @@ def save_weather_reading(timestamp = None, host = None, reading = None):
     # don't know what happened here, hope they can recover
     return None
 
-def get_forecast(ip_address):
+def get_forecast():
     #response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
     thefinaldata = ["location,timestamp,temperature"]
     for row in db.get_vals_like_key("forecast_data_"):

@@ -408,7 +408,7 @@ def getheatcolor():
 @app.route('/getforecast', methods=['GET'])
 def getforecast():
     """Retrieve cached data for one location"""
-    retval = weather.get_forecast(request.remote_addr)
+    retval = weather.get_forecast()
     #logit("{}".format(retval))
     return Response("\n".join(retval),mimetype='text/csv')
 
