@@ -1,2 +1,0 @@
-AddType application/x-httpd-phpcgi .php
-Action application/x-httpd-phpcgi /cgi-bin/php.cgi
