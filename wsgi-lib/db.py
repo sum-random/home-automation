@@ -5,7 +5,7 @@
 from os import path
 #import multiprocessing
 #import traceback
-#import json
+import json
 import pymysql
 
 
@@ -194,6 +194,33 @@ ON DUPLICATE KEY UPDATE {mupd}valdata='{val}';"""
     connection.close()
     return True
 
+def update_device_info(host, devjson):
+    """Insert or update host information"""
+    conn = open_sql_connection()
+    tcursor = conn.cursor()
+    qry_string = f"""
+INSERT INTO devices(host, devjson)
+VALUES('{host}', '{devjson}')
+ON DUPLICATE KEY UPDATE devjson='{devjson}';"""
+    tcursor.execute(qry_string)
+    conn.commit()
+    conn.close()
+
+def get_device_info(host):
+    """ Retrieve CPU info from db"""
+    retval = False
+    connection = open_sql_connection()
+    tablecursor = connection.cursor()
+    query_string = f"SELECT devjson FROM devices WHERE hostname='{host}'"
+    if tablecursor.execute(query_string) > 0:
+        for nexttable in tablecursor.fetchall():
+            host_json = json.loads(nexttable[0])
+            if host_json['recd_pkts'] != '0' and 'cpuinfo' in host_json:
+                retval = host_json['cpuinfo']
+    tablecursor.close()
+    connection.close()
+    return retval
+
 def get_val_for_key(key):
     """Retrieve value for key"""
     retval = ""
@@ -258,7 +285,12 @@ def get_desired_light_states(light):
 SELECT id, lightcode, monthmatch, daymatch, turnon, turnoff, hhcode
 FROM lightschedule{where}"""):
         for nextrow in cursor.fetchall():
-            retval.append({"id":f"{nextrow[0]}","Housecode":f"{nextrow[6]}","Month":f"{nextrow[2]}","Day":f"{nextrow[3]}","TurnOn":f"{nextrow[4]}","TurnOff":f"{nextrow[5]}"})
+            retval.append({"id":f"{nextrow[0]}",
+                           "Housecode":f"{nextrow[6]}",
+                           "Month":f"{nextrow[2]}",
+                           "Day":f"{nextrow[3]}",
+                           "TurnOn":f"{nextrow[4]}",
+                           "TurnOff":f"{nextrow[5]}"})
     logit(f"{retval}")
     cursor.close()
     connection.close()

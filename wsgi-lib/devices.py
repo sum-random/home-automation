@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
+"""scan devices for uptime, temperature, etc"""
 
 import re
-import os
-import subprocess
 from subprocess import Popen, PIPE
 from multiprocessing import Pool
 import socket
 import json
-import syslog
-import time
 from datetime import datetime
 
 import db
-from logit import logit
 from config import config
 CONFIG=config()
 
@@ -38,67 +34,62 @@ def _shortname(longname):
     return longname.split('.')[0]
 
 def readdevice(ipaddr):
+    """get hostname, SSH port and device type"""
     fields = ['type', 'maker', 'model', 'version', 'misc1' , 'misc2']
     srv_type = {}
     try:
-    	hostname = socket.gethostbyaddr(ipaddr)
+        host = socket.gethostbyaddr(ipaddr)
     except:
-        hostname = [ipaddr]
-    long = hostname[0]
+        host = [ipaddr]
+    long = host[0]
     short = _shortname(long)
     spat = re.compile(short)
-    type = re.compile(' *# type ')
-    f = open(CONFIG['path']['dhcpd_config'])
-    while True:
-        line = f.readline()
-        if not line: break
-        if spat.search(line):
-            typeraw = f.readline()
-            typeline = type.sub('', typeraw)[:-1]
-            typeinfo = typeline.split(' ')
-            for x in range(len(typeinfo)):
-              srv_type[fields[x]] = typeinfo[x]
-            break
-    f.close()
+    mtype = re.compile(' *# type ')
+    with open(CONFIG['path']['dhcpd_config'],encoding='utf-8') as f:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            if spat.search(line):
+                typeraw = f.readline()
+                typeline = mtype.sub('', typeraw)[:-1]
+                typeinfo = typeline.split(' ')
+                for x in range(len(typeinfo)):
+                    srv_type[fields[x]] = typeinfo[x]
+                break
     srv_type['hostname'] = short
-    if not 'type' in srv_type:
+    if 'type' not in srv_type:
         srv_type['type'] = 'server'
 
-    # get SSH port number, if previously saved
-    connection = db.open_sql_connection()
-    cursor = connection.cursor()
-    query_string = "SELECT devjson FROM devices where hostname='{}';".format(short)
-    if cursor.execute(query_string) > 0:
-        for nextrowraw in cursor.fetchall():
-            if nextrowraw[0] is not None:
-                nextrow = json.loads(nextrowraw[0])
-                srv_type.update(nextrow)
-    cursor.close()
-    connection.close()
+    # merge previously saved info about this host
+    update = db.get_device_info(srv_type['hostname'])
+    if update:
+        srv_type.update(update)
 
-    return(srv_type)
+    return srv_type
 
 
 def _device_ip_list():
     hosts = []
-    f = open(CONFIG['path']['named_config'], 'r')
-    pat1 = re.compile('^[A-Za-z]')
-    pat2 = re.compile('10.[45].[67][09].[0-9]*')
-    pat3 = re.compile('10.10.10.[0-9]*')
-    while True:
-        line = f.readline()
-        if not line: break
-        if(pat1.search(line) and pat2.search(line)):
-            match = pat2.search(line)
-            hosts.append(readdevice(match.group()))
-        if(pat1.search(line) and pat3.search(line)):
-            match = pat3.search(line)
-            hosts.append(readdevice(match.group()))
-    f.close()
+    with open(CONFIG['path']['named_config'], 'r', encoding='utf-8') as f:
+        pat1 = re.compile('^[A-Za-z]')
+        pat2 = re.compile('10.[45].[67][09].[0-9]*')
+        pat3 = re.compile('10.10.10.[0-9]*')
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            if(pat1.search(line) and pat2.search(line)):
+                match = pat2.search(line)
+                hosts.append(readdevice(match.group()))
+            if(pat1.search(line) and pat3.search(line)):
+                match = pat3.search(line)
+                hosts.append(readdevice(match.group()))
     return hosts
 
 
 def check_ping(device):
+    """ ping device and check for open SSH port"""
     dev_name = device['hostname']
     ping_pat = re.compile('.*(\d) packets received.*')
     output = ','.join(Popen(["/sbin/ping",
@@ -118,7 +109,7 @@ def check_ping(device):
                 socket.setdefaulttimeout(3)
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((dev_name, port))
-            except OSError as error:
+            except OSError:
                 pass
             else:
                 s.close()
@@ -128,18 +119,19 @@ def check_ping(device):
 
 def check_ssh(device):
     """ Look for open SSH port, if found, log in and gather hardware info """
-    dev_name = device['hostname']
     if 'recd_pkts' in device and device['recd_pkts'] != '0' and 'sshport' in device:
         for key in CMDS[device['sshport']]:
+            cmd=CMDS[device['sshport']][key]
+            host=device['hostname']
             output = Popen([CONFIG['path']['ssh_cmd'],
                             "-f",
                             "-o", "StrictHostKeyChecking=no",
                             "-o", "HostkeyAlgorithms=+ssh-rsa",
                             "-o", "BatchMode=yes",
                             "-i", CONFIG['path']['ssh_key'],
-                            "-p", "{}".format(device['sshport']),
-                            "{}@{}".format(SSHUSER, device['hostname']),
-                            '{}'.format(CMDS[device['sshport']][key])], stdout=PIPE, stderr=PIPE)
+                            "-p", f"{device['sshport']}",
+                            f"{SSHUSER}@{host}",
+                            f'{cmd}'], stdout=PIPE, stderr=PIPE)
             output.wait()
             outtxt = output.communicate()[0].decode('utf-8')
             if outtxt:
@@ -163,10 +155,8 @@ def scandevices():
     check_ssh to scan each one and
     gather info if it has sshd daemon running
     """
-    p = Pool(16)
-    retval = p.map(check_ssh, p.map(check_ping, _device_ip_list()))
-    p.close()
-    p.join()
+    with Pool(16) as p:
+        retval = p.map(check_ssh, p.map(check_ping, _device_ip_list()))
     return retval
 
 
@@ -191,77 +181,56 @@ def renderdevices():
 
 
 def get_device_html():
-  # CPU type indexes
-  lnx = 'model name'
-  mip = 'cpu model'
-  bsd = 'hw_model'
-  arm = 'Processor'
-  rpi = 'Model'
-  armalt = 'CPU architecture'
-  cpus = [lnx, mip, bsd, arm, rpi]
-
-  try:
     """ Render devices in a table for browser """
+    # CPU type indexes
+    lnx = 'model name'
+    mip = 'cpu model'
+    bsd = 'hw_model'
+    arm = 'Processor'
+    rpi = 'Model'
+    armalt = 'CPU architecture'
+    cpus = [lnx, mip, bsd, arm, rpi]
+
+    try:
     # get the JSON data for rendering
-    retval = ["<table><tr><th>Host</th><th>Type</th><th>Status</th><th>CPU</th><th>Charge</th></tr>"]
-    for thehost in sorted(renderdevices(), key=lambda device: (device['type'], device['hostname'])):
-        shorthost = _shortname(thehost['hostname'])
-        if 'batstat' in thehost or 'load' in thehost:
-            hoststat = "{} {}".format(thehost['batstat'] if 'batstat' in thehost else '',
-                                      thehost['load'] if 'load' in thehost else '')
-        else:
-            hoststat = "Up"
-        if 'batcap' in thehost and not isinstance(thehost['batcap'], dict):
-            batcap = int(thehost['batcap'])
-            batred = 255 if batcap < 50 else (100 - batcap) * 5
-            batgrn = 255 if batcap > 50 else batcap * 5
-            batcolor = "rgb({},{},0)".format(batred, batgrn)
-            batstat = "<td style='background-color: {};'>{}</td>".format(batcolor, batcap)
-        else:
-            batstat = ''
-        alttext = ''
-        if 'cpuinfo' in thehost:
-            cpuinfo = thehost['cpuinfo']
-            new_cpuinfo = False
-            if armalt in cpuinfo:
-                new_cpuinfo = '{}: ARM v{}'.format(armalt, cpuinfo[armalt])
-            for next_cpu  in cpus:
-                if next_cpu in cpuinfo:
-                    new_cpuinfo = cpuinfo[next_cpu]
-            if new_cpuinfo:
-                alttext = '<td>{}</td>'.format(new_cpuinfo)
-        retval.append("<tr><td>{}</td><td>{}</td><td>{}</td>{}{}</tr>".format(thehost['hostname'],
-                                                                                thehost['type'],
-                                                                                hoststat,
-                                                                                alttext,
-                                                                                batstat))
-    retval.append("</table><div name='cpuinfo'></div>")
-    return '\n'.join(retval)
-  except Exception as e:
-    return "{}".format(e)
-    
+        retval = ["<table><tr><th>Host</th><th>Type</th><th>Status</th><th>CPU</th><th>Charge</th></tr>"]
+        for thehost in sorted(renderdevices(), key=lambda device: (device['type'], device['hostname'])):
+            if 'batstat' in thehost or 'load' in thehost:
+                batstat = thehost['batstat'] if 'batstat' in thehost else ''
+                load = thehost['load'] if 'load' in thehost else ''
+                hoststat = f"{batstat} {load}"
+            else:
+                hoststat = "Up"
+            if 'batcap' in thehost and not isinstance(thehost['batcap'], dict):
+                batcap = int(thehost['batcap'])
+                batred = 255 if batcap < 50 else (100 - batcap) * 5
+                batgrn = 255 if batcap > 50 else batcap * 5
+                batcolor = f"rgb({batred},{batgrn},0)"
+                batstat = f"<td style='background-color: {batcolor};'>{batcap}</td>"
+            else:
+                batstat = ''
+            alttext = ''
+            if 'cpuinfo' in thehost:
+                cpuinfo = thehost['cpuinfo']
+                new_cpuinfo = False
+                if armalt in cpuinfo:
+                    new_cpuinfo = f'{armalt}: ARM v{cpuinfo[armalt]}'
+                for next_cpu  in cpus:
+                    if next_cpu in cpuinfo:
+                        new_cpuinfo = cpuinfo[next_cpu]
+                if new_cpuinfo:
+                    alttext = f'<td>{new_cpuinfo}</td>'
+            retval.append(f"<tr><td>{thehost['hostname']}</td><td>{thehost['type']}</td><td>{hoststat}</td>{alttext}{batstat}</tr>")
+        retval.append("</table><div name='cpuinfo'></div>")
+        return '\n'.join(retval)
+    except Exception as e:
+        return f"{e}"
+
 
 def get_device_info(host):
-    """ Return device info """
-    retval = False
-    connection = db.open_sql_connection()
-    tablecursor = connection.cursor()
-    query_string = "SELECT devjson FROM devices WHERE hostname='{}'".format(host)
-    if tablecursor.execute(query_string) > 0:
-        for nexttable in tablecursor.fetchall():
-            host_json = json.loads(nexttable[0])
-            if host_json['recd_pkts'] != '0' and 'cpuinfo' in host_json:
-                retval = host_json['cpuinfo']
-    tablecursor.close()
-    connection.close()
-    return retval
-    
-if __name__ == '__main__':
-    connection = db.open_sql_connection()
+    """ Retrieve device info from db"""
+    return db.get_device_info(host)
 
+if __name__ == '__main__':
     for nextdev in scandevices():
-        tablecursor = connection.cursor()
-        query_string = "INSERT INTO devices(hostname, devjson) VALUES('{0}', '{1}') ON DUPLICATE KEY UPDATE devjson='{1}';".format(nextdev['hostname'], json.dumps(nextdev))
-        tablecursor.execute(query_string)
-        connection.commit()
-    connection.close()
+        db.update_device_info(nextdev['hostname'],json.dumps(nextdev))
