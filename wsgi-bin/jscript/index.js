@@ -47,14 +47,14 @@ function forecastGraph() {
         .domain(locations.sort())
         .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
       var vscale = d3.scaleLinear()
-        .domain(d3.extent(fcdata, d => d.temperature))
+        .domain(d3.extent(fcdata, d => d.temperature*1))
         .range([fccontainer.attr('height'),0]);
       var hscale = d3.scaleTime()
         .domain(d3.extent(fcdata, function(d) {return new Date(d.timestamp);}))
         .range([0,fccontainer.attr('width')]);
       var linefunc =  d3.line()
         .x(function(d){return hscale(new Date(d.timestamp));})
-        .y(function(d){return vscale(d.temperature);});
+        .y(function(d){return vscale(d.temperature*1);});
       fcthumb.selectAll('path')
         .data(graphdata)
         .enter().append('path')
@@ -758,16 +758,15 @@ function showWImg(evt) {
                   .domain(locations.sort())
                   .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
                 var vscale = d3.scaleLinear()
-                  .domain(d3.extent(trimdata, d => d.temperature))
+                  .domain(d3.extent(trimdata, d => d.temperature*1))
                   .range([graphy-margins*2-1,0]);
                 var nowlinedata=[];
-                d3.extent(rawdata, d => d.temperature).forEach(function(d){nowlinedata.push({"location":"","timestamp":new Date().toString(),"temperature":d});});
                 var hscale = d3.scaleTime()
                   .domain(d3.extent(trimdata, function(d) {return new Date(d.timestamp);}))
                   .range([0,graphx-margins*2-1]);
                 var linefunc =  d3.line()
                   .x(function(d){return hscale(new Date(d.timestamp));})
-                  .y(function(d){return vscale(d.temperature);});
+                  .y(function(d){return vscale(d.temperature*1);});
                 fcfull.selectAll('path')
                   .data(trimgroup)
                   .enter().append('path')
