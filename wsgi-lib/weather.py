@@ -13,24 +13,7 @@ from logit import logit
 
     
 def get_weather_list():
-    wlinks = { 
-               '5SoWe_radar': { 'url': 'https://www.wunderground.com/weather/us/fl/sarasota/KFLSARAS2114',
-                                'ttl': 'Local radar',
-                                'uri': 'https://s.w-x.co/staticmaps/wu/wu/wxtype1200_cur/uspie/animate.png',
-                                'alt': 'St Petersburg FL Regional Radar' },
-               '8Prec_fcast': { 'url': 'http://wxmaps.org/pix/clim.html',
-                                'ttl': 'Precipitation forecast',
-                                'uri': 'http://wxmaps.org/pix/prec1.png',
-                                'alt': 'Precipitation forecast' },
-               '9Mimic_tpw':  { 'url': 'http://tropic.ssec.wisc.edu/real-time/mtpw2',
-                                'ttl': 'MIMIC-TPW',
-                                'uri': 'http://tropic.ssec.wisc.edu/real-time/mtpw2/webAnims/tpw_nrl_colors/global2/mimictpw_global2_latest.gif',
-                                'alt': 'MIMIC-TPW' },
-               'forecast':    { 'url': '/getforecast',
-                                'ttl': 'SRQ FL Forecast',
-                                'uri': 'https://api.weather.gov/points/27.307,-82.4951',
-                                'alt': 'SRQ FL Forecast' } }
-    return wlinks
+    return json.loads(db.get_val_for_key('wlinks'))
 
 
 def get_weather_html():
