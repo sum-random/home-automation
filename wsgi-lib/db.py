@@ -199,7 +199,7 @@ def update_device_info(host, devjson):
     conn = open_sql_connection()
     tcursor = conn.cursor()
     qry_string = f"""
-INSERT INTO devices(host, devjson)
+INSERT INTO devices(hostname, devjson)
 VALUES('{host}', '{devjson}')
 ON DUPLICATE KEY UPDATE devjson='{devjson}';"""
     tcursor.execute(qry_string)
