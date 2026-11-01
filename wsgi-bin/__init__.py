@@ -79,11 +79,12 @@ def cpuinfo(host):
 @app.route('/listlight')
 def listlight():
     """retrieve list of light names"""
-    retval = [ 'idx,name,status' ]
+    retval = [ 'idx,name,status,current' ]
     lights = lightctl.get_light_list()
     for key in lights:
         light_state=lightctl.get_light_state(key)
-        retval.append(f"{key},{lights[key]},{light_state}")
+        current = lightctl.next_light_state(key)
+        retval.append(f"{key},{lights[key]},{light_state},{current}")
     return Response("\n".join(retval),mimetype='text/csv')
 
 
@@ -178,12 +179,6 @@ def deletescheddetail():
     retval = 'Undefined'
     requestobj = parse_data(request.data)
     retval = lightctl.delete_light_schedule_detail(id = requestobj['id'])
-    return Response(retval,mimetype='text/html')
-
-@app.route('/getlightcurrentstatus/<idx>', methods = ['GET','POST'])
-def readonelightcurrentstate(idx):
-    """query whether a light should be on or off with current schedule and overrides"""
-    retval = lightctl.next_light_state(idx)
     return Response(retval,mimetype='text/html')
 
 @app.route('/listmixer')
