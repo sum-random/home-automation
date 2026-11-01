@@ -45,7 +45,7 @@ function forecastGraph() {
       Array.from(graphdata).forEach(function(d){locations.push(d[0]);});
       var color = d3.scaleOrdinal()
         .domain(locations.sort())
-        .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
+        .range(['#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ff55ff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
       var vscale = d3.scaleLinear()
         .domain(d3.extent(fcdata, d => d.temperature*1))
         .range([fccontainer.attr('height'),0]);
@@ -148,7 +148,7 @@ function cpuTemperatureGraph(doResize=true) {
       var hostfunc = d3.group(data, d => d.host);
       var color = d3.scaleOrdinal()
         .domain(hostfunc.keys())
-        .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ffaaff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
+        .range([ '#aa0000','#aaaa00', '#0000ff', '#ff00ff', '#000000', '#ff55ff', '#aa00ff', '#00aa00', '#00aaff', '#aa5500', '#55aa00', '#555500']);
       //svg.data(hostfunc);
       svg.each(function(d,i) {
         gcon=d3.select(this);
